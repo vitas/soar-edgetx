@@ -456,6 +456,32 @@ setup_quality_test("battery threshold values are clamped in setup pages", functi
   end
 end)
 
+setup_quality_test("mixes page enables and restores trim adjustment mode", function()
+  local mixes = setup_env()
+  load_setup_page("src/SoarF5J/setup/mixes.lua", mixes)
+  mixes.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  mixes.widget.background()
+
+  local sawOn, sawOff = false, false
+  for _, write in ipairs(mixes.gvWrites) do
+    if write.index == 7 and write.value == 4 then sawOn = true end
+    if write.index == 7 and write.value == 0 then sawOff = true end
+  end
+  assert(sawOn, "mixes page did not enable GV8 mix trim mode")
+  assert(sawOff, "mixes page did not restore owned GV8 mode")
+
+  local previousMode = setup_env({ gvs = { [7] = 2 } })
+  load_setup_page("src/SoarF5J/setup/mixes.lua", previousMode)
+  previousMode.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  previousMode.widget.background()
+
+  local restoredPrevious = false
+  for _, write in ipairs(previousMode.gvWrites) do
+    if write.index == 7 and write.value == 2 then restoredPrevious = true end
+  end
+  assert(restoredPrevious, "mixes page did not restore previous GV8 mode")
+end)
+
 setup_quality_test("outputs reinsert saved mix list deterministically", function()
   local content = read_file("src/SoarF5J/setup/outputs.lua")
   assert(content:find("ipairs(mixes[3 - i])", 1, true), "saved mix list reinsertion is not deterministic")

@@ -239,6 +239,10 @@ Edits mix-related global variables for the current flight mode:
 Some values are flight-mode specific. Select the flight mode first, then edit
 the values for that mode.
 
+While this page is open, the widget sets the model adjustment mode so the TX15
+trim buttons can adjust the mix GVARs through the model's `ADJUST_GVAR` special
+functions. Leaving the page restores the previous adjustment mode.
+
 ### `setup/battery`
 
 Displays the current receiver battery value and edits the low-battery warning

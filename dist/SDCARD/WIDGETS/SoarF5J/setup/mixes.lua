@@ -24,6 +24,7 @@ local gui = nil
 local colors = libGUI.colors
 local title = "Mixes & Battery"
 local fm = getFlightMode()
+local adjustModePrevious
 
 -- Screen drawing constants
 local LCD_W2 = LCD_W / 2
@@ -44,6 +45,9 @@ local mixes = {
   { "Camber -> Aileron", 6, 0, 400 }
 }
 
+local GV_ADJUST_MODE = 7
+local ADJUST_MODE = 4
+
 local function batteryThresholdValue()
   local value = soarGlobals.getParameter(soarGlobals.batteryParameter)
   if type(value) ~= "number" then
@@ -52,11 +56,27 @@ local function batteryThresholdValue()
   return math.max(0, math.min(200, value + 100))
 end
 
+local function adjustModeOn()
+  local current = model.getGlobalVariable(GV_ADJUST_MODE, 0)
+  if adjustModePrevious == nil and current ~= ADJUST_MODE then
+    adjustModePrevious = current
+    model.setGlobalVariable(GV_ADJUST_MODE, 0, ADJUST_MODE)
+  end
+end
+
+local function adjustModeOff()
+  if adjustModePrevious ~= nil then
+    model.setGlobalVariable(GV_ADJUST_MODE, 0, adjustModePrevious)
+    adjustModePrevious = nil
+  end
+end
+
 -------------------------------- Setup GUI --------------------------------
 
 local function init()
   libGUI.flags = 0
   gui = libGUI.newGUI()
+  adjustModeOn()
 
   function gui.fullScreenRefresh()
     lcd.clear(COLOR_THEME_SECONDARY3)
@@ -79,8 +99,8 @@ local function init()
 
     -- Help text
     local txt = "Some variables can be adjusted individually for each flight mode.\n" ..
-                "Therefore, select the flight mode for which you want to adjust.\n" ..
-                "You can change that behaviour under GLOBAL VARIABLES."
+                "Select the flight mode before adjusting.\n" ..
+                "Trim buttons adjust active mix values while this page is open."
     lcd.drawTextLines(MARGIN, bottom + 25, LCD_W - 2 * MARGIN, LCD_H - bottom, txt, colors.primary1)
   end
 
@@ -158,6 +178,7 @@ local function init()
 end -- init()
 
 function widget.background()
+  adjustModeOff()
   gui = nil
 end -- background()
 
