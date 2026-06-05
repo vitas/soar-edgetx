@@ -9,21 +9,27 @@ Early development. The first target is a TX15 SD-card package plus model-templat
 ## Structure
 
 - `src/SoarF5J/`: maintainable Lua source.
-- `dist/WIDGETS/SoarF5J/`: SD-card widget package output.
+- `dist/SDCARD/`: generated SD-card install root.
 - `models/reference/`: reference model archives used for migration.
 - `models/tx15/`: TX15 model template artifacts.
 - `docs/`: planned setup, emulator, and SD-card documentation.
-- `tools/`: will contain local build, lint, packaging, and test helpers.
-- `tests/`: will contain local Lua tests for pure modules and template validation.
+- `tools/`: local build, lint, packaging, and test helpers.
+- `tests/`: local Lua tests for state modules, widgets, setup pages, and packaging checks.
 
 ## Verification
 
-The intended verification interface is:
+Run the full local gate with:
+
+```sh
+make verify
+```
+
+Individual targets are also available:
 
 ```sh
 make lint
-make test
 make package
+make test
 ```
 
-These commands will become available once local tooling lands in the next implementation step.
+`make test` rebuilds the generated package before running tests because packaging checks compare `src/SoarF5J` with `dist/SDCARD/WIDGETS/SoarF5J`.

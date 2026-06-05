@@ -3,13 +3,13 @@
 lint:
 	lua tools/lint.lua
 
-test:
+test: package
 	lua tests/run.lua
 
 package:
 	lua tools/package.lua
 
-verify: lint test package
+verify: lint test
 
 clean:
-	rm -rf dist/WIDGETS/SoarF5J
+	rm -rf dist/SDCARD

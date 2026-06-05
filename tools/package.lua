@@ -1,5 +1,6 @@
 local source = "src/SoarF5J"
-local target = "dist/WIDGETS/SoarF5J"
+local install_root = "dist/SDCARD"
+local target = install_root .. "/WIDGETS/SoarF5J"
 
 local function sh_quote(value)
   return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
@@ -33,7 +34,7 @@ if not shell_ok(os.execute("[ -d " .. sh_quote(source) .. " ]")) then
   error("missing source directory: " .. source, 0)
 end
 
-run("rm -rf " .. sh_quote(target))
+run("rm -rf " .. sh_quote(install_root))
 run("mkdir -p " .. sh_quote(target))
 
 local files = lines("find " .. sh_quote(source) .. " -type f -name '*.lua' 2>/dev/null")

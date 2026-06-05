@@ -62,7 +62,7 @@ local function read_file(path)
 end
 
 local function dist_path(source_path)
-  return source_path:gsub("^src/SoarF5J/", "dist/WIDGETS/SoarF5J/")
+  return source_path:gsub("^src/SoarF5J/", "dist/SDCARD/WIDGETS/SoarF5J/")
 end
 
 test("required setup source files exist", function()
