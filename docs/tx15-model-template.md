@@ -46,3 +46,7 @@ Manual Companion migration is acceptable until a repeatable model export path ex
 ## Current Artifact Policy
 
 Commit updated TX15 template artifacts under `models/tx15/` after they have been created and checked in EdgeTX Companion or on the TX15.
+
+For radio and simulator operation, including the required widget `Page` values,
+setup-page workflow, and competition-widget usage, see
+`docs/widget-setup-and-usage.md`.

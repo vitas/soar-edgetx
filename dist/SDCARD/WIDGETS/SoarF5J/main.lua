@@ -18,9 +18,19 @@
 -- GNU General Public License for more details.                          --
 ---------------------------------------------------------------------------
 
+local pageFiles = {
+  "competition/widget",
+  "setup/switches",
+  "setup/mixes",
+  "setup/outputs",
+  "setup/wing_alignment",
+  "setup/brake_curves",
+  "setup/aileron_camber",
+  "setup/battery"
+}
+
 local options = {
-  { "Version", VALUE, 1, 1, 2 },
-  { "FileName", STRING, "competition/widget" }
+  { "Page", VALUE, 1, 1, #pageFiles }
 }
 
 local soarGlobals
@@ -54,9 +64,25 @@ local function rxBatCheck()
   end
 end
 
+local function resolvePage(widgetOptions)
+  local page = tonumber(widgetOptions.Page)
+
+  if page and pageFiles[page] then
+    return page
+  end
+
+  return 1
+end
+
 -- Load a Lua component dynamically based on option values.
 local function Load(widget)
-  local chunk, errMsg = loadScript(soarGlobals.path .. widget.options.FileName .. ".lua")
+  local page = resolvePage(widget.options)
+  local fileName = pageFiles[page]
+  widget.errMsg = nil
+  widget.page = page
+  widget.fileName = fileName
+
+  local chunk, errMsg = loadScript(soarGlobals.path .. fileName .. ".lua")
   if errMsg then
     widget.errMsg = errMsg
   else
@@ -64,7 +90,7 @@ local function Load(widget)
     if not ok then
       widget.errMsg = err
     elseif type(widget.refresh) ~= "function" then
-      widget.errMsg = widget.options.FileName .. ".lua did not define widget.refresh"
+      widget.errMsg = fileName .. ".lua did not define widget.refresh"
     end
   end
 end
@@ -111,7 +137,7 @@ local function create(zone, options)
 end
 
 local function update(widget, options)
-  if options.Version ~= widget.options.Version or options.FileName ~= widget.options.FileName then
+  if resolvePage(options) ~= widget.page then
     local zone = widget.zone
 
     -- Erase all fields in widget.

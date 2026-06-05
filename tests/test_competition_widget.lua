@@ -47,6 +47,7 @@ local function new_widget_env()
     timerWrites = {},
     gvWrites = {},
     drawTexts = {},
+    drawTimers = {},
     timers = {
       [0] = { start = 600, value = 600 },
       [1] = { start = 0, value = 0 }
@@ -74,7 +75,14 @@ local function new_widget_env()
 
   lcd = {
     drawFilledRectangle = function() end,
-    drawTimer = function() end,
+    drawTimer = function(x, y, value, flags)
+      env.drawTimers[#env.drawTimers + 1] = {
+        x = x,
+        y = y,
+        value = value,
+        flags = flags
+      }
+    end,
     drawText = function(x, y, text)
       env.drawTexts[#env.drawTexts + 1] = {
         x = x,
@@ -222,6 +230,16 @@ widget_test("widget load and initial idle do not write GV8", function()
   env.widget.background()
 
   assert_equal(count_gv_writes(env, 8), 0, "GV8 writes")
+end)
+
+widget_test("competition timers are drawn in separated vertical rows", function()
+  local env = new_widget_env()
+  env.widget.zone.h = 220
+
+  env.widget.refresh(nil, nil)
+
+  assert_equal(#env.drawTimers, 2, "timer draw count")
+  assert_equal(env.drawTimers[2].y - env.drawTimers[1].y >= 64, true, "timer row spacing")
 end)
 
 widget_test("explicit arm and target adjustment still write timer 0", function()

@@ -68,6 +68,15 @@ test("compiled Lua bytecode is ignored and untracked", function()
   assert_equal(#tracked, 0, "tracked compiled Lua file count")
 end)
 
+test("Makefile installs packaged widget to configured SD card", function()
+  local makefile = read_file("Makefile")
+
+  assert(makefile:find("install%-widget: package"), "missing install-widget package dependency")
+  assert(makefile:find("SDCARD", 1, true), "missing SDCARD variable")
+  assert(makefile:find("rm -rf \"$(SDCARD)/WIDGETS/SoarF5J\"", 1, true), "missing stale widget removal")
+  assert(makefile:find("cp -R dist/SDCARD/WIDGETS/SoarF5J \"$(SDCARD)/WIDGETS/\"", 1, true), "missing widget copy")
+end)
+
 test("TX15 template assigns SoarF5J widget", function()
   local model = command_output("unzip -p models/tx15/f5j_tmpl_t15.etx MODELS/model1.yml")
 

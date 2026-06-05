@@ -49,7 +49,10 @@ Do not use a command-line emulator workflow until it has been verified locally.
 2. Open screen/widget setup.
 3. Add a widget.
 4. Select `SoarF5J`.
-5. Configure the widget page option for the page being tested.
+5. Configure the widget `Page` option for the page being tested.
+
+See `docs/widget-setup-and-usage.md` for the full list of page numbers,
+navigation controls, setup workflow, and competition-widget operation.
 
 ## Verification Limits
 

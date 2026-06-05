@@ -323,21 +323,26 @@ local function draw()
   local headerH = 26
   local right = w - pad
   local rowY = headerH + pad
-  local timerFlags = colors.primary1 + XXLSIZE + RIGHT
+  local compact = h < 190
+  local timerSize = compact and DBLSIZE or XXLSIZE
+  local labelSize = compact and MIDSIZE or DBLSIZE
+  local timerGap = compact and 46 or 68
+  local metricGap = compact and 42 or 54
+  local timerFlags = colors.primary1 + timerSize + RIGHT
 
   lcd.drawFilledRectangle(0, 0, w, h, colors.secondary3)
   lcd.drawFilledRectangle(0, 0, w, headerH, colors.secondary1)
   lcd.drawText(pad, 5, "F5J", colors.primary3 + DBLSIZE)
   lcd.drawText(right, 7, status_text(), colors.primary3 + MIDSIZE + RIGHT)
 
-  lcd.drawText(pad, rowY + 8, state.mode == "initial" and "Target" or "Flight", colors.primary2 + DBLSIZE)
+  lcd.drawText(pad, rowY + 8, state.mode == "initial" and "Target" or "Flight", colors.primary2 + labelSize)
   lcd.drawTimer(right, rowY, flight_timer_value(), timerFlags)
 
-  rowY = rowY + 42
-  lcd.drawText(pad, rowY + 8, "Motor", colors.primary2 + DBLSIZE)
+  rowY = rowY + timerGap
+  lcd.drawText(pad, rowY + 8, "Motor", colors.primary2 + labelSize)
   lcd.drawTimer(right, rowY, motor_timer_value(), timerFlags)
 
-  rowY = rowY + 46
+  rowY = rowY + metricGap
   local colW = math.floor((w - pad * 3) / 2)
   draw_metric("Landing", state.landing_points, " pt", pad, rowY, colW)
   draw_metric("Start h", state.start_height, " m", pad * 2 + colW, rowY, colW)

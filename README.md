@@ -33,10 +33,20 @@ make test
 
 `make test` rebuilds the SoarF5J widget package before running tests because packaging checks compare `src/SoarF5J` with `dist/SDCARD/WIDGETS/SoarF5J`.
 
+To rebuild the widget and install it onto a mounted SD card:
+
+```sh
+make install-widget SDCARD=/Volumes/TX15
+```
+
+`make sdcard SDCARD=/Volumes/TX15` is an alias. The target deletes the old
+`WIDGETS/SoarF5J` folder first so stale Lua or `.luac` files are not kept.
+
 ## Documentation
 
 - `docs/project-structure.md`: source layout and generated package output.
 - `docs/sdcard-structure.md`: TX15 SD-card install layout.
+- `docs/widget-setup-and-usage.md`: widget install, setup page, and competition usage guide.
 - `docs/emulator.md`: local EdgeTX Companion simulator workflow.
 - `docs/tx15-model-template.md`: committed TX15 template notes.
 - `models/tx15/README.md`: TX15 template artifact notes.
