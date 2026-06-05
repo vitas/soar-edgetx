@@ -722,4 +722,3 @@ git commit -m "Finalize F5J EdgeTX package"
 **Step 4: Report manual verification gaps**
 
 Do not claim radio behavior is verified unless it has been tested in EdgeTX Companion simulator or on the TX15. Report manual checks still needed.
-
