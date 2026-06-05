@@ -34,7 +34,7 @@ if not shell_ok(os.execute("[ -d " .. sh_quote(source) .. " ]")) then
   error("missing source directory: " .. source, 0)
 end
 
-run("rm -rf " .. sh_quote(install_root))
+run("rm -rf " .. sh_quote(target))
 run("mkdir -p " .. sh_quote(target))
 
 local files = lines("find " .. sh_quote(source) .. " -type f -name '*.lua' 2>/dev/null")

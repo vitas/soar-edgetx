@@ -2,7 +2,11 @@
 
 This directory is for TX15 model-template artifacts.
 
-No TX15 template artifact is committed yet.
+Current template:
+
+```text
+f5j_tmpl_t15.etx
+```
 
 Create or update the template in EdgeTX Companion or on the TX15, then export it here once the model structure is repeatable and reviewed.
 

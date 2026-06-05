@@ -9,8 +9,7 @@ Early development. The first target is a TX15 SD-card package plus model-templat
 ## Structure
 
 - `src/SoarF5J/`: maintainable Lua source.
-- `dist/SDCARD/`: generated SD-card install root.
-- `models/reference/`: reference model archives used for migration.
+- `dist/SDCARD/`: TX15 SD-card root with generated SoarF5J widget output.
 - `models/tx15/`: TX15 model template artifacts.
 - `docs/`: project structure, emulator, TX15 template, setup, and SD-card documentation.
 - `tools/`: local build, lint, packaging, and test helpers.
@@ -32,13 +31,12 @@ make package
 make test
 ```
 
-`make test` rebuilds the generated package before running tests because packaging checks compare `src/SoarF5J` with `dist/SDCARD/WIDGETS/SoarF5J`.
+`make test` rebuilds the SoarF5J widget package before running tests because packaging checks compare `src/SoarF5J` with `dist/SDCARD/WIDGETS/SoarF5J`.
 
 ## Documentation
 
 - `docs/project-structure.md`: source layout and generated package output.
 - `docs/sdcard-structure.md`: TX15 SD-card install layout.
 - `docs/emulator.md`: local EdgeTX Companion simulator workflow.
-- `docs/tx15-model-template.md`: Xlite reference archive and TX15 template policy.
-- `models/reference/README.md`: reference-model artifact notes.
+- `docs/tx15-model-template.md`: committed TX15 template notes.
 - `models/tx15/README.md`: TX15 template artifact notes.

@@ -12,4 +12,4 @@ package:
 verify: lint test
 
 clean:
-	rm -rf dist/SDCARD
+	rm -rf dist/SDCARD/WIDGETS/SoarF5J

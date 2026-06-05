@@ -1,24 +1,21 @@
 # TX15 Model Template
 
-The first TX15 template is expected to be migrated manually in Companion, using the Xlite F5J model as the reference.
-
-## Reference Archive
-
-Reference archive:
+The first TX15 template is committed at:
 
 ```text
-/Users/vitas/Downloads/xlite_f5j.otx
+models/tx15/f5j_tmpl_t15.etx
 ```
 
-Archive contents observed locally:
+The archive currently contains:
 
 ```text
-RADIO/radio.bin
-MODELS/model1.bin
-RADIO/models.txt
+RADIO/radio.yml
+MODELS/model1.yml
+MODELS/f5j.txt
+MODELS/labels.yml
 ```
 
-That means the archive contains one model slot.
+It was created manually in Companion from the F5J migration work.
 
 ## Referenced OpenTX Scripts
 
@@ -48,4 +45,4 @@ Manual Companion migration is acceptable until a repeatable model export path ex
 
 ## Current Artifact Policy
 
-Do not commit a TX15 model template until it has been created and checked in EdgeTX Companion or on the TX15.
+Commit updated TX15 template artifacts under `models/tx15/` after they have been created and checked in EdgeTX Companion or on the TX15.

@@ -6,6 +6,13 @@ Expected layout:
 
 ```text
 SDCARD/
+  edgetx.sdcard.version
+  RADIO/
+  MODELS/
+  SOUNDS/
+  SCRIPTS/
+  TEMPLATES/
+  THEMES/
   WIDGETS/
     SoarF5J/
       main.lua
@@ -13,6 +20,7 @@ SDCARD/
       competition/
       setup/
       pages/
+    ShowAll/
 ```
 
 In EdgeTX, add a SoarF5J widget to a model screen and select the required page in widget options.

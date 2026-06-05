@@ -1,14 +1,13 @@
 # Project Structure
 
-This project is source-first. Edit Lua under `src/SoarF5J`; treat `dist/SDCARD` as generated install output.
+This project is source-first for SoarF5J Lua. Edit Lua under `src/SoarF5J`; treat `dist/SDCARD/WIDGETS/SoarF5J` as generated widget output inside the committed TX15 SD-card root.
 
 ## Top-Level Directories
 
 - `src/SoarF5J/`: maintainable EdgeTX widget source.
-- `dist/SDCARD/`: generated SD-card install root created by `make package`.
+- `dist/SDCARD/`: TX15 SD-card root. Most files are static SD-card content; `WIDGETS/SoarF5J` is refreshed by `make package`.
 - `docs/`: design notes, implementation plans, install notes, and simulator documentation.
-- `models/reference/`: external model archives or notes used for migration.
-- `models/tx15/`: TX15 model-template artifacts or notes.
+- `models/tx15/`: TX15 model-template artifacts and notes.
 - `tests/`: local Lua tests for state logic, widget behavior, setup pages, and packaging checks.
 - `tools/`: local linting and packaging scripts.
 
@@ -20,9 +19,9 @@ Runtime Lua loads files from `/WIDGETS/SoarF5J/` on the radio SD card. In this r
 dist/SDCARD/WIDGETS/SoarF5J/
 ```
 
-Run `make package` to rebuild it from `src/SoarF5J`.
+Run `make package` to rebuild only `dist/SDCARD/WIDGETS/SoarF5J` from `src/SoarF5J`. Other SD-card folders are preserved.
 
-Run `make clean` to remove generated SD-card output.
+Run `make clean` to remove the generated SoarF5J widget output.
 
 Run `make verify` before committing changes. It runs linting, rebuilds the package, and runs tests.
 
