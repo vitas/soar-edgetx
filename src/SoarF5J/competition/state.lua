@@ -60,6 +60,32 @@ function State.tick(state, inputs)
   return state
 end
 
+function State.capture_start_height(state, altitude)
+  if not state.height_capture_pending or not state.height_window_elapsed then
+    return state
+  end
+
+  if type(altitude) == "number" and altitude > 0 then
+    state.start_height = altitude
+  else
+    state.start_height = state.default_start_height
+  end
+
+  state.height_capture_pending = false
+  state.height_window_started_at = nil
+  state.height_window_elapsed = false
+
+  return state
+end
+
+function State.set_target_time(state, seconds)
+  if state.mode == "initial" and type(seconds) == "number" and seconds >= 0 then
+    state.target_time = seconds
+  end
+
+  return state
+end
+
 function State.trigger(state)
   if state.mode == "glide" then
     state.mode = "landing_points"
@@ -70,6 +96,8 @@ function State.trigger(state)
   elseif state.mode == "time_correction" then
     state.mode = "finished"
   elseif state.mode == "finished" then
+    State.arm(state)
+  elseif state.mode == "zero" then
     State.arm(state)
   end
 
