@@ -9,7 +9,7 @@ SDCARD/
   edgetx.sdcard.version
   RADIO/
   MODELS/
-  SOUNDS/
+  SOUNDS/        # local/untracked sound pack
   SCRIPTS/
   TEMPLATES/
   THEMES/
