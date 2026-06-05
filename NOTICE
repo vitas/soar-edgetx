@@ -1,0 +1,21 @@
+SoarF5J EdgeTX
+
+This project is derived from and inspired by SoarOTX and SoarETX.
+
+SoarOTX:
+  Author: Jesper Frickmann
+  License: GPL-2.0
+  URL: https://github.com/jfrickmann/SoarOTX
+  Role: Upstream behavioral reference
+
+SoarETX starter code:
+  Authors: Jesper Frickmann, Frankie Arzu, EdgeTX contributors
+  License headers: GPL-2.0
+  Source identity: Repo-owner supplied local snapshot; no stable public origin has been identified in this repo yet
+  Inspection path: /Users/vitas/Downloads/SoarETX
+  Inspected: 2026-06-05
+  Snapshot fingerprint: sha256:68e5e109740d80ece7a99c57b9af4982168f2f4d052f267b1d4abdc7bef2d831
+  Snapshot fingerprint method: find /Users/vitas/Downloads/SoarETX -type f ! -name '.DS_Store' -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256
+  Archive artifact: /Users/vitas/Downloads/SoarETX-2.1.4.zip
+  Archive artifact SHA-256: a0591e447bd9c96d60ade231267616cbd958caca300f22994cd89f8aae2a87fd
+  Role: Starter code supplied by the repo owner
