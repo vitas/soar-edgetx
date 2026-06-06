@@ -223,6 +223,10 @@ Use the vertical slider to adjust the flaperon position. The page writes the
 related global variables and temporarily enables the model adjustment mode while
 editing. When the page exits, it restores the previous adjustment state.
 
+The TX15 template uses the page's adjustment mode for these trim-button edits:
+aileron trim adjusts `Ail`, rudder trim adjusts `AiF`, elevator trim adjusts
+`CbA`, and throttle trim adjusts the thermal camber amount `GV10` / `CbX`.
+
 ### `setup/mixes`
 
 Edits mix-related global variables for the current flight mode:

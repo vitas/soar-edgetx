@@ -6,6 +6,43 @@ F5J-only EdgeTX color-radio widget and model-template project for the Radiomaste
 
 Early development. The first target is a TX15 SD-card package plus model-template documentation.
 
+## What It Can Do
+
+`SoarF5J` is an F5J-only EdgeTX color-radio widget for a TX15 model template.
+It is not a general SoarOTX replacement and does not include F3K, F5K,
+black-and-white radio support, or flight log saving.
+
+The competition page can:
+
+- Show the F5J contest state, target/flight timer, motor timer, landing points,
+  start height, and current flight mode.
+- Run the F5J launch, motor, glide, landing, and zero-result state flow.
+- Capture start height from altitude telemetry after the motor-off height
+  window.
+- Force a zero result when the motor is restarted after launch.
+- Sync the radio timers used by the template so normal EdgeTX timer voices and
+  warnings can still be used.
+
+The setup pages can:
+
+- Assign the model switches used for launch, motor, timer, and flight controls.
+- Edit flight-mode-specific mix global variables and battery warning level.
+- Reorder named output channels while preserving their mixer lines.
+- Align four-servo wing outputs and curves.
+- Tune airbrake flap and aileron curves.
+- Set aileron travel, aileron-to-flap, camber-to-aileron, and thermal camber
+  values, including trim-button adjustment for `Ail`, `AiF`, `CbA`, and
+  `GV10` / `CbX` in the TX15 template.
+- Display receiver battery telemetry and configure the low-battery warning
+  threshold.
+
+The repository also provides:
+
+- A TX15 EdgeTX model template under `models/tx15/`.
+- A generated SD-card package under `dist/SDCARD/`.
+- `make install-widget SDCARD=/path/to/card` for copying the current widget to
+  a mounted radio SD card.
+
 ## Structure
 
 - `src/SoarF5J/`: maintainable Lua source.

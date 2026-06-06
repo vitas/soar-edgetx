@@ -84,6 +84,14 @@ test("TX15 template assigns SoarF5J widget", function()
   assert(model:find("stringValue: \"competition/widget\"", 1, true) or model:find("stringValue: competition/widget", 1, true), "missing competition widget page")
 end)
 
+test("TX15 template maps throttle trim to GV10 CbX in aileron camber setup", function()
+  local model = command_output("unzip -p models/tx15/f5j_tmpl_t15.etx MODELS/model1.yml")
+
+  assert(model:find("name: CbX", 1, true), "missing GV10 CbX name")
+  assert(model:find("def: 9,Src,T3,1", 1, true), "missing T3 adjustment for GV10 CbX")
+  assert(not model:find("def: 6,Src,T3,1", 1, true), "T3 should not duplicate CbA adjustment")
+end)
+
 test("TX15 template has no legacy SoarOTX scripts, logs, or non-F5J sound references", function()
   local model = command_output("unzip -p models/tx15/f5j_tmpl_t15.etx MODELS/model1.yml")
   local forbidden = {

@@ -84,6 +84,7 @@ local GV_AIL = 0 -- Aileron travel
 local GV_AIL_TO_FLAP = 1 -- Aileron -> flap
 local GV_DIF = 3 -- Aileron differential
 local GV_CAMBER_TO_AIL = 6 -- Camber -> aileron
+local GV_THERMAL_CAMBER = 9 -- Thermal camber amount
 local GV_ADJUST_MODE = 7
 local ADJUST_MODE = 3
 
@@ -178,7 +179,8 @@ local function drawAdjustmentRows()
   local rows = {
     { "Aileron trim", "Ail", GV_AIL },
     { "Rudder trim", "AiF", GV_AIL_TO_FLAP },
-    { "Elevator trim", "CbA", GV_CAMBER_TO_AIL }
+    { "Elevator trim", "CbA", GV_CAMBER_TO_AIL },
+    { "Throttle trim", "CbX", GV_THERMAL_CAMBER }
   }
   local x = MARGIN
   local y = TOP
