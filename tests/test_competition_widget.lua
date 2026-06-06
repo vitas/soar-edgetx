@@ -23,6 +23,8 @@ local globalNames = {
   "getFlightMode",
   "getLogicalSwitchValue",
   "getValue",
+  "playNumber",
+  "UNIT_METERS",
   "loadScript"
 }
 
@@ -46,6 +48,7 @@ local function new_widget_env()
     switches = {},
     timerWrites = {},
     gvWrites = {},
+    playNumbers = {},
     drawTexts = {},
     drawTimers = {},
     timers = {
@@ -68,6 +71,7 @@ local function new_widget_env()
   DBLSIZE = 30
   XXLSIZE = 40
   RIGHT = 100
+  UNIT_METERS = 9
   EVT_VIRTUAL_ENTER = 1
   EVT_TOUCH_TAP = 2
   EVT_VIRTUAL_INC = 3
@@ -130,8 +134,17 @@ local function new_widget_env()
   function getValue(name)
     if name == "Alt+" then
       return env.altitude
+    elseif name == "Alt" then
+      return env.altitude
     end
     return nil
+  end
+
+  function playNumber(value, unit)
+    env.playNumbers[#env.playNumbers + 1] = {
+      value = value,
+      unit = unit
+    }
   end
 
   function loadScript(path)
@@ -324,6 +337,51 @@ widget_test("pending start height is captured after early landing trigger", func
   env.widget.refresh(nil, nil)
 
   assert_equal(latest_drawn_text(env, "87 m"), "87 m", "start height remains captured")
+end)
+
+widget_test("periodic altitude voice follows L8 after height window", function()
+  local env = new_widget_env()
+  env.switches[7] = true
+
+  env.flightMode = 2
+  env.widget.background()
+  env.now = 500
+  env.flightMode = 0
+  env.widget.background()
+
+  env.altitude = 87
+  env.now = 1600
+  env.widget.background()
+  assert_equal(#env.playNumbers, 1, "first altitude call count")
+  assert_equal(env.playNumbers[1].value, 87, "first altitude call value")
+  assert_equal(env.playNumbers[1].unit, UNIT_METERS, "first altitude call unit")
+
+  env.widget.background()
+  assert_equal(#env.playNumbers, 1, "same interval duplicate count")
+
+  env.altitude = 93
+  env.now = 2600
+  env.widget.background()
+  assert_equal(#env.playNumbers, 2, "second altitude call count")
+  assert_equal(env.playNumbers[2].value, 93, "second altitude call value")
+end)
+
+widget_test("periodic altitude voice is silent when L8 is off", function()
+  local env = new_widget_env()
+
+  env.flightMode = 2
+  env.widget.background()
+  env.now = 500
+  env.flightMode = 0
+  env.widget.background()
+
+  env.altitude = 87
+  env.now = 1600
+  env.widget.background()
+  env.now = 2600
+  env.widget.background()
+
+  assert_equal(#env.playNumbers, 0, "altitude call count")
 end)
 
 widget_test("zero result can recover to initial on enter", function()

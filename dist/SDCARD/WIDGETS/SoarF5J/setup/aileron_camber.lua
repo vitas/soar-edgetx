@@ -38,12 +38,16 @@ local MARGIN =    20
 local TOP =       HEADER + MARGIN
 local SLIDER_X =  LCD_W - 30
 local SLIDER_W =  50
-local SLIDER_H =  200
-local R2 =        (LCD_H - TOP - MARGIN) / 1.707
-local R1 =        R2 - 35
-local CTR_X =     LCD_W / 2
-local CTR_Y =     TOP + 0.707 * R2
+local SLIDER_H =  LCD_H - TOP - 2 * MARGIN
+local LEFT_W =    220
+local HELP_Y
+local HELP_W =    LEFT_W - 2 * MARGIN
+local R2 =        math.min(82, (LCD_W - LEFT_W - MARGIN - 50) / 2, (LCD_H - TOP - MARGIN) / 2)
+local R1 =        math.max(20, R2 - 24)
+local CTR_X =     LEFT_W + MARGIN + R2
+local CTR_Y =     TOP + (LCD_H - TOP - MARGIN) / 2
 local SML_H =     select(2, lcd.sizeText("", SMLSIZE))
+HELP_Y =          TOP + 4 * (SML_H + 4) + 10
 
 -- Setup warning prompt
 do
@@ -243,9 +247,9 @@ local function setup_gui()
 
     drawAdjustmentRows()
 
-    local txt = "Use the slider to adjust the flaperons to the position of maximum reflex.\n\n" ..
-                "Notice that camber can only move the flaperons down from this position."
-    lcd.drawTextLines(MARGIN, TOP + 70, CTR_X - 2 * MARGIN, LCD_H - TOP - MARGIN, txt, colors.primary1)
+    local txt = "Set maximum reflex with the slider.\n" ..
+                "Camber moves down from this position."
+    lcd.drawTextLines(MARGIN, HELP_Y, HELP_W, LCD_H - HELP_Y - MARGIN, txt, SMLSIZE + colors.primary1)
   end
 
   -- Close button

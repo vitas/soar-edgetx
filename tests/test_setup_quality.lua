@@ -148,6 +148,7 @@ local function setup_env(options)
   options = options or {}
 
   local env = {
+    drawCalls = {},
     drawTexts = {},
     drawTextLines = {},
     labels = {},
@@ -195,21 +196,27 @@ local function setup_env(options)
     bor = function(a, b) return (a or 0) + (b or 0) end
   }
 
+  local function recordDraw(method, ...)
+    env.drawCalls[#env.drawCalls + 1] = { method = method, args = { ... } }
+  end
+
   lcd = {
     clear = function() end,
-    drawFilledRectangle = function() end,
-    drawRectangle = function() end,
-    drawLine = function() end,
-    drawFilledCircle = function() end,
-    drawCircle = function() end,
-    drawPie = function() end,
-    drawAnnulus = function() end,
-    drawArc = function() end,
-    drawText = function(x, y, text)
+    drawFilledRectangle = function(...) recordDraw("drawFilledRectangle", ...) end,
+    drawRectangle = function(...) recordDraw("drawRectangle", ...) end,
+    drawLine = function(...) recordDraw("drawLine", ...) end,
+    drawFilledCircle = function(...) recordDraw("drawFilledCircle", ...) end,
+    drawCircle = function(...) recordDraw("drawCircle", ...) end,
+    drawPie = function(...) recordDraw("drawPie", ...) end,
+    drawAnnulus = function(...) recordDraw("drawAnnulus", ...) end,
+    drawArc = function(...) recordDraw("drawArc", ...) end,
+    drawText = function(x, y, text, flags)
+      recordDraw("drawText", x, y, text, flags)
       env.drawTexts[#env.drawTexts + 1] = tostring(text)
     end,
-    drawNumber = function() end,
-    drawTextLines = function(x, y, w, h, text)
+    drawNumber = function(...) recordDraw("drawNumber", ...) end,
+    drawTextLines = function(x, y, w, h, text, flags)
+      recordDraw("drawTextLines", x, y, w, h, text, flags)
       env.drawTextLines[#env.drawTextLines + 1] = tostring(text)
     end,
     exitFullScreen = function() end,
@@ -512,6 +519,55 @@ setup_quality_test("aileron camber cleanup restores previous GV8 mode", function
     if write.index == 7 and write.value == 1 then restoredPrevious = true end
   end
   assert(restoredPrevious, "aileron camber did not restore previous GV8 mode")
+end)
+
+setup_quality_test("aileron camber layout keeps diagram clear of copy", function()
+  local aileron = setup_env({
+    gvs = {
+      [0] = 57,
+      [1] = 24,
+      [3] = 0,
+      [6] = 153,
+      [9] = 33
+    }
+  })
+  load_setup_page("src/SoarF5J/setup/aileron_camber.lua", aileron)
+  aileron.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  aileron.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+  aileron.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  local diagram
+  local help
+  local throttle
+  for _, call in ipairs(aileron.drawCalls) do
+    if call.method == "drawPie" and not diagram then
+      diagram = {
+        x = call.args[1],
+        y = call.args[2],
+        r = call.args[3]
+      }
+    elseif call.method == "drawTextLines" and tostring(call.args[5]):find("maximum reflex", 1, true) then
+      help = {
+        x = call.args[1],
+        y = call.args[2],
+        w = call.args[3]
+      }
+    elseif call.method == "drawText" and call.args[3] == "Throttle trim" then
+      throttle = {
+        y = call.args[2]
+      }
+    end
+  end
+
+  assert(diagram, "missing aileron/camber diagram")
+  assert(help, "missing aileron/camber help copy")
+  assert(throttle, "missing throttle trim row")
+  local smallTextH = select(2, lcd.sizeText("", SMLSIZE))
+  assert(diagram.y - diagram.r >= 44, "diagram overlaps top bar")
+  assert(diagram.x - diagram.r >= 220, "diagram overlaps trim/help copy column")
+  assert(diagram.x + diagram.r <= LCD_W - 50, "diagram overlaps slider area")
+  assert(throttle.y + smallTextH + 8 <= help.y, "help copy overlaps trim rows")
+  assert(help.x + help.w <= diagram.x - diagram.r, "help copy overlaps diagram")
 end)
 
 setup_quality_test("wing alignment cleanup tracks owned GV8 state", function()

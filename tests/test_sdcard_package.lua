@@ -92,6 +92,13 @@ test("TX15 template maps throttle trim to GV10 CbX in aileron camber setup", fun
   assert(not model:find("def: 6,Src,T3,1", 1, true), "T3 should not duplicate CbA adjustment")
 end)
 
+test("TX15 template does not bind altitude report switch to speed mode", function()
+  local model = command_output("unzip -p models/tx15/f5j_tmpl_t15.etx MODELS/model1.yml")
+
+  assert(model:find("def: SB2,L1", 1, true), "missing voice-reporting default for L8 altitude reports")
+  assert(not model:find("def: SC0,L1", 1, true), "altitude reports should not default to SC down speed mode")
+end)
+
 test("TX15 template has no legacy SoarOTX scripts, logs, or non-F5J sound references", function()
   local model = command_output("unzip -p models/tx15/f5j_tmpl_t15.etx MODELS/model1.yml")
   local forbidden = {

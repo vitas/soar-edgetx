@@ -19,12 +19,14 @@ local widget, soarGlobals = ...
 local State = loadScript(soarGlobals.path .. "competition/state.lua")()
 local colors = soarGlobals.libGUI.colors
 
+local LS_ALT10 = 7
 local LS_TRIGGER = 8
 local LS_ARM = 22
 local GV_FLIGHT_TIMER = 8
 local FM_LAUNCH = 2
 local DEFAULT_TARGET_TIME = 600
 local DEFAULT_START_HEIGHT = 100
+local ALTITUDE_CALL_INTERVAL = 10
 
 local state
 local prevArm
@@ -32,6 +34,7 @@ local prevTrigger
 local lastMotorOn
 local heightRemaining = 0
 local flightTimerRunning
+local nextAltitudeCall = 0
 
 local modeLabels = {
   initial = "Ready",
@@ -117,6 +120,13 @@ local function read_start_altitude()
     return nil
   end
   return getValue("Alt+")
+end
+
+local function read_current_altitude()
+  if type(getValue) ~= "function" then
+    return nil
+  end
+  return getValue("Alt")
 end
 
 local function flight_mode_is_motor()
@@ -222,6 +232,22 @@ local function update_height_window(now)
   end
 end
 
+local function report_altitude(now)
+  if state.height_capture_pending or not getLogicalSwitchValue(LS_ALT10) then
+    return
+  end
+
+  if now < nextAltitudeCall then
+    return
+  end
+
+  local altitude = read_current_altitude()
+  if type(altitude) == "number" and type(playNumber) == "function" then
+    playNumber(altitude, UNIT_METERS or 0)
+    nextAltitudeCall = now + ALTITUDE_CALL_INTERVAL
+  end
+end
+
 local function run_runtime(event)
   local now = now_seconds()
   local motorOn = flight_mode_is_motor()
@@ -234,6 +260,7 @@ local function run_runtime(event)
 
   if armEdge then
     initialize_flight(true)
+    nextAltitudeCall = 0
   end
 
   if state.height_capture_pending then
@@ -259,6 +286,7 @@ local function run_runtime(event)
       zero_result()
     else
       update_height_window(now)
+      report_altitude(now)
       if triggerEdge then
         advance_scoring_state()
       end

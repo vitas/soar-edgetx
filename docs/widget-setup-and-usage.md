@@ -172,6 +172,11 @@ The page currently covers:
 Use the drop-down fields to select the desired physical switch position for
 each function.
 
+The TX15 template defaults the 10-second altitude report switch to the same
+physical switch used for voice reporting. The competition widget reads that
+logical switch during glide and calls the current `Alt` telemetry value every
+10 seconds after the F5J height window has closed.
+
 ### `setup/outputs`
 
 Configures named output channels.
