@@ -62,7 +62,7 @@ The simulator cannot fully verify without TX15 hardware and telemetry:
 
 - Physical switch, slider, and added-slider behavior.
 - Live motor safety behavior with a real ESC.
-- Vario/altitude telemetry and F5J start-height capture.
+- Vario/altitude telemetry and F5J maximum-altitude capture.
 - RF, receiver, and sensor integration.
 - Field timing workflow under contest pressure.
 

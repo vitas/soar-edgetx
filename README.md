@@ -14,11 +14,11 @@ black-and-white radio support, or flight log saving.
 
 The competition page can:
 
-- Show the F5J contest state, target/flight timer, motor timer, landing points,
-  start height, and current flight mode.
-- Run the F5J launch, motor, glide, landing, and zero-result state flow.
-- Capture start height from altitude telemetry after the motor-off height
-  window.
+- Show the F5J contest state, target/flight timer, motor timer, maximum launch
+  altitude, and current flight mode.
+- Run the F5J launch, motor, glide, finish, and zero-result state flow.
+- Capture maximum altitude from `Alt+` telemetry during motor run and the
+  10-second window after motor-off.
 - Force a zero result when the motor is restarted after launch.
 - Sync the radio timers used by the template so normal EdgeTX timer voices and
   warnings can still be used.

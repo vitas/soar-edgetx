@@ -215,6 +215,15 @@ local function latest_drawn_text(env, prefix)
   return nil
 end
 
+local function drawn_text_exists(env, exact)
+  for _, entry in ipairs(env.drawTexts) do
+    if entry.text == exact then
+      return true
+    end
+  end
+  return false
+end
+
 local function widget_test(name, fn)
   test(name, function()
     local ok, err = pcall(fn)
@@ -252,6 +261,7 @@ widget_test("competition timers are drawn in separated vertical rows", function(
   env.widget.refresh(nil, nil)
 
   assert_equal(#env.drawTimers, 2, "timer draw count")
+  assert_equal(env.drawTimers[1].y >= 54, true, "first timer starts lower on page")
   assert_equal(env.drawTimers[2].y - env.drawTimers[1].y >= 64, true, "timer row spacing")
 end)
 
@@ -265,6 +275,52 @@ widget_test("explicit arm and target adjustment still write timer 0", function()
 
   env.widget.refresh(EVT_VIRTUAL_INC, nil)
   assert_equal(count_timer_writes(env, 0) > afterArm, true, "target adjustment timer write")
+end)
+
+widget_test("target time follows edited timer value while ready", function()
+  local env = new_widget_env()
+
+  env.timers[0].value = 480
+  env.widget.background()
+  env.widget.background()
+  env.drawTimers = {}
+  env.widget.refresh(nil, nil)
+
+  assert_equal(env.drawTimers[1].value, 480, "ready target timer")
+end)
+
+widget_test("target time follows edited timer start while ready", function()
+  local env = new_widget_env()
+
+  env.widget.background()
+  env.timers[0].start = 420
+  env.widget.background()
+  env.drawTimers = {}
+  env.widget.refresh(nil, nil)
+
+  assert_equal(env.drawTimers[1].value, 420, "ready target timer")
+end)
+
+widget_test("reset after finished ignores stale countdown timer value", function()
+  local env = new_widget_env()
+
+  env.widget.background()
+  env.flightMode = 2
+  env.widget.background()
+  env.flightMode = 0
+  env.timers[0].value = 541
+  env.widget.background()
+
+  env.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_equal(latest_drawn_text(env, "Finished"), "Finished", "finished label")
+
+  env.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  env.timers[0].value = 541
+  env.drawTimers = {}
+  env.widget.background()
+  env.widget.refresh(nil, nil)
+
+  assert_equal(env.drawTimers[1].value, 600, "reset target timer")
 end)
 
 widget_test("GV8 writes only on flight timer transitions", function()
@@ -296,16 +352,14 @@ widget_test("GV8 writes only on flight timer transitions", function()
 
   env.timers[0].value = 540
   env.widget.refresh(EVT_VIRTUAL_ENTER, nil)
-  assert_equal(gv_values(env, 8), "0,1,1,0", "scoring GV8")
+  assert_equal(latest_drawn_text(env, "Finished"), "Finished", "finished label")
+  assert_equal(gv_values(env, 8), "0,1,1,0", "finished GV8")
 
-  local afterScoring = count_gv_writes(env, 8)
+  local afterFinished = count_gv_writes(env, 8)
   env.widget.background()
   env.widget.refresh(nil, nil)
-  assert_equal(count_gv_writes(env, 8), afterScoring, "idle scoring GV8")
+  assert_equal(count_gv_writes(env, 8), afterFinished, "idle finished GV8")
 
-  env.widget.refresh(EVT_VIRTUAL_ENTER, nil)
-  env.widget.refresh(EVT_VIRTUAL_ENTER, nil)
-  env.widget.refresh(EVT_VIRTUAL_ENTER, nil)
   local beforeFinishedReset = count_gv_writes(env, 8)
   env.widget.refresh(EVT_VIRTUAL_ENTER, nil)
 
@@ -313,30 +367,39 @@ widget_test("GV8 writes only on flight timer transitions", function()
   assert_equal(gv_values(env, 8), "0,1,1,0,0", "finished reset GV8 values")
 end)
 
-widget_test("pending start height is captured after early landing trigger", function()
+widget_test("max altitude tracks motor and height window after early finish", function()
   local env = new_widget_env()
 
+  env.altitude = 44
   env.flightMode = 2
+  env.widget.background()
+  env.altitude = 60
   env.widget.background()
   env.now = 500
   env.flightMode = 0
   env.widget.background()
   env.widget.refresh(EVT_VIRTUAL_ENTER, nil)
 
-  env.now = 1600
+  assert_equal(latest_drawn_text(env, "Finished"), "Finished", "finished after trigger")
+
+  env.now = 1400
   env.altitude = 87
   env.drawTexts = {}
   env.widget.background()
   env.widget.refresh(nil, nil)
 
-  assert_equal(latest_drawn_text(env, "87 m"), "87 m", "captured start height")
+  assert_equal(latest_drawn_text(env, "87 m"), "87 m", "captured max altitude")
 
+  env.now = 1600
   env.altitude = 123
   env.drawTexts = {}
   env.widget.background()
   env.widget.refresh(nil, nil)
 
-  assert_equal(latest_drawn_text(env, "87 m"), "87 m", "start height remains captured")
+  assert_equal(latest_drawn_text(env, "87 m"), "87 m", "max altitude remains captured")
+  assert_equal(drawn_text_exists(env, "Landing"), false, "landing label")
+  assert_equal(drawn_text_exists(env, "Start h"), false, "start height label")
+  assert_equal(drawn_text_exists(env, "Max alt"), true, "max altitude label")
 end)
 
 widget_test("periodic altitude voice follows L8 after height window", function()
@@ -406,7 +469,7 @@ widget_test("zero result can recover to initial on enter", function()
   env.widget.refresh(EVT_VIRTUAL_ENTER, nil)
 
   assert_equal(latest_drawn_text(env, "Ready"), "Ready", "ready label")
-  assert_equal(latest_drawn_text(env, "Mode: initial"), "Mode: initial", "initial mode")
+  assert_equal(drawn_text_exists(env, "Mode: initial"), false, "initial mode footer")
   assert_equal(count_timer_writes(env, 0) > 0, true, "timer reset")
   assert_equal(gv_values(env, 8), "0", "GV8 reset")
 end)

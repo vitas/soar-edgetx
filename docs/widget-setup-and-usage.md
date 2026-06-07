@@ -127,7 +127,9 @@ also clears temporary adjustment modes used by that page.
 
 ## Navigation
 
-The shared GUI uses the normal EdgeTX virtual events:
+The shared GUI uses the normal EdgeTX virtual events. EdgeTX sends these events
+to widgets only in full-screen mode, so open the widget full-screen before using
+the keys below:
 
 - `Next` / `Prev`: move focus between controls.
 - `Enter`: open a page, activate a button, start editing a number, or confirm.
@@ -273,24 +275,40 @@ The competition widget shows:
 - F5J state.
 - Target or flight timer.
 - Motor timer.
-- Landing points.
-- Start height.
+- Maximum launch altitude.
 
-The target time is read from Timer 1. If Timer 1 has no usable start value, the
-widget falls back to 10 minutes.
+The working-window target time is read from Timer 1. EdgeTX shows this as
+`Timer 1` in the model setup, while Lua accesses it as timer index `0`. If
+Timer 1 has no usable start or current value, the widget falls back to 10
+minutes.
+
+To change the working window in the emulator or on the radio, keep the widget in
+the `Ready` state and change Timer 1. Editing the Timer 1 `Start` value changes
+the configured model default. Editing the current Timer 1 value while the widget
+is ready before the first launch also updates the visible target time. To use
+the widget `Inc` / `Dec` controls, first open the competition widget full-screen;
+EdgeTX does not send those key events to the normal main-view widget after radio
+startup. After the widget has started or reset a flight, stale Timer 1 countdown
+values are ignored so the next flight does not inherit the previous remaining
+time.
+
+To reset the working-window timer back to the target time, use the model's arm
+or reset control while the widget is on the competition page. After a flight,
+press the trigger or `Enter` once to finish timing, then press it again from the
+`Finished` or `Zero result` state to reset for the next flight.
 
 Basic flow:
 
 1. Arm or reset the flight using the model's configured arm control.
-2. In the initial state, use `Inc` / `Dec` to adjust target time in one-minute
-   steps if needed.
+2. In the initial state, open the widget full-screen and use `Inc` / `Dec` to
+   adjust target time in one-minute steps if needed.
 3. Start the motor using the model's launch/motor flight mode.
 4. When the motor stops, the widget moves to glide timing.
-5. The widget captures start height from `Alt+` after the F5J height window.
-6. Press the configured trigger, `Enter`, or tap the widget to move through
-   scoring fields.
-7. Adjust landing points, start height, or time correction with `Inc` / `Dec`.
-8. Confirm through the final scoring states with the trigger or `Enter`.
+5. The widget tracks maximum altitude from `Alt+` during motor run and for 10
+   seconds after motor-off.
+6. Press the configured trigger, `Enter`, or tap the widget to finish timing.
+7. Press the trigger or `Enter` again from the finished state to reset for the
+   next flight.
 
 Restarting the motor after glide has started produces a zero result. The widget
 does not save flight logs.

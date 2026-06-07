@@ -25,7 +25,6 @@ local LS_ARM = 22
 local GV_FLIGHT_TIMER = 8
 local FM_LAUNCH = 2
 local DEFAULT_TARGET_TIME = 600
-local DEFAULT_START_HEIGHT = 100
 local ALTITUDE_CALL_INTERVAL = 10
 
 local state
@@ -35,14 +34,14 @@ local lastMotorOn
 local heightRemaining = 0
 local flightTimerRunning
 local nextAltitudeCall = 0
+local observedTimerStart
+local observedTimerValue
+local allowTimerValueTargetSync = true
 
 local modeLabels = {
   initial = "Ready",
   motor = "Motor ON",
   glide = "Glide",
-  landing_points = "Landing points",
-  start_height = "Start height",
-  time_correction = "Time correction",
   finished = "Finished",
   zero = "Zero result"
 }
@@ -77,15 +76,43 @@ end
 
 local function read_target_time()
   local timer = read_timer(0)
-  local target = timer_number(timer.start, timer_number(timer.value, DEFAULT_TARGET_TIME))
-  if target <= 0 then
+  local start = timer_number(timer.start, 0)
+  local value = timer_number(timer.value, 0)
+  local target = state and state.target_time or nil
+
+  if observedTimerStart == nil and observedTimerValue == nil then
+    if start > 0 then
+      target = start
+    elseif value > 0 then
+      target = value
+    end
+  elseif start > 0 and start ~= observedTimerStart then
+    target = start
+  elseif allowTimerValueTargetSync and value > 0 and value ~= observedTimerValue then
+    target = value
+  elseif type(target) ~= "number" or target <= 0 then
+    if start > 0 then
+      target = start
+    elseif value > 0 then
+      target = value
+    end
+  end
+
+  observedTimerStart = start
+  observedTimerValue = value
+
+  if type(target) ~= "number" or target <= 0 then
     return DEFAULT_TARGET_TIME
   end
   return target
 end
 
 local function set_timer(index, values)
-  model.setTimer(index, values)
+  local timer = read_timer(index)
+  for key, value in pairs(values) do
+    timer[key] = value
+  end
+  model.setTimer(index, timer)
 end
 
 local function set_flight_timer_running(running, force)
@@ -100,6 +127,13 @@ local function reset_radio_timers()
   local target = state.target_time or read_target_time()
   set_timer(0, { start = target, value = target })
   set_timer(1, { start = 0, value = 0 })
+  if type(model.resetTimer) == "function" then
+    model.resetTimer(0)
+    model.resetTimer(1)
+  end
+  observedTimerStart = target
+  observedTimerValue = target
+  allowTimerValueTargetSync = false
 end
 
 local function initialize_flight(resetAltitude)
@@ -115,7 +149,7 @@ local function initialize_flight(resetAltitude)
   end
 end
 
-local function read_start_altitude()
+local function read_max_altitude()
   if type(getValue) ~= "function" then
     return nil
   end
@@ -194,13 +228,6 @@ local function adjust_current_field(delta)
 
   if state.mode == "initial" then
     set_target_time((state.target_time or read_target_time()) + delta * 60)
-  elseif state.mode == "landing_points" then
-    state.landing_points = clamp(state.landing_points + delta * 5, 0, 50)
-  elseif state.mode == "start_height" then
-    state.start_height = clamp(state.start_height + delta, 0, 1000)
-  elseif state.mode == "time_correction" then
-    state.flight_time = clamp((state.flight_time or 0) + delta, 0, 3600)
-    set_timer(0, { value = state.flight_time })
   end
 end
 
@@ -218,6 +245,7 @@ local function advance_scoring_state()
 end
 
 local function update_height_window(now)
+  State.capture_max_altitude(state, read_max_altitude(), now)
   State.tick(state, { now = now })
 
   if state.height_capture_pending and state.height_window_started_at then
@@ -227,7 +255,6 @@ local function update_height_window(now)
   end
 
   if state.height_window_elapsed then
-    State.capture_start_height(state, read_start_altitude())
     heightRemaining = 0
   end
 end
@@ -273,10 +300,12 @@ local function run_runtime(event)
 
     if motorOn then
       State.motor_started(state)
+      State.capture_max_altitude(state, read_max_altitude(), now)
       reset_radio_timers()
       set_flight_timer_running(true, true)
     end
   elseif state.mode == "motor" then
+    State.capture_max_altitude(state, read_max_altitude(), now)
     if not motorOn then
       State.motor_stopped(state, now)
       set_flight_timer_running(true, true)
@@ -290,20 +319,6 @@ local function run_runtime(event)
       if triggerEdge then
         advance_scoring_state()
       end
-    end
-  elseif state.mode == "landing_points" then
-    if motorOn and not lastMotorOn then
-      zero_result()
-    else
-      adjust_current_field(event_delta(event))
-      if triggerEdge then
-        advance_scoring_state()
-      end
-    end
-  elseif state.mode == "start_height" or state.mode == "time_correction" then
-    adjust_current_field(event_delta(event))
-    if triggerEdge then
-      advance_scoring_state()
     end
   elseif state.mode == "finished" then
     if triggerEdge then
@@ -349,8 +364,9 @@ local function draw()
   local h = widget.zone.h
   local pad = 8
   local headerH = 26
+  local textYOffset = 20
   local right = w - pad
-  local rowY = headerH + pad
+  local rowY = headerH + pad + textYOffset
   local compact = h < 190
   local timerSize = compact and DBLSIZE or XXLSIZE
   local labelSize = compact and MIDSIZE or DBLSIZE
@@ -360,8 +376,8 @@ local function draw()
 
   lcd.drawFilledRectangle(0, 0, w, h, colors.secondary3)
   lcd.drawFilledRectangle(0, 0, w, headerH, colors.secondary1)
-  lcd.drawText(pad, 5, "F5J", colors.primary3 + DBLSIZE)
-  lcd.drawText(right, 7, status_text(), colors.primary3 + MIDSIZE + RIGHT)
+  lcd.drawText(pad, 5 + textYOffset, "F5J", colors.primary3 + DBLSIZE)
+  lcd.drawText(right, 7 + textYOffset, status_text(), colors.primary3 + MIDSIZE + RIGHT)
 
   lcd.drawText(pad, rowY + 8, state.mode == "initial" and "Target" or "Flight", colors.primary2 + labelSize)
   lcd.drawTimer(right, rowY, flight_timer_value(), timerFlags)
@@ -371,15 +387,10 @@ local function draw()
   lcd.drawTimer(right, rowY, motor_timer_value(), timerFlags)
 
   rowY = rowY + metricGap
-  local colW = math.floor((w - pad * 3) / 2)
-  draw_metric("Landing", state.landing_points, " pt", pad, rowY, colW)
-  draw_metric("Start h", state.start_height, " m", pad * 2 + colW, rowY, colW)
-
-  rowY = rowY + 24
-  lcd.drawText(pad, rowY, "Mode: " .. state.mode, colors.primary2 + SMLSIZE)
+  draw_metric("Max alt", state.max_altitude or 0, " m", pad, rowY, w - 2 * pad)
 end
 
-state = State.new({ target_time = read_target_time(), start_height = DEFAULT_START_HEIGHT })
+state = State.new({ target_time = read_target_time() })
 prevArm = getLogicalSwitchValue(LS_ARM)
 prevTrigger = getLogicalSwitchValue(LS_TRIGGER)
 lastMotorOn = flight_mode_is_motor()

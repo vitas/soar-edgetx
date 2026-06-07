@@ -2,8 +2,7 @@ local State = {}
 
 local function reset_flight(state)
   state.mode = "initial"
-  state.landing_points = 0
-  state.start_height = state.default_start_height
+  state.max_altitude = 0
   state.flight_time = nil
   state.result = nil
   state.zero_result = false
@@ -19,7 +18,6 @@ function State.new(opts)
 
   local state = {
     target_time = opts.target_time,
-    default_start_height = opts.start_height or 100,
   }
 
   reset_flight(state)
@@ -55,25 +53,28 @@ function State.tick(state, inputs)
 
   if state.height_capture_pending and state.height_window_started_at and inputs.now then
     state.height_window_elapsed = (inputs.now - state.height_window_started_at) >= 10
+    if state.height_window_elapsed then
+      state.height_capture_pending = false
+      state.height_window_started_at = nil
+    end
   end
 
   return state
 end
 
-function State.capture_start_height(state, altitude)
-  if not state.height_capture_pending or not state.height_window_elapsed then
+function State.capture_max_altitude(state, altitude, now)
+  if type(altitude) ~= "number" or altitude <= 0 then
     return state
   end
 
-  if type(altitude) == "number" and altitude > 0 then
-    state.start_height = altitude
-  else
-    state.start_height = state.default_start_height
+  local active = state.mode == "motor"
+  if not active and state.height_capture_pending and state.height_window_started_at and type(now) == "number" then
+    active = (now - state.height_window_started_at) <= 10
   end
 
-  state.height_capture_pending = false
-  state.height_window_started_at = nil
-  state.height_window_elapsed = false
+  if active and altitude > state.max_altitude then
+    state.max_altitude = altitude
+  end
 
   return state
 end
@@ -88,12 +89,6 @@ end
 
 function State.trigger(state)
   if state.mode == "glide" then
-    state.mode = "landing_points"
-  elseif state.mode == "landing_points" then
-    state.mode = "start_height"
-  elseif state.mode == "start_height" then
-    state.mode = "time_correction"
-  elseif state.mode == "time_correction" then
     state.mode = "finished"
   elseif state.mode == "finished" then
     State.arm(state)
@@ -105,11 +100,11 @@ function State.trigger(state)
 end
 
 function State.restart_motor(state)
-  if state.mode == "glide" or state.mode == "landing_points" then
+  if state.mode == "glide" then
     state.mode = "zero"
     state.flight_time = 0
     state.result = 0
-    state.start_height = 0
+    state.max_altitude = 0
     state.zero_result = true
     state.motor_restarted = true
     state.timing_active = false
