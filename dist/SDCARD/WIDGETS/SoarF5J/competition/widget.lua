@@ -25,7 +25,10 @@ local LS_ARM = 22
 local GV_FLIGHT_TIMER = 8
 local FM_LAUNCH = 2
 local DEFAULT_TARGET_TIME = 600
+local TARGET_TIME_STEP = 60
 local ALTITUDE_CALL_INTERVAL = 10
+local FLIGHT_TIMER_COLOR = lcd.RGB(0, 70, 20)
+local MOTOR_TIMER_COLOR = lcd.RGB(110, 0, 0)
 
 local state
 local prevArm
@@ -101,7 +104,7 @@ local function read_target_time()
   observedTimerStart = start
   observedTimerValue = value
 
-  if type(target) ~= "number" or target <= 0 then
+  if type(target) ~= "number" or target < 0 then
     return DEFAULT_TARGET_TIME
   end
   return target
@@ -196,14 +199,29 @@ local function sync_target_from_timer()
 end
 
 local function set_target_time(seconds)
-  State.set_target_time(state, clamp(seconds, 1, 3600))
+  State.set_target_time(state, clamp(seconds, 0, 3600))
   reset_radio_timers()
+end
+
+local function step_target_time(seconds, delta)
+  local current = clamp(timer_number(seconds, DEFAULT_TARGET_TIME), 0, 3600)
+  local minutes
+
+  if delta > 0 then
+    minutes = math.floor(current / TARGET_TIME_STEP)
+  elseif delta < 0 then
+    minutes = math.ceil(current / TARGET_TIME_STEP)
+  else
+    return current
+  end
+
+  return clamp((minutes + delta) * TARGET_TIME_STEP, 0, 3600)
 end
 
 local function record_flight_time()
   local timer = read_timer(0)
   local start = timer_number(timer.start, state.target_time or DEFAULT_TARGET_TIME)
-  local value = timer_number(timer.value, start)
+  local value = clamp(timer_number(timer.value, start), 0, start)
   local elapsed = start - value
 
   if elapsed < 0 then
@@ -221,13 +239,25 @@ local function zero_result()
   set_flight_timer_running(false, true)
 end
 
+local function enforce_flight_timer_floor()
+  local value = timer_number(read_timer(0).value, state.target_time or DEFAULT_TARGET_TIME)
+
+  if value < 0 then
+    set_timer(0, { value = 0 })
+  end
+
+  if value <= 0 then
+    set_flight_timer_running(false, false)
+  end
+end
+
 local function adjust_current_field(delta)
   if delta == 0 then
     return
   end
 
   if state.mode == "initial" then
-    set_target_time((state.target_time or read_target_time()) + delta * 60)
+    set_target_time(step_target_time(state.target_time or read_target_time(), delta))
   end
 end
 
@@ -309,11 +339,14 @@ local function run_runtime(event)
     if not motorOn then
       State.motor_stopped(state, now)
       set_flight_timer_running(true, true)
+    else
+      enforce_flight_timer_floor()
     end
   elseif state.mode == "glide" then
     if motorOn and not lastMotorOn then
       zero_result()
     else
+      enforce_flight_timer_floor()
       update_height_window(now)
       report_altitude(now)
       if triggerEdge then
@@ -347,7 +380,7 @@ local function flight_timer_value()
     return state.flight_time
   end
 
-  return timer_number(read_timer(0).value, state.target_time or DEFAULT_TARGET_TIME)
+  return math.max(0, timer_number(read_timer(0).value, state.target_time or DEFAULT_TARGET_TIME))
 end
 
 local function motor_timer_value()
@@ -355,7 +388,7 @@ local function motor_timer_value()
 end
 
 local function draw_metric(label, value, suffix, x, y, w)
-  lcd.drawText(x, y, label, colors.primary2 + SMLSIZE)
+  lcd.drawText(x, y, label, colors.primary3 + SMLSIZE)
   lcd.drawText(x + w, y, tostring(value) .. suffix, colors.primary1 + MIDSIZE + RIGHT)
 end
 
@@ -372,19 +405,20 @@ local function draw()
   local labelSize = compact and MIDSIZE or DBLSIZE
   local timerGap = compact and 46 or 68
   local metricGap = compact and 42 or 54
-  local timerFlags = colors.primary1 + timerSize + RIGHT
+  local flightTimerFlags = FLIGHT_TIMER_COLOR + timerSize + RIGHT
+  local motorTimerFlags = MOTOR_TIMER_COLOR + timerSize + RIGHT
 
   lcd.drawFilledRectangle(0, 0, w, h, colors.secondary3)
   lcd.drawFilledRectangle(0, 0, w, headerH, colors.secondary1)
-  lcd.drawText(pad, 5 + textYOffset, "F5J", colors.primary3 + DBLSIZE)
+  lcd.drawText(pad, 5 + textYOffset, "F5J", colors.primary3 + MIDSIZE)
   lcd.drawText(right, 7 + textYOffset, status_text(), colors.primary3 + MIDSIZE + RIGHT)
 
-  lcd.drawText(pad, rowY + 8, state.mode == "initial" and "Target" or "Flight", colors.primary2 + labelSize)
-  lcd.drawTimer(right, rowY, flight_timer_value(), timerFlags)
+  lcd.drawText(pad, rowY + 8, state.mode == "initial" and "Target" or "Flight", colors.primary3 + labelSize)
+  lcd.drawTimer(right, rowY, flight_timer_value(), flightTimerFlags)
 
   rowY = rowY + timerGap
-  lcd.drawText(pad, rowY + 8, "Motor", colors.primary2 + labelSize)
-  lcd.drawTimer(right, rowY, motor_timer_value(), timerFlags)
+  lcd.drawText(pad, rowY + 8, "Motor", colors.primary3 + labelSize)
+  lcd.drawTimer(right, rowY, motor_timer_value(), motorTimerFlags)
 
   rowY = rowY + metricGap
   draw_metric("Max alt", state.max_altitude or 0, " m", pad, rowY, w - 2 * pad)

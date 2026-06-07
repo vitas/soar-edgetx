@@ -87,12 +87,16 @@ local function new_widget_env()
         flags = flags
       }
     end,
-    drawText = function(x, y, text)
+    drawText = function(x, y, text, flags)
       env.drawTexts[#env.drawTexts + 1] = {
         x = x,
         y = y,
-        text = tostring(text)
+        text = tostring(text),
+        flags = flags
       }
+    end,
+    RGB = function(r, g, b)
+      return 1000000 + r * 10000 + g * 100 + b
     end
   }
 
@@ -215,6 +219,15 @@ local function latest_drawn_text(env, prefix)
   return nil
 end
 
+local function latest_drawn_entry(env, exact)
+  for i = #env.drawTexts, 1, -1 do
+    if env.drawTexts[i].text == exact then
+      return env.drawTexts[i]
+    end
+  end
+  return nil
+end
+
 local function drawn_text_exists(env, exact)
   for _, entry in ipairs(env.drawTexts) do
     if entry.text == exact then
@@ -265,6 +278,21 @@ widget_test("competition timers are drawn in separated vertical rows", function(
   assert_equal(env.drawTimers[2].y - env.drawTimers[1].y >= 64, true, "timer row spacing")
 end)
 
+widget_test("competition labels and timers use contest colors", function()
+  local env = new_widget_env()
+  env.widget.zone.h = 220
+
+  env.widget.refresh(nil, nil)
+
+  assert_equal(latest_drawn_entry(env, "F5J").flags, COLOR_THEME_PRIMARY3 + MIDSIZE, "model title size")
+  assert_equal(latest_drawn_entry(env, "Ready").flags, COLOR_THEME_PRIMARY3 + MIDSIZE + RIGHT, "ready label color")
+  assert_equal(latest_drawn_entry(env, "Target").flags, COLOR_THEME_PRIMARY3 + DBLSIZE, "target label color")
+  assert_equal(latest_drawn_entry(env, "Motor").flags, COLOR_THEME_PRIMARY3 + DBLSIZE, "motor label color")
+  assert_equal(latest_drawn_entry(env, "Max alt").flags, COLOR_THEME_PRIMARY3 + SMLSIZE, "altitude label color")
+  assert_equal(env.drawTimers[1].flags, lcd.RGB(0, 70, 20) + XXLSIZE + RIGHT, "flight timer color")
+  assert_equal(env.drawTimers[2].flags, lcd.RGB(110, 0, 0) + XXLSIZE + RIGHT, "motor timer color")
+end)
+
 widget_test("explicit arm and target adjustment still write timer 0", function()
   local env = new_widget_env()
 
@@ -275,6 +303,39 @@ widget_test("explicit arm and target adjustment still write timer 0", function()
 
   env.widget.refresh(EVT_VIRTUAL_INC, nil)
   assert_equal(count_timer_writes(env, 0) > afterArm, true, "target adjustment timer write")
+end)
+
+widget_test("target adjustment reaches zero without one second residue", function()
+  local env = new_widget_env()
+
+  env.timers[0].start = 60
+  env.timers[0].value = 60
+  env.widget.background()
+
+  env.widget.refresh(EVT_VIRTUAL_DEC, nil)
+  env.widget.background()
+  env.drawTimers = {}
+  env.widget.refresh(nil, nil)
+  assert_equal(env.drawTimers[1].value, 0, "zero target timer")
+
+  env.widget.refresh(EVT_VIRTUAL_INC, nil)
+  env.drawTimers = {}
+  env.widget.refresh(nil, nil)
+  assert_equal(env.drawTimers[1].value, 60, "one minute target timer")
+end)
+
+widget_test("target adjustment normalizes stale one second residue", function()
+  local env = new_widget_env()
+
+  env.timers[0].start = 1
+  env.timers[0].value = 1
+  env.widget.background()
+
+  env.widget.refresh(EVT_VIRTUAL_INC, nil)
+  env.drawTimers = {}
+  env.widget.refresh(nil, nil)
+
+  assert_equal(env.drawTimers[1].value, 60, "normalized target timer")
 end)
 
 widget_test("target time follows edited timer value while ready", function()
@@ -321,6 +382,24 @@ widget_test("reset after finished ignores stale countdown timer value", function
   env.widget.refresh(nil, nil)
 
   assert_equal(env.drawTimers[1].value, 600, "reset target timer")
+end)
+
+widget_test("flight timer display clamps countdown below zero", function()
+  local env = new_widget_env()
+
+  env.widget.background()
+  env.flightMode = 2
+  env.widget.background()
+  env.flightMode = 0
+  env.widget.background()
+  env.now = 1200
+  env.timers[0].value = -262
+  env.drawTimers = {}
+  env.widget.refresh(nil, nil)
+
+  assert_equal(latest_drawn_text(env, "Glide"), "Glide", "glide label")
+  assert_equal(env.drawTimers[1].value, 0, "flight timer value")
+  assert_equal(env.timers[0].value, 0, "radio flight timer value")
 end)
 
 widget_test("GV8 writes only on flight timer transitions", function()
