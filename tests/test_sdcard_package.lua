@@ -84,6 +84,25 @@ test("TX15 template assigns SoarF5J widget", function()
   assert(model:find("stringValue: \"competition/widget\"", 1, true) or model:find("stringValue: competition/widget", 1, true), "missing competition widget page")
 end)
 
+test("exported TX15 template assigns SoarF5J pages 1 through 7", function()
+  local model = read_file("dist/SDCARD/TEMPLATES/f5J-t15.yml")
+  local pages = {}
+
+  assert(model:find("LayoutId: Layout1x1", 1, true), "missing competition 1x1 screen")
+  assert(model:find("LayoutId: Layout1x6", 1, true), "missing setup 1x6 screen")
+
+  for block in model:gmatch("widgetName: SoarF5J(.-)stringValue:%s*competition/widget") do
+    local page = block:match("signedValue:%s*(%d+)")
+    if page then
+      pages[tonumber(page)] = true
+    end
+  end
+
+  for page = 1, 7 do
+    assert(pages[page], "missing SoarF5J page " .. page .. " widget")
+  end
+end)
+
 test("TX15 template maps throttle trim to GV10 CbX in aileron camber setup", function()
   local model = command_output("unzip -p models/tx15/f5j_tmpl_t15.etx MODELS/model1.yml")
 

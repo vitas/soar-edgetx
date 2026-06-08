@@ -267,12 +267,16 @@ local function setup_env(options)
     env.sticky[index] = value
   end
 
-  function getStickySwitch(index)
-    return env.sticky[index] or false
+  if not options.omitGetStickySwitch then
+    function getStickySwitch(index)
+      return env.sticky[index] or false
+    end
+  else
+    getStickySwitch = nil
   end
 
-  function getLogicalSwitchValue()
-    return false
+  function getLogicalSwitchValue(index)
+    return env.sticky[index] or false
   end
 
   function playTone() end
@@ -398,6 +402,28 @@ setup_quality_test("curve setup pages show motor warning prompt before edits", f
   assert(text_rendered(wing):find("Please disable the motor", 1, true), "wing alignment warning copy missing")
   wing.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
   assert(wing.gvWrites[1] and wing.gvWrites[1].value == 1, "wing alignment did not enable GV8 after warning acknowledgment")
+end)
+
+setup_quality_test("brake curves supports radios without getStickySwitch", function()
+  local brake = setup_env({
+    input8 = 800,
+    omitGetStickySwitch = true,
+    curves = {
+      [4] = five_point_curve(),
+      [5] = five_point_curve()
+    }
+  })
+
+  load_setup_page("src/SoarF5J/setup/brake_curves.lua", brake)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert(brake.prompts[1], "brake curves did not show motor warning prompt")
+
+  local ok, err = pcall(function()
+    brake.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+  end)
+
+  assert(ok, "brake curves crashed without getStickySwitch: " .. tostring(err))
+  assert(brake.stickyWrites[1] and brake.stickyWrites[1].value == true, "brake curves did not enable step switch")
 end)
 
 setup_quality_test("curve setup pages report missing step input without load crash", function()

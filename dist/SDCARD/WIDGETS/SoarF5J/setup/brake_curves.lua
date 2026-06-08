@@ -114,6 +114,15 @@ local tblAil 																-- Table with data for the aileron curve
 local activeP   														-- The point currently being edited
 local stepOwned = false											-- Step input has be turned on by this widget
 
+local function stickySwitchValue(index)
+  if type(getStickySwitch) == "function" then
+    return getStickySwitch(index)
+  elseif type(getLogicalSwitchValue) == "function" then
+    return getLogicalSwitchValue(index)
+  end
+  return false
+end
+
 -- Turn off step input (if it was turned on by this widget)
 local function stepOff()
   if stepOwned then
@@ -123,7 +132,7 @@ local function stepOff()
 end
 
 local function stepOn()
-  if not getStickySwitch(LS_STEP) then
+  if not stickySwitchValue(LS_STEP) then
     setStickySwitch(LS_STEP, true)
     stepOwned = true
   end
