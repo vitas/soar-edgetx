@@ -5,6 +5,8 @@
 -- Date:    2025-01-20                                                   --
 -- Version: 1.2.4                                                        --
 --                                                                       --
+-- SoarF5J contributor: Vitaliy Ryumshyn                                --
+--                                                                       --
 -- Copyright (C) EdgeTX                                                  --
 --                                                                       --
 -- License GPLv2: http://www.gnu.org/licenses/gpl-2.0.html               --

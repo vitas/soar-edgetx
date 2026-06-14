@@ -10,7 +10,8 @@ Observed on this machine:
 
 The planned EdgeTX Companion 2.11 path, `/Applications/EdgeTX Companion 2.11.app`, was not present when checked.
 
-Use OpenTX Companion 2.3 only for inspecting the Xlite reference archive. Use EdgeTX Companion for TX15 simulation and model work.
+Use OpenTX Companion 2.3 only for inspecting the Xlite reference archive. Use
+EdgeTX Companion for landscape color-radio simulation and model work.
 
 ## Prepare The SD Card Folder
 
@@ -34,14 +35,18 @@ WIDGETS/SoarF5J/
 
 EdgeTX's color-radio manual describes `WIDGETS` as the SD-card folder where widget files are stored. The EdgeTX Lua guide also notes that Companion's SD Structure path should point at a valid copy of the transmitter SD-card contents.
 
-## Open The TX15 Simulator
+## Open A Landscape Color-Radio Simulator
 
 1. Open the installed EdgeTX Companion app.
-2. Create or select a TX15-compatible radio profile.
+2. Create or select a compatible landscape color-radio profile.
 3. Open the simulator from Companion for that profile.
 4. In simulator settings or the Companion radio profile, point the SD-card path at this repo's `dist/SDCARD` folder, or copy `dist/SDCARD` contents into the simulator SD-card folder Companion uses.
 
 Do not use a command-line emulator workflow until it has been verified locally.
+
+The widget layout is tested locally for `480x272`, `480x320`, and `800x480`
+landscape screens. Manual simulator/radio testing is currently limited to TX15
+and T16/TX16S-class radios.
 
 ## Add The Widget
 
@@ -58,7 +63,7 @@ navigation controls, setup workflow, and competition-widget operation.
 
 The simulator can check Lua loading, screen navigation, widget options, setup pages, and basic model mutations.
 
-The simulator cannot fully verify without TX15 hardware and telemetry:
+The simulator cannot fully verify without matching radio hardware and telemetry:
 
 - Physical switch, slider, and added-slider behavior.
 - Live motor safety behavior with a real ESC.

@@ -4,6 +4,8 @@
 -- Derived from SoarETX by Jesper Frickmann, Frankie Arzu, and EdgeTX    --
 -- contributors.                                                         --
 --                                                                       --
+-- SoarF5J contributor: Vitaliy Ryumshyn                                --
+--                                                                       --
 -- Copyright (C) EdgeTX                                                  --
 --                                                                       --
 -- License GPLv2: http://www.gnu.org/licenses/gpl-2.0.html               --
@@ -27,22 +29,25 @@ local title = "Switches"
 -- Screen drawing constants
 local HEADER = 40
 local MARGIN = 25
-local LINE = 25
-local HEIGHT = 20
 local WIDTH = 60
 local COL2 = LCD_W - MARGIN - WIDTH
 
 -- List of 1. text label 2. logical switch.
 local items = {
+  { "Launch mode (Motor Arm) and flight timer control", 4 },
+  { "Start/Stop timer and Motor", 8 },
   { "Allow vario and voice reporting of altitude", 0 },
   { "Variometer sound", 1 },
   { "Speed flight mode", 2 },
   { "Float flight mode", 3 },
+  { "Landing", 5 },
+  { "Landing off / crow off", 44 },
   { "Report remaining window time every 10 sec.", 6 },
-  { "Report current altitude every 10 sec.", 7 },
-  { "Launch mode (Motor Arm) and flight timer control", 4 },
-  { "Start/Stop timer and Motor", 8 }
+  { "Report current altitude every 10 sec.", 7 }
 }
+
+local LINE = math.min(25, math.floor((LCD_H - HEADER - 4) / #items))
+local HEIGHT = math.min(20, LINE - 2)
 
 -------------------------------- Setup GUI --------------------------------
 
@@ -56,7 +61,7 @@ local function init()
     lcd.drawText(10, 2, title, bit32.bor(DBLSIZE, colors.primary2))
 
     -- Row background
-    for i = 0, 7 do
+    for i = 0, #items - 1 do
       local y = HEADER + i * LINE
       if i % 2 == 1 then
         lcd.drawFilledRectangle(0, y, LCD_W, LINE, COLOR_THEME_SECONDARY2)

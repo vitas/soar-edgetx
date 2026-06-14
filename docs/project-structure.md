@@ -1,11 +1,13 @@
 # Project Structure
 
-This project is source-first for SoarF5J Lua. Edit Lua under `src/SoarF5J`; treat `dist/SDCARD/WIDGETS/SoarF5J` as generated widget output inside the committed TX15 SD-card root.
+This project is source-first for SoarF5J Lua. Edit Lua under `src/SoarF5J`;
+treat `dist/SDCARD/WIDGETS/SoarF5J` as generated widget output inside the
+committed EdgeTX landscape color-radio SD-card root.
 
 ## Top-Level Directories
 
 - `src/SoarF5J/`: maintainable EdgeTX widget source.
-- `dist/SDCARD/`: TX15 SD-card root. Most files are static SD-card content; `WIDGETS/SoarF5J` is refreshed by `make package`.
+- `dist/SDCARD/`: EdgeTX landscape color-radio SD-card root. Most files are static SD-card content; `WIDGETS/SoarF5J` is refreshed by `make package`.
 - `docs/`: design notes, implementation plans, install notes, and simulator documentation.
 - `models/tx15/`: TX15 model-template artifacts and notes.
 - `tests/`: local Lua tests for state logic, widget behavior, setup pages, and packaging checks.

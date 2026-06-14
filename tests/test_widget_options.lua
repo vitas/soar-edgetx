@@ -62,6 +62,7 @@ test("widget exposes Page as the only operator option", function()
 
   assert_equal(#env.main.options, 1, "widget option count")
   assert_equal(env.main.options[1][1], "Page", "widget option")
+  assert_equal(env.main.options[1][5], 7, "maximum page")
 end)
 
 test("Page option selects mixes setup page", function()
@@ -101,4 +102,16 @@ test("Page update reloads widget component", function()
   restore_globals()
 
   assert_equal(widget.loadedPath, "/WIDGETS/SoarF5J/setup/wing_alignment.lua", "loaded widget page")
+end)
+
+test("Page 8 falls back to competition after battery page removal", function()
+  local env = load_main_with_stubs()
+
+  local widget = env.main.create({ w = 480, h = 220 }, {
+    Page = 8
+  })
+
+  restore_globals()
+
+  assert_equal(widget.loadedPath, "/WIDGETS/SoarF5J/competition/widget.lua", "loaded widget page")
 end)

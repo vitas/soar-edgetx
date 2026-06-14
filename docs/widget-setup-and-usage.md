@@ -1,10 +1,29 @@
 # SoarF5J Widget Setup And Usage
 
 This guide explains how to install, configure, and use the `SoarF5J` EdgeTX
-widget on a Radiomaster TX15 or in the EdgeTX Companion simulator.
+widget on supported EdgeTX landscape color radios or in the EdgeTX Companion
+simulator.
 
 The setup pages are not standalone EdgeTX tool scripts. They are widget pages
 loaded by `WIDGETS/SoarF5J/main.lua` through widget options.
+
+## Supported Screens
+
+The widget is intended for EdgeTX landscape color-radio screens at:
+
+```text
+480x272
+480x320
+800x480
+```
+
+Radios with those screen sizes should work when the active model provides the
+required F5J template structure. The widget code uses EdgeTX screen dimensions
+and widget-zone dimensions rather than a radio board name. Manual
+radio/simulator testing is currently limited to TX15 and T16/TX16S-class
+radios.
+
+Portrait color screens and monochrome radios are not currently supported.
 
 ## Build The SD Card Package
 
@@ -26,7 +45,7 @@ The widget files are installed under:
 dist/SDCARD/WIDGETS/SoarF5J/
 ```
 
-Copy the contents of `dist/SDCARD` to the TX15 SD-card root, or point the
+Copy the contents of `dist/SDCARD` to the radio SD-card root, or point the
 EdgeTX Companion simulator SD Structure path at `dist/SDCARD`.
 
 When updating an existing radio SD card, delete the old `WIDGETS/SoarF5J`
@@ -35,7 +54,7 @@ or old widget code being left behind.
 
 ## Model Requirements
 
-Use the committed TX15 template when possible:
+Use the committed TX15 template when possible on TX15:
 
 ```text
 models/tx15/f5j_tmpl_t15.etx
@@ -50,11 +69,11 @@ The widget expects the model to provide the template structure:
 - Input `input8`, used as the step input for the curve setup pages.
 - Named output channels. The output setup page only shows outputs whose
   channel name is not empty.
-- Receiver battery telemetry, if battery display and warning should work.
+- Receiver battery telemetry, if low-battery warning should work.
 
 If a setup page reports a missing input, curve, or output, the active model does
-not match what that page needs. Start from the TX15 template or repair the
-missing model item in Companion.
+not match what that page needs. Start from a compatible F5J template for your
+radio, or repair the missing model item in Companion.
 
 ## Safety Preflight
 
@@ -70,7 +89,7 @@ or curves.
 
 ## Add The Widget
 
-On the TX15 or in the EdgeTX simulator:
+On the radio or in the EdgeTX simulator:
 
 1. Open the F5J model.
 2. Open screen/widget setup for the model.
@@ -92,7 +111,6 @@ Page values:
 5  Wing alignment
 6  Brake curves
 7  Aileron/camber
-8  Battery
 ```
 
 The underlying file paths are:
@@ -105,7 +123,6 @@ setup/outputs
 setup/wing_alignment
 setup/brake_curves
 setup/aileron_camber
-setup/battery
 ```
 
 The easiest bench workflow is to keep one `SoarF5J` widget on a setup screen
@@ -143,7 +160,7 @@ There is no separate save button in the widget.
 
 ## Recommended Setup Order
 
-1. Install the SD-card package and open the TX15 template model.
+1. Install the SD-card package and open a compatible F5J template model.
 2. Add the main widget with `Page = 1`.
 3. Add a setup widget or temporarily change the main widget `Page`.
 4. Run `Page = 2` and confirm the physical switch assignments.
@@ -151,9 +168,8 @@ There is no separate save button in the widget.
 6. Run `Page = 5` to align flaperon outputs and curves.
 7. Run `Page = 6` to tune the flap and aileron airbrake curves.
 8. Run `Page = 7` to set maximum reflex and related camber values.
-9. Run `Page = 3` in each relevant flight mode.
-10. Run `Page = 8` to set receiver battery warning level.
-11. Return the contest widget to `Page = 1`.
+9. Run `Page = 3` in each relevant flight mode and set receiver battery warning level.
+10. Return the contest widget to `Page = 1`.
 
 ## Setup Pages
 
@@ -162,14 +178,16 @@ There is no separate save button in the widget.
 Assigns physical switch positions to the logical switches used by the model.
 The page currently covers:
 
+- Launch mode, motor arm, and flight timer control.
+- Start/stop timer and motor trigger.
 - Altitude voice reporting.
 - Variometer sound.
 - Speed flight mode.
 - Float flight mode.
+- Landing.
+- Landing off / crow off.
 - Window time reports every 10 seconds.
 - Altitude reports every 10 seconds.
-- Launch mode, motor arm, and flight timer control.
-- Start/stop timer and motor trigger.
 
 Use the drop-down fields to select the desired physical switch position for
 each function.
@@ -250,17 +268,10 @@ Edits mix-related global variables for the current flight mode:
 Some values are flight-mode specific. Select the flight mode first, then edit
 the values for that mode.
 
-While this page is open, the widget sets the model adjustment mode so the TX15
-trim buttons can adjust the mix GVARs through the model's `ADJUST_GVAR` special
-functions. Leaving the page restores the previous adjustment mode.
-
-### `setup/battery`
-
-Displays the current receiver battery value and edits the low-battery warning
-threshold.
-
-If the current battery reads `--.- V`, the widget has not found usable receiver
-battery telemetry yet. The warning threshold can still be set.
+While this page is open, the widget sets the model adjustment mode so the
+template's trim buttons can adjust the mix GVARs through the model's
+`ADJUST_GVAR` special functions. Leaving the page restores the previous
+adjustment mode.
 
 ## Competition Widget
 
@@ -340,22 +351,17 @@ A setup screen still shows the competition timers:
 
 The widget reports `Curve #32 is missing`:
 
-- Use the TX15 template, or add curve 32 to the model before loading the
+- Use a compatible F5J template, or add curve 32 to the model before loading the
   widget.
 
 A setup page reports missing `input8`, a curve, or an output:
 
 - The active model does not match the setup page assumptions.
-- Re-open the TX15 template or add the missing model item in Companion.
+- Re-open a compatible F5J template or add the missing model item in Companion.
 
 A setup page only shows its title tile:
 
 - This is normal. Press `Enter` or tap the widget to open the full setup page.
-
-Battery shows `--.- V`:
-
-- Discover or configure the receiver battery telemetry sensor first.
-- Confirm the sensor is visible to EdgeTX before relying on the warning.
 
 Edits seem to affect the wrong flight mode:
 

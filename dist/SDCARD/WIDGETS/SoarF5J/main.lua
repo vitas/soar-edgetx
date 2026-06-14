@@ -4,6 +4,8 @@
 -- Derived from SoarETX by Jesper Frickmann, Frankie Arzu, and EdgeTX    --
 -- contributors.                                                         --
 --                                                                       --
+-- SoarF5J contributor: Vitaliy Ryumshyn                                --
+--                                                                       --
 -- Copyright (C) EdgeTX                                                  --
 --                                                                       --
 -- License GPLv2: http://www.gnu.org/licenses/gpl-2.0.html               --
@@ -25,8 +27,7 @@ local pageFiles = {
   "setup/outputs",
   "setup/wing_alignment",
   "setup/brake_curves",
-  "setup/aileron_camber",
-  "setup/battery"
+  "setup/aileron_camber"
 }
 
 local options = {

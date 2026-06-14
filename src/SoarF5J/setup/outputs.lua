@@ -5,6 +5,8 @@
 -- Date:    2025-01-20                                                   --
 -- Version: 1.2.4                                                        --
 --                                                                       --
+-- SoarF5J contributor: Vitaliy Ryumshyn                                --
+--                                                                       --
 -- Copyright (C) EdgeTX                                                  --
 --                                                                       --
 -- License GPLv2: http://www.gnu.org/licenses/gpl-2.0.html               --
@@ -44,6 +46,7 @@ local HEADER =     40
 local MARGIN =     10
 local TOP =        50
 local ROW =        38
+local VISIBLE_ROWS = math.max(1, math.floor((LCD_H - HEADER) / ROW))
 local CTR =        340
 local STEP =       10
 local SCALE =      12
@@ -269,7 +272,7 @@ local function init()
     lcd.drawText(MARGIN, HEADER / 2 - 2, "Configure Outputs", DBLSIZE + VCENTER + colors.primary2)
 
     -- Row background
-    for i = 0, 6 do
+    for i = 0, VISIBLE_ROWS - 1 do
       local y = HEADER + i * ROW
       if i % 2 == 1 then
         lcd.drawFilledRectangle(0, y, LCD_W, ROW, COLOR_THEME_SECONDARY2)
@@ -282,8 +285,8 @@ local function init()
     if focusNamed > 0 then
       if focusNamed < firstLine then
         firstLine = focusNamed
-      elseif firstLine + 5 < focusNamed then
-        firstLine = focusNamed - 5
+      elseif firstLine + VISIBLE_ROWS - 1 < focusNamed then
+        firstLine = focusNamed - VISIBLE_ROWS + 1
       end
     end
     focusNamed = 0
@@ -291,7 +294,7 @@ local function init()
     -- Draw vertical reference lines
     for i = -6, 6 do
       local x = CTR - i * MAXOUT / (SCALE * 6) + 2
-      lcd.drawLine(x, HEADER, x, HEADER + 6 * ROW, DOTTED, FORCE, COLOR_THEME_DISABLED)
+      lcd.drawLine(x, HEADER, x, HEADER + VISIBLE_ROWS * ROW, DOTTED, FORCE, COLOR_THEME_DISABLED)
     end
   end
 
@@ -340,7 +343,7 @@ local function init()
             focusNamed = channel.iNamed
           end
           -- If channel is not visible, place it outside the screen to avoid receiving touch events
-          if channel.iNamed < firstLine or channel.iNamed > firstLine + 5 then
+          if channel.iNamed < firstLine or channel.iNamed > firstLine + VISIBLE_ROWS - 1 then
             channel.y = LCD_H
           else
             channel.y = HEADER + (channel.iNamed - firstLine) * ROW + 2
@@ -353,8 +356,8 @@ local function init()
         function channel.onEvent(event, touchState)
           if event == EVT_TOUCH_SLIDE and not channel.editing then
             firstLine = math.floor(channel.iNamed - (touchState.y - HEADER - ROW / 2) / ROW + 0.5)
-            firstLine = math.min(firstLine, #channels - 5, channel.iNamed)
-            firstLine = math.max(firstLine, 1, channel.iNamed - 5)
+            firstLine = math.min(firstLine, math.max(1, #channels - VISIBLE_ROWS + 1), channel.iNamed)
+            firstLine = math.max(firstLine, 1, channel.iNamed - VISIBLE_ROWS + 1)
           else
             onEvent(event, touchState)
           end

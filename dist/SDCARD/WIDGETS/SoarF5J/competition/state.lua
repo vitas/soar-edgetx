@@ -1,3 +1,11 @@
+---------------------------------------------------------------------------
+-- SoarF5J competition state                                             --
+--                                                                       --
+-- SoarF5J contributor: Vitaliy Ryumshyn                                --
+--                                                                       --
+-- License GPLv2: http://www.gnu.org/licenses/gpl-2.0.html               --
+---------------------------------------------------------------------------
+
 local State = {}
 
 local function reset_flight(state)

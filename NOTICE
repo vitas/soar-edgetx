@@ -2,6 +2,11 @@ SoarF5J EdgeTX
 
 This project is derived from and inspired by SoarOTX and SoarETX.
 
+SoarF5J project authors and contributors:
+  Authors: Jesper Frickmann, Frankie Arzu, Vitaliy Ryumshyn
+  Additional contributors: EdgeTX contributors
+  License: GPL-2.0
+
 SoarOTX:
   Author: Jesper Frickmann
   License: GPL-2.0

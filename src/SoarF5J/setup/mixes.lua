@@ -4,6 +4,8 @@
 -- Derived from SoarETX by Jesper Frickmann, Frankie Arzu, and EdgeTX    --
 -- contributors.                                                         --
 --                                                                       --
+-- SoarF5J contributor: Vitaliy Ryumshyn                                --
+--                                                                       --
 -- Copyright (C) EdgeTX                                                  --
 --                                                                       --
 -- License GPLv2: http://www.gnu.org/licenses/gpl-2.0.html               --
@@ -101,7 +103,8 @@ local function init()
     local txt = "Some variables can be adjusted individually for each flight mode.\n" ..
                 "Select the flight mode before adjusting.\n" ..
                 "Trim buttons adjust active mix values while this page is open."
-    lcd.drawTextLines(MARGIN, bottom + 25, LCD_W - 2 * MARGIN, LCD_H - bottom, txt, colors.primary1)
+    local helpY = bottom + 25
+    lcd.drawTextLines(MARGIN, helpY, LCD_W - 2 * MARGIN, LCD_H - helpY - MARGIN, txt, colors.primary1)
   end
 
   -- Close button

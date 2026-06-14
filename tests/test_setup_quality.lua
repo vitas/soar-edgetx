@@ -31,6 +31,7 @@ local globalNames = {
   "getFieldInfo",
   "getValue",
   "getFlightMode",
+  "switches",
   "setStickySwitch",
   "getStickySwitch",
   "getLogicalSwitchValue",
@@ -111,6 +112,15 @@ local function new_gui_stub(env)
       end,
       button = function() return element() end,
       menu = function() return element() end,
+      dropDown = function(x, y, w, h, items, selected, onChange, flags)
+        local dropDown = element()
+        dropDown.items = items
+        dropDown.selected = selected
+        dropDown.onChange = onChange
+        dropDown.flags = flags
+        env.dropDowns[#env.dropDowns + 1] = dropDown
+        return dropDown
+      end,
       label = function(x, y, w, h, text)
         env.labels[#env.labels + 1] = text
         return element()
@@ -152,6 +162,7 @@ local function setup_env(options)
     drawTexts = {},
     drawTextLines = {},
     labels = {},
+    dropDowns = {},
     numbers = {},
     prompts = {},
     dismissedPrompts = 0,
@@ -161,12 +172,14 @@ local function setup_env(options)
     curves = options.curves or {},
     outputs = options.outputs or {},
     gvs = options.gvs or {},
+    logicalSwitches = options.logicalSwitches or {},
     input8 = options.input8,
     parameterValue = options.parameterValue
   }
 
-  LCD_W = 480
-  LCD_H = 272
+  local screen = options.screen or { w = 480, h = 272 }
+  LCD_W = screen.w
+  LCD_H = screen.h
   COLOR_THEME_PRIMARY1 = 1
   COLOR_THEME_PRIMARY2 = 2
   COLOR_THEME_PRIMARY3 = 3
@@ -244,8 +257,40 @@ local function setup_env(options)
     setGlobalVariable = function(index, phase, value)
       env.gvWrites[#env.gvWrites + 1] = { index = index, phase = phase, value = value }
       env.gvs[index] = value
+    end,
+    getLogicalSwitch = function(index)
+      env.logicalSwitches[index] = env.logicalSwitches[index] or { v1 = 1 }
+      return env.logicalSwitches[index]
+    end,
+    setLogicalSwitch = function(index, value)
+      env.logicalSwitches[index] = value
     end
   }
+
+  function switches()
+    local names = {
+      "SA-",
+      "SA+",
+      "SB-",
+      "SB0",
+      "SB+",
+      "SC-",
+      "SC0",
+      "SC+",
+      "SD-",
+      "SD+",
+      "SE-",
+      "SE0",
+      "SE+"
+    }
+    local i = 0
+    return function()
+      i = i + 1
+      if names[i] then
+        return i, names[i]
+      end
+    end
+  end
 
   function getFieldInfo(name)
     if name == "input8" and env.input8 then
@@ -342,6 +387,74 @@ local function setup_quality_test(name, fn)
   end)
 end
 
+local supported_screens = {
+  { name = "480x272", w = 480, h = 272 },
+  { name = "480x320", w = 480, h = 320 },
+  { name = "800x480", w = 800, h = 480 }
+}
+
+local function assert_screen_size(screen)
+  assert_equal(LCD_W, screen.w, screen.name .. " width")
+  assert_equal(LCD_H, screen.h, screen.name .. " height")
+end
+
+local function bounds_label(method, screen, index, subject)
+  if subject then
+    return string.format("%s %s draw call %d on %s", subject, method, index, screen.name)
+  end
+  return string.format("%s draw call %d on %s", method, index, screen.name)
+end
+
+local function assert_point_in_screen(x, y, screen, label)
+  assert(type(x) == "number" and type(y) == "number", label .. " has non-numeric coordinates")
+  assert(x >= 0, label .. " x is negative")
+  assert(y >= 0, label .. " y is negative")
+  assert(x <= screen.w, label .. " x exceeds screen width")
+  assert(y <= screen.h, label .. " y exceeds screen height")
+end
+
+local function assert_box_in_screen(x, y, w, h, screen, label)
+  assert_point_in_screen(x, y, screen, label)
+  assert(type(w) == "number" and type(h) == "number", label .. " has non-numeric size")
+  assert(w >= 0, label .. " width is negative")
+  assert(h >= 0, label .. " height is negative")
+  assert(x + w <= screen.w, label .. " extends past screen width")
+  assert(y + h <= screen.h, label .. " extends past screen height")
+end
+
+local function assert_circle_in_screen(x, y, r, screen, label)
+  assert(type(r) == "number" and r >= 0, label .. " has invalid radius")
+  assert_box_in_screen(x - r, y - r, r * 2, r * 2, screen, label)
+end
+
+local function assert_draw_calls_in_screen(env, screen, subject)
+  for i, call in ipairs(env.drawCalls) do
+    local label = bounds_label(call.method, screen, i, subject)
+    local a = call.args
+
+    if call.method == "drawFilledRectangle" or call.method == "drawRectangle" or call.method == "drawTextLines" then
+      assert_box_in_screen(a[1], a[2], a[3], a[4], screen, label)
+    elseif call.method == "drawLine" then
+      assert_point_in_screen(a[1], a[2], screen, label .. " start")
+      assert_point_in_screen(a[3], a[4], screen, label .. " end")
+    elseif call.method == "drawText" or call.method == "drawNumber" then
+      assert_point_in_screen(a[1], a[2], screen, label)
+    elseif call.method == "drawFilledCircle" or call.method == "drawCircle" or
+        call.method == "drawPie" or call.method == "drawAnnulus" or call.method == "drawArc" then
+      assert_circle_in_screen(a[1], a[2], a[3], screen, label)
+    end
+  end
+end
+
+local function render_after_warning(env)
+  env.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  if env.prompts[1] and env.prompts[1].customs and env.prompts[1].customs[1] then
+    env.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+    env.drawCalls = {}
+    env.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  end
+end
+
 setup_quality_test("curve setup pages load with valid stubs", function()
   local brake = setup_env({
     input8 = 800,
@@ -365,6 +478,135 @@ setup_quality_test("curve setup pages load with valid stubs", function()
   })
   load_setup_page("src/SoarF5J/setup/wing_alignment.lua", wing)
   assert(pcall(function() wing.widget.refresh(EVT_VIRTUAL_ENTER, nil) end), "wing alignment valid refresh crashed")
+end)
+
+setup_quality_test("setup pages render inside supported landscape screen sizes", function()
+  for _, screen in ipairs(supported_screens) do
+    local switches = setup_env({ screen = screen })
+    load_setup_page("src/SoarF5J/setup/switches.lua", switches)
+    render_after_warning(switches)
+    assert_screen_size(screen)
+    assert_draw_calls_in_screen(switches, screen, "switches")
+
+    local mixes = setup_env({ screen = screen })
+    load_setup_page("src/SoarF5J/setup/mixes.lua", mixes)
+    render_after_warning(mixes)
+    assert_screen_size(screen)
+    assert_draw_calls_in_screen(mixes, screen, "mixes")
+
+    local brake = setup_env({
+      screen = screen,
+      input8 = 800,
+      curves = {
+        [4] = five_point_curve(),
+        [5] = five_point_curve()
+      }
+    })
+    load_setup_page("src/SoarF5J/setup/brake_curves.lua", brake)
+    render_after_warning(brake)
+    assert_screen_size(screen)
+    assert_draw_calls_in_screen(brake, screen, "brake curves")
+
+    local wing = setup_env({
+      screen = screen,
+      input8 = 800,
+      curves = {
+        [0] = five_point_curve(),
+        [1] = five_point_curve(),
+        [2] = five_point_curve(),
+        [3] = five_point_curve()
+      },
+      outputs = valid_wing_outputs()
+    })
+    load_setup_page("src/SoarF5J/setup/wing_alignment.lua", wing)
+    render_after_warning(wing)
+    assert_screen_size(screen)
+    assert_draw_calls_in_screen(wing, screen, "wing alignment")
+
+    local aileron = setup_env({
+      screen = screen,
+      gvs = {
+        [0] = 57,
+        [1] = 24,
+        [3] = 0,
+        [6] = 153,
+        [9] = 33
+      }
+    })
+    load_setup_page("src/SoarF5J/setup/aileron_camber.lua", aileron)
+    render_after_warning(aileron)
+    assert_screen_size(screen)
+    assert_draw_calls_in_screen(aileron, screen, "aileron camber")
+
+    local outputs = setup_env({ screen = screen })
+    local outputNames = {
+      "AilL",
+      "FlpL",
+      "FlpR",
+      "AilR"
+    }
+    for i = 0, 31 do
+      outputs.outputs[i] = { name = outputNames[i + 1] or "", min = -1000, offset = 0, max = 1000 }
+    end
+    function getFieldInfo(name)
+      if name == "ch1" then
+        return { id = 100 }
+      end
+      return nil
+    end
+    outputs.modelMixes = {}
+    model.getMixesCount = function(channel)
+      local mixes = outputs.modelMixes[channel] or {}
+      return #mixes
+    end
+    model.getMix = function(channel, index)
+      return outputs.modelMixes[channel] and outputs.modelMixes[channel][index + 1] or {}
+    end
+    model.deleteMix = function(channel, index) end
+    model.insertMix = function(channel, index, mix) end
+    load_setup_page("src/SoarF5J/setup/outputs.lua", outputs)
+    render_after_warning(outputs)
+    assert_screen_size(screen)
+    assert_draw_calls_in_screen(outputs, screen, "outputs")
+  end
+end)
+
+setup_quality_test("switches page exposes landing and landing-off switches", function()
+  local switchesPage = setup_env({
+    logicalSwitches = {
+      [5] = { v1 = 1 },
+      [44] = { v1 = 1 }
+    }
+  })
+  load_setup_page("src/SoarF5J/setup/switches.lua", switchesPage)
+  switchesPage.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  assert_equal(switchesPage.labels[1], "Launch mode (Motor Arm) and flight timer control", "first switches row")
+  assert_equal(switchesPage.labels[2], "Start/Stop timer and Motor", "second switches row")
+
+  local sawLandingLabel = false
+  local sawLandingOffLabel = false
+  for _, label in ipairs(switchesPage.labels) do
+    if label == "Landing" then
+      sawLandingLabel = true
+    elseif label == "Landing off / crow off" then
+      sawLandingOffLabel = true
+    end
+  end
+  assert(sawLandingLabel, "switches page missing Landing label")
+  assert(sawLandingOffLabel, "switches page missing Landing off label")
+
+  local sawLandingSwitch = false
+  local sawLandingOffSwitch = false
+  for _, dropDown in ipairs(switchesPage.dropDowns) do
+    if dropDown.ls == 5 then
+      sawLandingSwitch = true
+    elseif dropDown.ls == 44 then
+      sawLandingOffSwitch = true
+    end
+  end
+  assert(sawLandingSwitch, "switches page missing L06 dropdown")
+  assert(sawLandingOffSwitch, "switches page missing L45 dropdown")
 end)
 
 setup_quality_test("curve setup pages show motor warning prompt before edits", function()
@@ -477,11 +719,6 @@ setup_quality_test("battery threshold values are clamped in setup pages", functi
 
   for _, entry in ipairs(values) do
     local parameterValue = entry[1]
-    local battery = setup_env({ parameterValue = parameterValue })
-    load_setup_page("src/SoarF5J/setup/battery.lua", battery)
-    assert(pcall(function() battery.widget.refresh(EVT_VIRTUAL_ENTER, nil) end), "battery page crashed")
-    assert(battery.numbers[1] and battery.numbers[1] >= 0 and battery.numbers[1] <= 200, "battery value not clamped")
-
     local mixes = setup_env({ parameterValue = parameterValue })
     load_setup_page("src/SoarF5J/setup/mixes.lua", mixes)
     assert(pcall(function() mixes.widget.refresh(EVT_VIRTUAL_ENTER, nil) end), "mixes page crashed")

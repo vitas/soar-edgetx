@@ -5,7 +5,6 @@ local required_sources = {
   "src/SoarF5J/setup/wing_alignment.lua",
   "src/SoarF5J/setup/brake_curves.lua",
   "src/SoarF5J/setup/aileron_camber.lua",
-  "src/SoarF5J/setup/battery.lua",
   "src/SoarF5J/lib/safety.lua"
 }
 
@@ -15,8 +14,7 @@ local setup_sources = {
   "src/SoarF5J/setup/outputs.lua",
   "src/SoarF5J/setup/wing_alignment.lua",
   "src/SoarF5J/setup/brake_curves.lua",
-  "src/SoarF5J/setup/aileron_camber.lua",
-  "src/SoarF5J/setup/battery.lua"
+  "src/SoarF5J/setup/aileron_camber.lua"
 }
 
 local forbidden_class_labels = {
@@ -119,13 +117,14 @@ test("aileron camber page includes SoarOTX adjustment behavior", function()
   assert(content:find("ADJUST_MODE = 3", 1, true), "missing adjustment mode")
 end)
 
-test("battery page exposes warning threshold setup", function()
-  local content = read_file("src/SoarF5J/setup/battery.lua")
+test("battery setup remains on mixes page only", function()
+  local content = read_file("src/SoarF5J/setup/mixes.lua")
 
   assert(content:find("getParameter", 1, true), "missing threshold read")
   assert(content:find("setParameter", 1, true), "missing threshold write")
   assert(content:find("batteryParameter", 1, true), "missing battery parameter index")
   assert(content:find("Battery warning level", 1, true), "missing threshold label")
+  assert(not file_exists("src/SoarF5J/setup/battery.lua"), "battery setup page should be removed")
 end)
 
 test("mixes page leaves thermal camber to aileron camber setup", function()
