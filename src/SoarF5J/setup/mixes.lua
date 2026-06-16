@@ -40,7 +40,9 @@ local W2 = LCD_W2 - 2 * MARGIN - W1
 local mixes = {
   { "Aileron -> Rudder", 2, -100, 100 },
   { "Aileron Travel", 0, -100, 100 },
+  { "Elevator Travel", 10, -100, 100 },
   { "Aileron -> Flap", 1, -100, 100 },
+  { "Aileron -> Elevator", 11, -100, 100 },
   { "Aileron Differential", 3, -100, 100 },
   { "Brake -> Elevator", 4, 0, 40 },
   { "Snap - flap", 5, 0, 50 },
@@ -92,11 +94,12 @@ local function init()
     lcd.drawText(LCD_W - HEADER, HEADER / 2, "FM" .. fmIdx .. ":" .. fmStr, RIGHT + VCENTER + MIDSIZE + colors.primary2)
 
     -- Line stripes
-    for i = 1, 3, 2 do
+    local rows = math.ceil((#mixes + 1) / 2)
+    for i = 1, rows - 1, 2 do
       lcd.drawFilledRectangle(0, HEADER + LINE * i, LCD_W, LINE, COLOR_THEME_SECONDARY2)
     end
 
-    local bottom = HEADER + 4 * LINE
+    local bottom = HEADER + rows * LINE
     lcd.drawLine(LCD_W2, HEADER, LCD_W2, bottom, SOLID, colors.primary1)
 
     -- Help text

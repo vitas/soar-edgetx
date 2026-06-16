@@ -134,6 +134,20 @@ test("mixes page leaves thermal camber to aileron camber setup", function()
   assert(not content:find('{ "Thermal camber", 9, 0, 100 }', 1, true), "GV10 CbX should not be on mixes page")
 end)
 
+test("setup pages expose aileron to elevator mix controls", function()
+  local mixes = read_file("src/SoarF5J/setup/mixes.lua")
+  local switches = read_file("src/SoarF5J/setup/switches.lua")
+
+  assert(mixes:find('{ "Aileron -> Elevator", 11, -100, 100 }', 1, true), "mixes page missing GV12 aileron-elevator control")
+  assert(switches:find('{ "Aileron -> Elevator", 45 }', 1, true), "switches page missing L46 aileron-elevator switch")
+end)
+
+test("mixes page exposes elevator travel control", function()
+  local content = read_file("src/SoarF5J/setup/mixes.lua")
+
+  assert(content:find('{ "Elevator Travel", 10, -100, 100 }', 1, true), "mixes page missing GV11 elevator travel control")
+end)
+
 test("safety helper loads without EdgeTX globals", function()
   local safety = assert(loadfile("src/SoarF5J/lib/safety.lua"))()
 

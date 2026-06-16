@@ -575,7 +575,8 @@ setup_quality_test("switches page exposes landing and landing-off switches", fun
   local switchesPage = setup_env({
     logicalSwitches = {
       [5] = { v1 = 1 },
-      [44] = { v1 = 1 }
+      [44] = { v1 = 1 },
+      [45] = { v1 = 1 }
     }
   })
   load_setup_page("src/SoarF5J/setup/switches.lua", switchesPage)
@@ -586,27 +587,35 @@ setup_quality_test("switches page exposes landing and landing-off switches", fun
 
   local sawLandingLabel = false
   local sawLandingOffLabel = false
+  local sawAileronElevatorLabel = false
   for _, label in ipairs(switchesPage.labels) do
     if label == "Landing" then
       sawLandingLabel = true
     elseif label == "Landing off / crow off" then
       sawLandingOffLabel = true
+    elseif label == "Aileron -> Elevator" then
+      sawAileronElevatorLabel = true
     end
   end
   assert(sawLandingLabel, "switches page missing Landing label")
   assert(sawLandingOffLabel, "switches page missing Landing off label")
+  assert(sawAileronElevatorLabel, "switches page missing Aileron -> Elevator label")
 
   local sawLandingSwitch = false
   local sawLandingOffSwitch = false
+  local sawAileronElevatorSwitch = false
   for _, dropDown in ipairs(switchesPage.dropDowns) do
     if dropDown.ls == 5 then
       sawLandingSwitch = true
     elseif dropDown.ls == 44 then
       sawLandingOffSwitch = true
+    elseif dropDown.ls == 45 then
+      sawAileronElevatorSwitch = true
     end
   end
   assert(sawLandingSwitch, "switches page missing L06 dropdown")
   assert(sawLandingOffSwitch, "switches page missing L45 dropdown")
+  assert(sawAileronElevatorSwitch, "switches page missing L46 dropdown")
 end)
 
 setup_quality_test("curve setup pages show motor warning prompt before edits", function()

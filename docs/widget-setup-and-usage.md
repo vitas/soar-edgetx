@@ -186,11 +186,15 @@ The page currently covers:
 - Float flight mode.
 - Landing.
 - Landing off / crow off.
+- Aileron to elevator mix enable.
 - Window time reports every 10 seconds.
 - Altitude reports every 10 seconds.
 
 Use the drop-down fields to select the desired physical switch position for
 each function.
+
+The TX15 template defaults motor arm to `SA down`.
+The TX15 template defaults the aileron to elevator mix enable switch to `SA up`.
 
 The TX15 template defaults the 10-second altitude report switch to the same
 physical switch used for voice reporting. The competition widget reads that
@@ -258,7 +262,9 @@ Edits mix-related global variables for the current flight mode:
 
 - Aileron to rudder.
 - Aileron travel.
+- Elevator travel.
 - Aileron to flap.
+- Aileron to elevator.
 - Aileron differential.
 - Brake to elevator.
 - Snap flap.

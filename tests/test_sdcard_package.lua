@@ -121,6 +121,15 @@ local function assert_mix_block(block, expected, label)
   end
 end
 
+local function find_mix_block(blocks, name)
+  for _, block in ipairs(blocks) do
+    if block:find("name: " .. name, 1, true) then
+      return block
+    end
+  end
+  return nil
+end
+
 local function tx15_template_models()
   return {
     {
@@ -229,6 +238,27 @@ test("TX15 templates swap CH4 and CH7 mixer output references", function()
     assert_contains(indexed_block(model.content, "limitData", 6), "name: ElevL", model.label .. " CH7 output")
     assert_contains(indexed_block(model.content, "failsafeChannels", 3), "val: -189", model.label .. " CH4 failsafe")
     assert_contains(indexed_block(model.content, "failsafeChannels", 6), "val: -122", model.label .. " CH7 failsafe")
+  end
+end)
+
+test("TX15 templates add switchable GV12 aileron to elevator mix", function()
+  for _, model in ipairs(tx15_template_models()) do
+    local elevator_mixes = mix_blocks_for(model.content, 21)
+    local aileron_elevator = find_mix_block(elevator_mixes, "AilEle")
+
+    assert(aileron_elevator, model.label .. " missing AilEle mix")
+    assert_mix_block(aileron_elevator, {
+      "srcRaw: I2",
+      "weight: gv(11)",
+      "swtch: L46",
+      "mltpx: ADD",
+      "name: AilEle"
+    }, model.label .. " aileron-elevator mix")
+
+    assert_contains(indexed_block(model.content, "logicalSw", 4), "def: SA2,NONE", model.label .. " L5 motor arm switch")
+    assert_contains(indexed_block(model.content, "logicalSw", 45), "def: SA0,NONE", model.label .. " L46 switch")
+    assert_contains(indexed_block(model.content, "gvars", 11), "name: AiE", model.label .. " GV12 name")
+    assert_contains(indexed_block(model.content, "flightModeData", 0), "11:\n        val: 0", model.label .. " GV12 cruise default")
   end
 end)
 
