@@ -324,7 +324,7 @@ mixData:
     offset: 0
     name: Motor
   - destCh: 3
-    srcRaw: ch(21)
+    srcRaw: I0
     weight: 100
     swtch: NONE
     curve:
@@ -343,8 +343,8 @@ mixData:
     offset: 0
     name: ""
   - destCh: 3
-    srcRaw: I1
-    weight: gv(10)
+    srcRaw: I2
+    weight: gv(2)
     swtch: NONE
     curve:
       type: 0
@@ -355,12 +355,12 @@ mixData:
     speedPrec: 0
     speedUp: 0
     speedDown: 0
-    carryTrim: 0
+    carryTrim: 1
     mltpx: ADD
     mixWarn: 0
-    flightModes: 000100000
+    flightModes: 000000000
     offset: 0
-    name: ""
+    name: AilRud
   - destCh: 4
     srcRaw: ch(31)
     weight: 100
@@ -438,7 +438,7 @@ mixData:
     offset: 0
     name: ""
   - destCh: 6
-    srcRaw: I0
+    srcRaw: ch(21)
     weight: 100
     swtch: NONE
     curve:
@@ -457,8 +457,8 @@ mixData:
     offset: 0
     name: ""
   - destCh: 6
-    srcRaw: I2
-    weight: gv(2)
+    srcRaw: I1
+    weight: gv(10)
     swtch: NONE
     curve:
       type: 0
@@ -469,12 +469,12 @@ mixData:
     speedPrec: 0
     speedUp: 0
     speedDown: 0
-    carryTrim: 1
+    carryTrim: 0
     mltpx: ADD
     mixWarn: 0
-    flightModes: 000000000
+    flightModes: 000100000
     offset: 0
-    name: AilRud
+    name: ""
   - destCh: 7
     srcRaw: ch(21)
     weight: 100
@@ -514,7 +514,7 @@ mixData:
     offset: 0
     name: ""
   - destCh: 8
-    srcRaw: ch(6)
+    srcRaw: ch(3)
     weight: 50
     swtch: NONE
     curve:
@@ -533,7 +533,7 @@ mixData:
     offset: 0
     name: Vt-l
   - destCh: 8
-    srcRaw: ch(3)
+    srcRaw: ch(6)
     weight: -50
     swtch: NONE
     curve:
@@ -552,7 +552,7 @@ mixData:
     offset: 0
     name: ""
   - destCh: 9
-    srcRaw: ch(6)
+    srcRaw: ch(3)
     weight: 50
     swtch: NONE
     curve:
@@ -571,7 +571,7 @@ mixData:
     offset: 0
     name: ""
   - destCh: 9
-    srcRaw: ch(3)
+    srcRaw: ch(6)
     weight: 50
     swtch: NONE
     curve:
@@ -1342,11 +1342,11 @@ limitData:
   3:
     min: 0
     max: 0
-    revert: 0
+    revert: 1
     offset: 0
     ppmCenter: 0
     symetrical: 0
-    name: ElevL
+    name: Rudd
     curve: 0
   4:
     min: 0
@@ -1369,11 +1369,11 @@ limitData:
   6:
     min: 0
     max: 0
-    revert: 1
+    revert: 0
     offset: 0
     ppmCenter: 0
     symetrical: 0
-    name: Rudd
+    name: ElevL
     curve: 0
   7:
     min: 0
@@ -2417,13 +2417,13 @@ failsafeChannels:
   2:
     val: -1233
   3:
-    val: -122
+    val: -189
   4:
     val: 38
   5:
     val: 57
   6:
-    val: -189
+    val: -122
   7:
     val: 2001
 trainerData:

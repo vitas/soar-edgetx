@@ -34,6 +34,106 @@ local function read_file(path)
   return content
 end
 
+local function lines_from(content)
+  local lines = {}
+  for line in (content .. "\n"):gmatch("([^\n]*)\n") do
+    lines[#lines + 1] = line
+  end
+  return lines
+end
+
+local function top_level_section(content, name)
+  local section = {}
+  local in_section = false
+
+  for _, line in ipairs(lines_from(content)) do
+    if line == name .. ":" then
+      in_section = true
+      section[#section + 1] = line
+    elseif in_section and line:match("^%S") then
+      break
+    elseif in_section then
+      section[#section + 1] = line
+    end
+  end
+
+  assert(#section > 0, "missing section: " .. name)
+  return table.concat(section, "\n")
+end
+
+local function indexed_block(content, section_name, index)
+  local section = top_level_section(content, section_name)
+  local header = "  " .. tostring(index) .. ":"
+  local block = {}
+  local in_block = false
+
+  for _, line in ipairs(lines_from(section)) do
+    if line == header then
+      in_block = true
+      block[#block + 1] = line
+    elseif in_block and line:match("^  %S") then
+      break
+    elseif in_block then
+      block[#block + 1] = line
+    end
+  end
+
+  assert(#block > 0, "missing " .. section_name .. " block " .. tostring(index))
+  return table.concat(block, "\n")
+end
+
+local function mix_blocks_for(content, dest_ch)
+  local section = top_level_section(content, "mixData")
+  local blocks = {}
+  local block = nil
+
+  local function finish_block()
+    if not block then return end
+    local text = table.concat(block, "\n")
+    for _, line in ipairs(block) do
+      if line:match("destCh:%s*" .. tostring(dest_ch) .. "%s*$") then
+        blocks[#blocks + 1] = text
+        break
+      end
+    end
+  end
+
+  for _, line in ipairs(lines_from(section)) do
+    if line:match("^  %-") then
+      finish_block()
+      block = { line }
+    elseif block then
+      block[#block + 1] = line
+    end
+  end
+  finish_block()
+
+  return blocks
+end
+
+local function assert_contains(content, needle, label)
+  assert(content:find(needle, 1, true), label .. " missing " .. needle)
+end
+
+local function assert_mix_block(block, expected, label)
+  for _, needle in ipairs(expected) do
+    assert_contains(block, needle, label)
+  end
+end
+
+local function tx15_template_models()
+  return {
+    {
+      label = "TX15 ETX model",
+      content = command_output("unzip -p models/tx15/f5j_tmpl_t15.etx MODELS/model1.yml")
+    },
+    {
+      label = "exported TX15 template",
+      content = read_file("dist/SDCARD/TEMPLATES/f5J-t15.yml")
+    }
+  }
+end
+
 test("static SD card content survives package rebuild", function()
   local required_files = {
     "dist/SDCARD/edgetx.sdcard.version",
@@ -100,6 +200,35 @@ test("exported TX15 template assigns SoarF5J pages 1 through 7", function()
 
   for page = 1, 7 do
     assert(pages[page], "missing SoarF5J page " .. page .. " widget")
+  end
+end)
+
+test("TX15 templates swap CH4 and CH7 mixer output references", function()
+  for _, model in ipairs(tx15_template_models()) do
+    local ch4_mixes = mix_blocks_for(model.content, 3)
+    local ch7_mixes = mix_blocks_for(model.content, 6)
+    local lftv_mixes = mix_blocks_for(model.content, 8)
+    local rgtv_mixes = mix_blocks_for(model.content, 9)
+
+    assert_equal(#ch4_mixes, 2, model.label .. " CH4 mix count")
+    assert_equal(#ch7_mixes, 2, model.label .. " CH7 mix count")
+    assert_equal(#lftv_mixes, 2, model.label .. " LftV mix count")
+    assert_equal(#rgtv_mixes, 2, model.label .. " RgtV mix count")
+
+    assert_mix_block(ch4_mixes[1], { "srcRaw: I0", "weight: 100" }, model.label .. " CH4 rudder")
+    assert_mix_block(ch4_mixes[2], { "srcRaw: I2", "weight: gv(2)", "name: AilRud" }, model.label .. " CH4 aileron-rudder")
+    assert_mix_block(ch7_mixes[1], { "srcRaw: ch(21)", "weight: 100" }, model.label .. " CH7 elevator")
+    assert_mix_block(ch7_mixes[2], { "srcRaw: I1", "weight: gv(10)" }, model.label .. " CH7 KAPOW elevator")
+
+    assert_mix_block(lftv_mixes[1], { "srcRaw: ch(3)", "weight: 50", "name: Vt-l" }, model.label .. " LftV rudder source")
+    assert_mix_block(lftv_mixes[2], { "srcRaw: ch(6)", "weight: -50" }, model.label .. " LftV elevator source")
+    assert_mix_block(rgtv_mixes[1], { "srcRaw: ch(3)", "weight: 50" }, model.label .. " RgtV rudder source")
+    assert_mix_block(rgtv_mixes[2], { "srcRaw: ch(6)", "weight: 50", "name: Vt-R" }, model.label .. " RgtV elevator source")
+
+    assert_contains(indexed_block(model.content, "limitData", 3), "name: Rudd", model.label .. " CH4 output")
+    assert_contains(indexed_block(model.content, "limitData", 6), "name: ElevL", model.label .. " CH7 output")
+    assert_contains(indexed_block(model.content, "failsafeChannels", 3), "val: -189", model.label .. " CH4 failsafe")
+    assert_contains(indexed_block(model.content, "failsafeChannels", 6), "val: -122", model.label .. " CH7 failsafe")
   end
 end)
 
