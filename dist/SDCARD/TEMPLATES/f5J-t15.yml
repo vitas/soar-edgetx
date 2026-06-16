@@ -75,9 +75,7 @@ flightModeData:
       9:
         val: 33
       10:
-        val: 100
-      11:
-        val: 0
+        val: 80
   1:
     trim:
       0:
@@ -111,6 +109,8 @@ flightModeData:
         val: 69
       9:
         val: 0
+      10:
+        val: 0
       11:
         val: 0
   2:
@@ -125,8 +125,6 @@ flightModeData:
     gvars:
       4:
         val: -4
-      11:
-        val: 0
   3:
     trim:
       1:
@@ -142,10 +140,6 @@ flightModeData:
     gvars:
       4:
         val: -100
-      9:
-        val: 0
-      11:
-        val: 0
   4:
     trim:
       1:
@@ -158,11 +152,6 @@ flightModeData:
     name: Speed
     fadeIn: 0
     fadeOut: 0
-    gvars:
-      9:
-        val: 0
-      11:
-        val: 0
   5:
     trim:
       1:
@@ -175,29 +164,6 @@ flightModeData:
     name: Float
     fadeIn: 0
     fadeOut: 0
-    gvars:
-      11:
-        val: 0
-  6:
-    swtch: NONE
-    name: ""
-    fadeIn: 0
-    fadeOut: 0
-    gvars:
-      9:
-        val: 0
-      11:
-        val: 0
-  7:
-    swtch: NONE
-    name: ""
-    fadeIn: 0
-    fadeOut: 0
-    gvars:
-      9:
-        val: 0
-      11:
-        val: 0
   8:
     swtch: NONE
     name: ""
@@ -514,7 +480,7 @@ mixData:
     offset: 0
     name: ""
   - destCh: 7
-    srcRaw: I8
+    srcRaw: I1
     weight: gv(10)
     swtch: NONE
     curve:
@@ -795,7 +761,7 @@ mixData:
     carryTrim: 0
     mltpx: ADD
     mixWarn: 0
-    flightModes: 000000000
+    flightModes: 011100111
     offset: 0
     name: AilEle
   - destCh: 21
@@ -1601,7 +1567,7 @@ expoData:
       type: 1
       value: 35
     trimSource: 0
-    name: ElevL
+    name: Elev
   - srcRaw: Ail
     scale: 0
     mode: 3
@@ -1693,24 +1659,11 @@ expoData:
       value: 8
     trimSource: 1
     name: Adjust
-  - srcRaw: Ele
-    scale: 0
-    mode: 3
-    chn: 8
-    swtch: NONE
-    flightModes: 000000000
-    weight: 100
-    offset: 0
-    curve:
-      type: 1
-      value: 35
-    trimSource: 0
-    name: ElevR
 inputNames:
   0:
     val: Rud
   1:
-    val: EleL
+    val: Ele
   2:
     val: Ail
   3:
@@ -1723,8 +1676,6 @@ inputNames:
     val: Cmb
   7:
     val: Adj
-  8:
-    val: ElvR
 curves:
   0:
     type: 0
@@ -1949,7 +1900,7 @@ logicalSw:
     lsState: 0
   1:
     func: FUNC_AND
-    def: SB0,!SA2
+    def: NONE,!SA2
     delay: 0
     duration: 0
     andsw: NONE
@@ -1997,7 +1948,7 @@ logicalSw:
     lsState: 0
   7:
     func: FUNC_AND
-    def: SB2,L1
+    def: SB0,L1
     delay: 0
     duration: 0
     andsw: NONE
@@ -2229,7 +2180,7 @@ logicalSw:
     lsState: 0
   45:
     func: FUNC_AND
-    def: SA0,NONE
+    def: SA0,!L6
     delay: 0
     duration: 0
     andsw: NONE
