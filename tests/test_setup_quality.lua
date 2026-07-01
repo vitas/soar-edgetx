@@ -576,7 +576,8 @@ setup_quality_test("switches page exposes landing and landing-off switches", fun
     logicalSwitches = {
       [5] = { v1 = 1 },
       [44] = { v1 = 1 },
-      [45] = { v1 = 1 }
+      [45] = { v1 = 1 },
+      [46] = { v1 = 1 }
     }
   })
   load_setup_page("src/SoarF5J/setup/switches.lua", switchesPage)
@@ -616,6 +617,32 @@ setup_quality_test("switches page exposes landing and landing-off switches", fun
   assert(sawLandingSwitch, "switches page missing L06 dropdown")
   assert(sawLandingOffSwitch, "switches page missing L45 dropdown")
   assert(sawAileronElevatorSwitch, "switches page missing L46 dropdown")
+end)
+
+setup_quality_test("switches page keeps crow-off audio edge switch aligned", function()
+  local switchesPage = setup_env({
+    logicalSwitches = {
+      [44] = { v1 = 1 },
+      [46] = { v1 = 1 }
+    }
+  })
+  load_setup_page("src/SoarF5J/setup/switches.lua", switchesPage)
+  switchesPage.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  local landingOff
+  for _, dropDown in ipairs(switchesPage.dropDowns) do
+    if dropDown.ls == 44 then
+      landingOff = dropDown
+      break
+    end
+  end
+
+  assert(landingOff, "missing L45 landing-off dropdown")
+  landingOff.selected = 3
+  landingOff.onChange(landingOff)
+
+  assert_equal(switchesPage.logicalSwitches[44].v1, 3, "L45 landing-off switch")
+  assert_equal(switchesPage.logicalSwitches[46].v1, 3, "L47 crow-off audio switch")
 end)
 
 setup_quality_test("curve setup pages show motor warning prompt before edits", function()

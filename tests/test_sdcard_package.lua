@@ -277,6 +277,43 @@ test("TX15 template does not bind altitude report switch to speed mode", functio
   assert(not model:find("def: SC0,L1", 1, true), "altitude reports should not default to SC down speed mode")
 end)
 
+test("TX15 templates use enabled F5J voice tracks for mode and window cues", function()
+  local expected = {
+    [6] = { "swtch: L6", 'def: "landin\\x00\\x00,1,1x"' },
+    [26] = { "swtch: L37", 'def: "flapup\\x00\\x00,1,5"' },
+    [32] = { "swtch: FM0", 'def: "cruise\\x00\\x00,1,1x"' },
+    [33] = { "swtch: FM2", 'def: "power\\x00\\x00\\x00,1,1x"' },
+    [34] = { "swtch: FM5", 'def: "therml\\x00\\x00,1,1x"' },
+    [35] = { "swtch: FM4", 'def: "speed\\x00\\x00\\x00,1,1x"' }
+  }
+
+  for _, model in ipairs(tx15_template_models()) do
+    for index, needles in pairs(expected) do
+      local block = indexed_block(model.content, "customFn", index)
+      assert_contains(block, "func: PLAY_TRACK", model.label .. " SF" .. tostring(index + 1))
+      for _, needle in ipairs(needles) do
+        assert_contains(block, needle, model.label .. " SF" .. tostring(index + 1))
+      end
+    end
+  end
+end)
+
+test("TX15 templates play crow-off only on switch edge outside motor mode", function()
+  for _, model in ipairs(tx15_template_models()) do
+    assert_mix_block(indexed_block(model.content, "logicalSw", 46), {
+      "func: FUNC_EDGE",
+      "def: SE0,0,-",
+      'andsw: "!FM2"'
+    }, model.label .. " L47 crow-off audio edge")
+
+    assert_mix_block(indexed_block(model.content, "customFn", 37), {
+      "swtch: L47",
+      "func: PLAY_TRACK",
+      'def: "crowof\\x00\\x00,1,1x"'
+    }, model.label .. " SF38 crow-off track")
+  end
+end)
+
 test("TX15 template has no legacy SoarOTX scripts, logs, or non-F5J sound references", function()
   local model = command_output("unzip -p models/tx15/f5j_tmpl_t15.etx MODELS/model1.yml")
   local forbidden = {

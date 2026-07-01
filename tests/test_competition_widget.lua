@@ -24,7 +24,9 @@ local globalNames = {
   "getLogicalSwitchValue",
   "getValue",
   "playNumber",
+  "playDuration",
   "UNIT_METERS",
+  "UNIT_SECONDS",
   "loadScript"
 }
 
@@ -49,6 +51,7 @@ local function new_widget_env()
     timerWrites = {},
     gvWrites = {},
     playNumbers = {},
+    playDurations = {},
     drawTexts = {},
     drawTimers = {},
     timers = {
@@ -72,6 +75,7 @@ local function new_widget_env()
   XXLSIZE = 40
   RIGHT = 100
   UNIT_METERS = 9
+  UNIT_SECONDS = 10
   EVT_VIRTUAL_ENTER = 1
   EVT_TOUCH_TAP = 2
   EVT_VIRTUAL_INC = 3
@@ -151,6 +155,13 @@ local function new_widget_env()
     }
   end
 
+  function playDuration(duration, hourFormat)
+    env.playDurations[#env.playDurations + 1] = {
+      duration = duration,
+      hourFormat = hourFormat
+    }
+  end
+
   function loadScript(path)
     local localPath = path:gsub("^/WIDGETS/SoarF5J/", "src/SoarF5J/")
     return assert(loadfile(localPath))
@@ -207,6 +218,24 @@ local function gv_values(env, gvIndex)
     end
   end
   return table.concat(values, ",")
+end
+
+local function duration_values(env)
+  local values = {}
+  for _, call in ipairs(env.playDurations) do
+    values[#values + 1] = tostring(call.duration)
+  end
+  return table.concat(values, ",")
+end
+
+local function play_numbers_with_unit(env, unit)
+  local values = {}
+  for _, call in ipairs(env.playNumbers) do
+    if call.unit == unit then
+      values[#values + 1] = call
+    end
+  end
+  return values
 end
 
 local function latest_drawn_text(env, prefix)
@@ -446,6 +475,58 @@ widget_test("GV8 writes only on flight timer transitions", function()
   assert_equal(gv_values(env, 8), "0,1,1,0,0", "finished reset GV8 values")
 end)
 
+widget_test("motor voice reports elapsed motor time every 10 seconds", function()
+  local env = new_widget_env()
+
+  env.flightMode = 2
+  env.widget.background()
+
+  env.timers[1].value = 9
+  env.widget.background()
+  assert_equal(duration_values(env), "", "no early motor voice")
+
+  env.timers[1].value = 10
+  env.widget.background()
+  env.widget.background()
+  assert_equal(duration_values(env), "10", "first motor voice")
+
+  env.timers[1].value = 20
+  env.widget.background()
+  assert_equal(duration_values(env), "10,20", "second motor voice")
+end)
+
+widget_test("height window voice counts down after motor stops", function()
+  local env = new_widget_env()
+
+  env.flightMode = 2
+  env.widget.background()
+
+  env.now = 500
+  env.flightMode = 0
+  env.widget.background()
+  assert_equal(duration_values(env), "", "height window does not use duration voice")
+  assert_equal(#env.playNumbers, 1, "height window first number count")
+  assert_equal(env.playNumbers[1].value, 10, "height window starts at 10")
+  assert_equal(env.playNumbers[1].unit, 0, "height window first number has no unit")
+
+  env.now = 600
+  env.widget.background()
+  env.widget.background()
+  assert_equal(#env.playNumbers, 2, "height window avoids duplicate 9")
+  assert_equal(env.playNumbers[2].value, 9, "height window second number")
+  assert_equal(env.playNumbers[2].unit, 0, "height window second number has no unit")
+
+  env.now = 700
+  env.widget.background()
+  assert_equal(#env.playNumbers, 3, "height window continues countdown")
+  assert_equal(env.playNumbers[3].value, 8, "height window third number")
+  assert_equal(env.playNumbers[3].unit, 0, "height window third number has no unit")
+
+  env.now = 1500
+  env.widget.background()
+  assert_equal(#env.playNumbers, 3, "height window does not announce zero")
+end)
+
 widget_test("max altitude tracks motor and height window after early finish", function()
   local env = new_widget_env()
 
@@ -494,18 +575,20 @@ widget_test("periodic altitude voice follows L8 after height window", function()
   env.altitude = 87
   env.now = 1600
   env.widget.background()
-  assert_equal(#env.playNumbers, 1, "first altitude call count")
-  assert_equal(env.playNumbers[1].value, 87, "first altitude call value")
-  assert_equal(env.playNumbers[1].unit, UNIT_METERS, "first altitude call unit")
+  local altitudeCalls = play_numbers_with_unit(env, UNIT_METERS)
+  assert_equal(#altitudeCalls, 1, "first altitude call count")
+  assert_equal(altitudeCalls[1].value, 87, "first altitude call value")
 
   env.widget.background()
-  assert_equal(#env.playNumbers, 1, "same interval duplicate count")
+  altitudeCalls = play_numbers_with_unit(env, UNIT_METERS)
+  assert_equal(#altitudeCalls, 1, "same interval duplicate count")
 
   env.altitude = 93
   env.now = 2600
   env.widget.background()
-  assert_equal(#env.playNumbers, 2, "second altitude call count")
-  assert_equal(env.playNumbers[2].value, 93, "second altitude call value")
+  altitudeCalls = play_numbers_with_unit(env, UNIT_METERS)
+  assert_equal(#altitudeCalls, 2, "second altitude call count")
+  assert_equal(altitudeCalls[2].value, 93, "second altitude call value")
 end)
 
 widget_test("periodic altitude voice is silent when L8 is off", function()
@@ -523,7 +606,7 @@ widget_test("periodic altitude voice is silent when L8 is off", function()
   env.now = 2600
   env.widget.background()
 
-  assert_equal(#env.playNumbers, 0, "altitude call count")
+  assert_equal(#play_numbers_with_unit(env, UNIT_METERS), 0, "altitude call count")
 end)
 
 widget_test("zero result can recover to initial on enter", function()

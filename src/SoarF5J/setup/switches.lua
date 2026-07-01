@@ -41,7 +41,7 @@ local items = {
   { "Speed flight mode", 2 },
   { "Float flight mode", 3 },
   { "Landing", 5 },
-  { "Landing off / crow off", 44 },
+  { "Landing off / crow off", 44, 46 },
   { "Aileron -> Elevator", 45 },
   { "Report remaining window time every 10 sec.", 6 },
   { "Report current altitude every 10 sec.", 7 }
@@ -111,6 +111,11 @@ local function init()
     local swIdx = swIndices[dropDown.selected]
     lsTbl.v1 = swIdx
     model.setLogicalSwitch(dropDown.ls, lsTbl)
+    if dropDown.linkedLs then
+      local linked = model.getLogicalSwitch(dropDown.linkedLs)
+      linked.v1 = swIdx
+      model.setLogicalSwitch(dropDown.linkedLs, linked)
+    end
   end
 
   for _, item in ipairs(items) do
@@ -132,6 +137,7 @@ local function init()
     else
       local dropDown = gui.dropDown(COL2, y, WIDTH, HEIGHT, swNames, selected, setSwitch, CENTER)
       dropDown.ls = item[2]
+      dropDown.linkedLs = item[3]
     end
 
     y = y + LINE

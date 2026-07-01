@@ -1,4 +1,4 @@
-semver: 2.12.1
+semver: 2.12.2
 header:
   name: f5J
   bitmap: sense.png
@@ -76,6 +76,8 @@ flightModeData:
         val: 33
       10:
         val: 80
+      11:
+        val: 0
   1:
     trim:
       0:
@@ -2180,10 +2182,18 @@ logicalSw:
     lsState: 0
   45:
     func: FUNC_AND
-    def: SA0,!L6
+    def: SA0,NONE
     delay: 0
     duration: 0
     andsw: NONE
+    lsPersist: 0
+    lsState: 0
+  46:
+    func: FUNC_EDGE
+    def: SE0,0,-
+    delay: 0
+    duration: 0
+    andsw: "!FM2"
     lsPersist: 0
     lsState: 0
 customFn:
@@ -2210,7 +2220,7 @@ customFn:
   6:
     swtch: L6
     func: PLAY_TRACK
-    def: "\x00\x00\x00\x00\x00\x00\x00\x00,1,1x"
+    def: "landin\x00\x00,1,1x"
   7:
     swtch: L7
     func: PLAY_VALUE
@@ -2290,9 +2300,25 @@ customFn:
   26:
     swtch: L37
     func: PLAY_TRACK
-    def: "\x00\x00\x00\x00\x00\x00\x00\x00,1,5"
+    def: "flapup\x00\x00,1,5"
+  32:
+    swtch: FM0
+    func: PLAY_TRACK
+    def: "cruise\x00\x00,1,1x"
+  33:
+    swtch: FM2
+    func: PLAY_TRACK
+    def: "power\x00\x00\x00,1,1x"
+  34:
+    swtch: FM5
+    func: PLAY_TRACK
+    def: "therml\x00\x00,1,1x"
+  35:
+    swtch: FM4
+    func: PLAY_TRACK
+    def: "speed\x00\x00\x00,1,1x"
   37:
-    swtch: L45
+    swtch: L47
     func: PLAY_TRACK
     def: "crowof\x00\x00,1,1x"
 thrTraceSrc: Thr
@@ -2411,7 +2437,7 @@ moduleData:
     mod:
       crsf:
         telemetryBaudrate: 0
-        crsfArmingMode: 1
+        crsfArmingMode: 0
         crsfArmingTrigger: NONE
 failsafeChannels:
   0:
@@ -2668,14 +2694,40 @@ screenData:
           type: Bool
           value:
             boolValue: 0
+        5:
+          type: Bool
+          value:
+            boolValue: 0
+        6:
+          type: Color
+          value:
+            color: COLIDX0
 topbarData:
   zones:
     4:
       widgetName: Radio Info
-      widgetData: ~
+      widgetData:
+        options:
+          0:
+            type: Color
+            value:
+              color: 0xf04030
+          1:
+            type: Color
+            value:
+              color: 0xf8c000
+          2:
+            type: Color
+            value:
+              color: 0x48ac50
     5:
       widgetName: Date Time
-      widgetData: ~
+      widgetData:
+        options:
+          0:
+            type: Color
+            value:
+              color: COLIDX1
 topbarWidgetWidth:
   0:
     val: 1
@@ -2689,7 +2741,7 @@ topbarWidgetWidth:
     val: 1
   5:
     val: 1
-view: 0
+view: 1
 modelRegistrationID: mYzzdzBE
 hatsMode: GLOBAL
 customSwitches:

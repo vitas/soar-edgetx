@@ -29,6 +29,8 @@ local FM_LAUNCH = 2
 local DEFAULT_TARGET_TIME = 600
 local TARGET_TIME_STEP = 60
 local ALTITUDE_CALL_INTERVAL = 10
+local MOTOR_CALL_INTERVAL = 10
+local HEIGHT_CAPTURE_WINDOW = 10
 local FLIGHT_TIMER_COLOR = lcd.RGB(0, 70, 20)
 local MOTOR_TIMER_COLOR = lcd.RGB(110, 0, 0)
 
@@ -39,6 +41,8 @@ local lastMotorOn
 local heightRemaining = 0
 local flightTimerRunning
 local nextAltitudeCall = 0
+local nextMotorCall = MOTOR_CALL_INTERVAL
+local lastHeightCall
 local observedTimerStart
 local observedTimerValue
 local allowTimerValueTargetSync = true
@@ -128,6 +132,35 @@ local function set_flight_timer_running(running, force)
   end
 end
 
+local function announce_seconds(seconds)
+  if seconds <= 0 then
+    return
+  end
+
+  if type(playDuration) == "function" then
+    playDuration(seconds, 0)
+  elseif type(playNumber) == "function" then
+    playNumber(seconds, UNIT_SECONDS or 0)
+  end
+end
+
+local function announce_number(seconds)
+  if seconds <= 0 then
+    return
+  end
+
+  if type(playNumber) == "function" then
+    playNumber(seconds, 0)
+  elseif type(playDuration) == "function" then
+    playDuration(seconds, 0)
+  end
+end
+
+local function reset_voice_calls()
+  nextMotorCall = MOTOR_CALL_INTERVAL
+  lastHeightCall = nil
+end
+
 local function reset_radio_timers()
   local target = state.target_time or read_target_time()
   set_timer(0, { start = target, value = target })
@@ -148,6 +181,7 @@ local function initialize_flight(resetAltitude)
   State.set_target_time(state, target)
   reset_radio_timers()
   set_flight_timer_running(false, true)
+  reset_voice_calls()
 
   if resetAltitude then
     soarGlobals.edgetx.resetAltitude()
@@ -239,6 +273,7 @@ local function zero_result()
   State.restart_motor(state)
   set_timer(0, { value = 0 })
   set_flight_timer_running(false, true)
+  reset_voice_calls()
 end
 
 local function enforce_flight_timer_floor()
@@ -270,6 +305,7 @@ local function advance_scoring_state()
     State.trigger(state)
     reset_radio_timers()
     set_flight_timer_running(false, true)
+    reset_voice_calls()
     return
   end
 
@@ -281,7 +317,7 @@ local function update_height_window(now)
   State.tick(state, { now = now })
 
   if state.height_capture_pending and state.height_window_started_at then
-    heightRemaining = math.max(0, math.ceil(10 - (now - state.height_window_started_at)))
+    heightRemaining = math.max(0, math.ceil(HEIGHT_CAPTURE_WINDOW - (now - state.height_window_started_at)))
   else
     heightRemaining = 0
   end
@@ -289,6 +325,30 @@ local function update_height_window(now)
   if state.height_window_elapsed then
     heightRemaining = 0
   end
+end
+
+local function report_motor_time()
+  local elapsed = math.floor(timer_number(read_timer(1).value, 0))
+  if elapsed < nextMotorCall then
+    return
+  end
+
+  local announced = math.floor(elapsed / MOTOR_CALL_INTERVAL) * MOTOR_CALL_INTERVAL
+  if announced < nextMotorCall then
+    announced = nextMotorCall
+  end
+
+  announce_seconds(announced)
+  nextMotorCall = announced + MOTOR_CALL_INTERVAL
+end
+
+local function report_height_window()
+  if heightRemaining <= 0 or heightRemaining == lastHeightCall then
+    return
+  end
+
+  announce_number(heightRemaining)
+  lastHeightCall = heightRemaining
 end
 
 local function report_altitude(now)
@@ -335,14 +395,18 @@ local function run_runtime(event)
       State.capture_max_altitude(state, read_max_altitude(), now)
       reset_radio_timers()
       set_flight_timer_running(true, true)
+      reset_voice_calls()
     end
   elseif state.mode == "motor" then
     State.capture_max_altitude(state, read_max_altitude(), now)
     if not motorOn then
       State.motor_stopped(state, now)
       set_flight_timer_running(true, true)
+      update_height_window(now)
+      report_height_window()
     else
       enforce_flight_timer_floor()
+      report_motor_time()
     end
   elseif state.mode == "glide" then
     if motorOn and not lastMotorOn then
@@ -350,6 +414,7 @@ local function run_runtime(event)
     else
       enforce_flight_timer_floor()
       update_height_window(now)
+      report_height_window()
       report_altitude(now)
       if triggerEdge then
         advance_scoring_state()
