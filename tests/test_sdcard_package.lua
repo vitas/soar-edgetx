@@ -47,7 +47,7 @@ local function top_level_section(content, name)
   local in_section = false
 
   for _, line in ipairs(lines_from(content)) do
-    if line == name .. ":" then
+    if line:match("^" .. name .. ":%s*$") then
       in_section = true
       section[#section + 1] = line
     elseif in_section and line:match("^%S") then
@@ -63,15 +63,17 @@ end
 
 local function indexed_block(content, section_name, index)
   local section = top_level_section(content, section_name)
-  local header = "  " .. tostring(index) .. ":"
   local block = {}
   local in_block = false
+  local block_indent = nil
 
   for _, line in ipairs(lines_from(section)) do
-    if line == header then
+    local indent = line:match("^(%s+)" .. tostring(index) .. ":%s*$")
+    if not in_block and indent then
       in_block = true
+      block_indent = indent
       block[#block + 1] = line
-    elseif in_block and line:match("^  %S") then
+    elseif in_block and line:match("^" .. block_indent .. "%S") then
       break
     elseif in_block then
       block[#block + 1] = line
@@ -99,7 +101,7 @@ local function mix_blocks_for(content, dest_ch)
   end
 
   for _, line in ipairs(lines_from(section)) do
-    if line:match("^  %-") then
+    if line:match("^%s*%-") then
       finish_block()
       block = { line }
     elseif block then
@@ -130,6 +132,16 @@ local function find_mix_block(blocks, name)
   return nil
 end
 
+local function normalize_model_content(content)
+  content = content:gsub("\r\n", "\n")
+
+  for _, key in ipairs({ "srcRaw", "weight", "swtch", "value", "name", "val" }) do
+    content = content:gsub("(" .. key .. ":%s*)\"([^\"\n]*)\"", "%1%2")
+  end
+
+  return content
+end
+
 local function tx15_template_models()
   return {
     {
@@ -141,6 +153,18 @@ local function tx15_template_models()
       content = read_file("dist/SDCARD/TEMPLATES/f5J-t15.yml")
     }
   }
+end
+
+local function tx15_output_models()
+  local models = tx15_template_models()
+  for _, model in ipairs(models) do
+    model.content = normalize_model_content(model.content)
+  end
+  models[#models + 1] = {
+    label = "SD card model",
+    content = normalize_model_content(read_file("dist/SDCARD/MODELS/model1.yml"))
+  }
+  return models
 end
 
 test("static SD card content survives package rebuild", function()
@@ -212,31 +236,43 @@ test("exported TX15 template assigns SoarF5J pages 1 through 7", function()
   end
 end)
 
-test("TX15 templates swap CH4 and CH7 mixer output references", function()
-  for _, model in ipairs(tx15_template_models()) do
+test("TX15 templates map CH4/CH5 to flaps and CH6 to rudder", function()
+  for _, model in ipairs(tx15_output_models()) do
     local ch4_mixes = mix_blocks_for(model.content, 3)
+    local ch5_mixes = mix_blocks_for(model.content, 4)
+    local ch6_mixes = mix_blocks_for(model.content, 5)
     local ch7_mixes = mix_blocks_for(model.content, 6)
     local lftv_mixes = mix_blocks_for(model.content, 8)
     local rgtv_mixes = mix_blocks_for(model.content, 9)
 
     assert_equal(#ch4_mixes, 2, model.label .. " CH4 mix count")
+    assert_equal(#ch5_mixes, 2, model.label .. " CH5 mix count")
+    assert_equal(#ch6_mixes, 2, model.label .. " CH6 mix count")
     assert_equal(#ch7_mixes, 2, model.label .. " CH7 mix count")
     assert_equal(#lftv_mixes, 2, model.label .. " LftV mix count")
     assert_equal(#rgtv_mixes, 2, model.label .. " RgtV mix count")
 
-    assert_mix_block(ch4_mixes[1], { "srcRaw: I0", "weight: 100" }, model.label .. " CH4 rudder")
-    assert_mix_block(ch4_mixes[2], { "srcRaw: I2", "weight: gv(2)", "name: AilRud" }, model.label .. " CH4 aileron-rudder")
+    assert_mix_block(ch4_mixes[1], { "srcRaw: ch(31)", "weight: 100", "value: !gv(3)" }, model.label .. " CH4 left flap")
+    assert_mix_block(ch4_mixes[2], { "srcRaw: ch(30)", "weight: -100" }, model.label .. " CH4 left flap camber")
+    assert_mix_block(ch5_mixes[1], { "srcRaw: ch(31)", "weight: 100", "value: gv(3)" }, model.label .. " CH5 right flap")
+    assert_mix_block(ch5_mixes[2], { "srcRaw: ch(30)", "weight: 100" }, model.label .. " CH5 right flap camber")
+    assert_mix_block(ch6_mixes[1], { "srcRaw: I0", "weight: 100" }, model.label .. " CH6 rudder")
+    assert_mix_block(ch6_mixes[2], { "srcRaw: I2", "weight: gv(2)", "name: AilRud" }, model.label .. " CH6 aileron-rudder")
     assert_mix_block(ch7_mixes[1], { "srcRaw: ch(21)", "weight: 100" }, model.label .. " CH7 elevator")
     assert_mix_block(ch7_mixes[2], { "srcRaw: I1", "weight: gv(10)" }, model.label .. " CH7 KAPOW elevator")
 
-    assert_mix_block(lftv_mixes[1], { "srcRaw: ch(3)", "weight: 50", "name: Vt-l" }, model.label .. " LftV rudder source")
+    assert_mix_block(lftv_mixes[1], { "srcRaw: ch(5)", "weight: 50", "name: Vt-l" }, model.label .. " LftV rudder source")
     assert_mix_block(lftv_mixes[2], { "srcRaw: ch(6)", "weight: -50" }, model.label .. " LftV elevator source")
-    assert_mix_block(rgtv_mixes[1], { "srcRaw: ch(3)", "weight: 50" }, model.label .. " RgtV rudder source")
+    assert_mix_block(rgtv_mixes[1], { "srcRaw: ch(5)", "weight: 50" }, model.label .. " RgtV rudder source")
     assert_mix_block(rgtv_mixes[2], { "srcRaw: ch(6)", "weight: 50", "name: Vt-R" }, model.label .. " RgtV elevator source")
 
-    assert_contains(indexed_block(model.content, "limitData", 3), "name: Rudd", model.label .. " CH4 output")
+    assert_contains(indexed_block(model.content, "limitData", 3), "name: Fl-L", model.label .. " CH4 output")
+    assert_contains(indexed_block(model.content, "limitData", 4), "name: Fl-R", model.label .. " CH5 output")
+    assert_contains(indexed_block(model.content, "limitData", 5), "name: Rudd", model.label .. " CH6 output")
     assert_contains(indexed_block(model.content, "limitData", 6), "name: ElevL", model.label .. " CH7 output")
-    assert_contains(indexed_block(model.content, "failsafeChannels", 3), "val: -189", model.label .. " CH4 failsafe")
+    assert_contains(indexed_block(model.content, "failsafeChannels", 3), "val: 38", model.label .. " CH4 failsafe")
+    assert_contains(indexed_block(model.content, "failsafeChannels", 4), "val: 57", model.label .. " CH5 failsafe")
+    assert_contains(indexed_block(model.content, "failsafeChannels", 5), "val: -189", model.label .. " CH6 failsafe")
     assert_contains(indexed_block(model.content, "failsafeChannels", 6), "val: -122", model.label .. " CH7 failsafe")
   end
 end)

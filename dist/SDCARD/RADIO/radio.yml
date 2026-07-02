@@ -1,4 +1,4 @@
-checksum: 2663
+checksum: 5470
 manuallyEdited: 0
 timezoneMinutes: 0
 ppmunit: 0
@@ -6,31 +6,31 @@ semver: 2.12.2
 board: tx15
 calib: 
    LH:
-      mid: 1047
-      spanNeg: 689
-      spanPos: 725
+      mid: 1044
+      spanNeg: 685
+      spanPos: 656
    LV:
-      mid: 972
-      spanNeg: 609
-      spanPos: 623
+      mid: 996
+      spanNeg: 627
+      spanPos: 620
    RV:
-      mid: 1011
-      spanNeg: 693
-      spanPos: 663
+      mid: 1009
+      spanNeg: 688
+      spanPos: 659
    RH:
-      mid: 1031
-      spanNeg: 695
-      spanPos: 730
+      mid: 1035
+      spanNeg: 691
+      spanPos: 724
    P1:
-      mid: 1062
-      spanNeg: 1046
-      spanPos: 830
+      mid: 1023
+      spanNeg: 1008
+      spanPos: 1008
    P2:
-      mid: 1041
-      spanNeg: 1025
-      spanPos: 991
-vBatWarn: 65
-txVoltageCalibration: 2
+      mid: 1023
+      spanNeg: 1008
+      spanPos: 1008
+vBatWarn: 83
+txVoltageCalibration: 127
 backlightMode: backlight_mode_all
 antennaMode: MODE_PER_MODEL
 disableRtcWarning: 0
@@ -64,12 +64,12 @@ disableAlarmWarning: 0
 stickMode: 1
 timezone: 0
 adjustRTC: 0
-inactivityTimer: 10
+inactivityTimer: 15
 internalModuleBaudrate: 5
 splashMode: 0
 hapticMode: mode_nokeys
 switchesDelay: 0
-lightAutoOff: 2
+lightAutoOff: 10
 templateSetup: 0
 PPM_Multiplier: 0
 hapticLength: 2
@@ -78,11 +78,11 @@ hapticStrength: 2
 gpsFormat: 0
 audioMuteEnable: 0
 speakerPitch: 0
-speakerVolume: 24
+speakerVolume: 15
 vBatMin: 60
-vBatMax: 80
-backlightBright: 0
-globalTimer: 547
+vBatMax: 88
+backlightBright: 8
+globalTimer: 2733
 bluetoothBaudrate: 0
 bluetoothMode: OFF
 countryCode: 0
@@ -233,8 +233,8 @@ favMultiMode: 0
 modelSelectLayout: 0
 radioThemesDisabled: 0
 radioGFDisabled: 0
-radioTrainerDisabled: 0
-modelHeliDisabled: 0
+radioTrainerDisabled: 1
+modelHeliDisabled: 1
 modelFMDisabled: 0
 modelCurvesDisabled: 0
 modelGVDisabled: 0

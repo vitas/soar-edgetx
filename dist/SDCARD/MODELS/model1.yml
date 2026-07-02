@@ -178,7 +178,7 @@ mixData:
    speedDown: 0
    name: "Motor"
  -
-   destCh: 3
+   destCh: 5
    srcRaw: "I0"
    carryTrim: 0
    mixWarn: 0
@@ -195,7 +195,7 @@ mixData:
    speedDown: 0
    name: ""
  -
-   destCh: 3
+   destCh: 5
    srcRaw: "I2"
    carryTrim: 1
    mixWarn: 0
@@ -212,7 +212,7 @@ mixData:
    speedDown: 0
    name: "AilRud"
  -
-   destCh: 4
+   destCh: 3
    srcRaw: "ch(31)"
    carryTrim: 0
    mixWarn: 0
@@ -232,7 +232,7 @@ mixData:
    speedDown: 0
    name: ""
  -
-   destCh: 4
+   destCh: 3
    srcRaw: "ch(30)"
    carryTrim: 0
    mixWarn: 0
@@ -249,7 +249,7 @@ mixData:
    speedDown: 0
    name: ""
  -
-   destCh: 5
+   destCh: 4
    srcRaw: "ch(31)"
    carryTrim: 0
    mixWarn: 0
@@ -269,7 +269,7 @@ mixData:
    speedDown: 0
    name: ""
  -
-   destCh: 5
+   destCh: 4
    srcRaw: "ch(30)"
    carryTrim: 0
    mixWarn: 0
@@ -355,7 +355,7 @@ mixData:
    name: ""
  -
    destCh: 8
-   srcRaw: "ch(3)"
+   srcRaw: "ch(5)"
    carryTrim: 0
    mixWarn: 0
    mltpx: ADD
@@ -389,7 +389,7 @@ mixData:
    name: ""
  -
    destCh: 9
-   srcRaw: "ch(3)"
+   srcRaw: "ch(5)"
    carryTrim: 0
    mixWarn: 0
    mltpx: ADD
@@ -1159,15 +1159,6 @@ limitData:
       name: "Moto"
    3:
       min: 0
-      max: 0
-      ppmCenter: 0
-      offset: 0
-      symetrical: 0
-      revert: 1
-      curve: 0
-      name: "Rudd"
-   4:
-      min: 0
       max: 2
       ppmCenter: 0
       offset: 0
@@ -1175,7 +1166,7 @@ limitData:
       revert: 1
       curve: 3
       name: "Fl-L"
-   5:
+   4:
       min: 0
       max: 0
       ppmCenter: 0
@@ -1184,6 +1175,15 @@ limitData:
       revert: 1
       curve: 4
       name: "Fl-R"
+   5:
+      min: 0
+      max: 0
+      ppmCenter: 0
+      offset: 0
+      symetrical: 0
+      revert: 1
+      curve: 0
+      name: "Rudd"
    6:
       min: 0
       max: 0
@@ -1880,14 +1880,38 @@ logicalSw:
       lsState: 0
       delay: 0
       duration: 0
-   34:
-      func: FUNC_EDGE
-      def: "L6,1,7"
-      andsw: "!FM2"
-      lsPersist: 0
-      lsState: 0
-      delay: 0
-      duration: 0
+46:
+   func: FUNC_EDGE
+   def: "SE0,0,-"
+   andsw: "!FM2"
+   lsPersist: 0
+   lsState: 0
+   delay: 0
+   duration: 0
+45:
+   func: FUNC_AND
+   def: "SA0,NONE"
+   andsw: "NONE"
+   lsPersist: 0
+   lsState: 0
+   delay: 0
+   duration: 0
+35:
+   func: FUNC_STICKY
+   def: "L44,L35"
+   andsw: "NONE"
+   lsPersist: 0
+   lsState: 0
+   delay: 0
+   duration: 0
+34:
+   func: FUNC_EDGE
+   def: "L6,1,7"
+   andsw: "!FM2"
+   lsPersist: 0
+   lsState: 0
+   delay: 0
+   duration: 0
    35:
       func: FUNC_STICKY
       def: "L44,L35"
@@ -1973,10 +1997,34 @@ customFn:
       swtch: "L2"
       func: VARIO
       def: "0"
-   6:
-      swtch: "L6"
-      func: PLAY_TRACK
-      def: ",1,1x"
+37:
+   swtch: "L47"
+   func: PLAY_TRACK
+   def: "crowof,1,1x"
+35:
+   swtch: "FM4"
+   func: PLAY_TRACK
+   def: "speed,1,1x"
+34:
+   swtch: "FM5"
+   func: PLAY_TRACK
+   def: "therml,1,1x"
+33:
+   swtch: "FM2"
+   func: PLAY_TRACK
+   def: "power,1,1x"
+32:
+   swtch: "FM0"
+   func: PLAY_TRACK
+   def: "cruise,1,1x"
+26:
+   swtch: "L37"
+   func: PLAY_TRACK
+   def: "flapup,1,5"
+6:
+   swtch: "L6"
+   func: PLAY_TRACK
+   def: "landin,1,1x"
    7:
       swtch: "L7"
       func: PLAY_VALUE
@@ -2057,6 +2105,26 @@ customFn:
       swtch: "L37"
       func: PLAY_TRACK
       def: ",1,5"
+   32:
+      swtch: "FM0"
+      func: PLAY_TRACK
+      def: "f3j_t2,1,1x"
+   33:
+      swtch: "FM2"
+      func: PLAY_TRACK
+      def: "f3jlau,1,1x"
+   34:
+      swtch: "FM5"
+      func: PLAY_TRACK
+      def: "f3j_t1,1,1x"
+   35:
+      swtch: "FM4"
+      func: PLAY_TRACK
+      def: "f3j_t3,1,1x"
+   36:
+      swtch: "L35"
+      func: PLAY_TRACK
+      def: "f3jlnd,1,1x"
    37:
       swtch: "L45"
       func: PLAY_TRACK
@@ -2206,7 +2274,7 @@ flightModeData:
 thrTraceSrc: Thr
 switchWarning: 
    SA:
-      pos: down
+      pos: up
 gvars: 
    0:
       name: "Ail"
@@ -2327,11 +2395,11 @@ failsafeChannels:
    2:
       val: -1233
    3:
-      val: -189
-   4:
       val: 38
-   5:
+   4:
       val: 57
+   5:
+      val: -189
    6:
       val: -122
    7:
@@ -2473,7 +2541,7 @@ screenData:
                      1:
                         type: String
                         value: 
-                           stringValue: competition/
+                           stringValue: competition/widget
          options: 
             0:
                type: Bool
@@ -2510,7 +2578,7 @@ screenData:
                      1:
                         type: String
                         value: 
-                           stringValue: competition/
+                           stringValue: competition/widget
             1:
                widgetName: SoarF5J
                widgetData: 
@@ -2522,7 +2590,7 @@ screenData:
                      1:
                         type: String
                         value: 
-                           stringValue: competition/
+                           stringValue: competition/widget
             2:
                widgetName: SoarF5J
                widgetData: 
@@ -2534,7 +2602,7 @@ screenData:
                      1:
                         type: String
                         value: 
-                           stringValue: competition/
+                           stringValue: competition/widget
             3:
                widgetName: SoarF5J
                widgetData: 
@@ -2546,7 +2614,7 @@ screenData:
                      1:
                         type: String
                         value: 
-                           stringValue: competition/
+                           stringValue: competition/widget
             4:
                widgetName: SoarF5J
                widgetData: 
@@ -2558,7 +2626,7 @@ screenData:
                      1:
                         type: String
                         value: 
-                           stringValue: competition/
+                           stringValue: competition/widget
             5:
                widgetName: SoarF5J
                widgetData: 
@@ -2570,7 +2638,7 @@ screenData:
                      1:
                         type: String
                         value: 
-                           stringValue: competition/
+                           stringValue: competition/widget
          options: 
             0:
                type: Bool
@@ -2600,6 +2668,79 @@ screenData:
                type: Color
                value: 
                   color: COLIDX0
+   2:
+      LayoutId: Layout2P1
+      layoutData: 
+         zones: 
+            0:
+               widgetName: Outputs
+               widgetData: 
+                  options: 
+                     0:
+                        type: Signed
+                        value: 
+                           signedValue: 1
+                     1:
+                        type: Bool
+                        value: 
+                           boolValue: 0
+                     2:
+                        type: Color
+                        value: 
+                           color: COLIDX5
+                     3:
+                        type: Color
+                        value: 
+                           color: COLIDX0
+                     4:
+                        type: Color
+                        value: 
+                           color: COLIDX3
+            1:
+               widgetName: ModelBmp
+               widgetData: 
+                  options: 
+                     0:
+                        type: Color
+                        value: 
+                           color: COLIDX3
+                     1:
+                        type: Unsigned
+                        value: 
+                           unsignedValue: 0
+                     2:
+                        type: Bool
+                        value: 
+                           boolValue: 0
+                     3:
+                        type: Color
+                        value: 
+                           color: COLIDX5
+                     4:
+                        type: Bool
+                        value: 
+                           boolValue: 1
+         options: 
+            0:
+               type: Bool
+               value: 
+                  boolValue: 1
+            1:
+               type: Bool
+               value: 
+                  boolValue: 1
+            2:
+               type: Bool
+               value: 
+                  boolValue: 1
+            3:
+               type: Bool
+               value: 
+                  boolValue: 1
+            4:
+               type: Bool
+               value: 
+                  boolValue: 0
 topbarData: 
    zones: 
       4:
@@ -2639,7 +2780,7 @@ topbarWidgetWidth:
       val: 1
    5:
       val: 1
-view: 1
+view: 0
 modelRegistrationID: "mYzzdzBE"
 customSwitches: 
    SW1:
