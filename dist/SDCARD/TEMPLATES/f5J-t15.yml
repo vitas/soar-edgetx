@@ -76,8 +76,6 @@ flightModeData:
         val: 33
       10:
         val: 80
-      11:
-        val: 0
   1:
     trim:
       0:
@@ -310,44 +308,6 @@ mixData:
     flightModes: 110111111
     offset: 0
     name: Motor
-  - destCh: 5
-    srcRaw: I0
-    weight: 100
-    swtch: NONE
-    curve:
-      type: 0
-      value: 0
-    delayPrec: 0
-    delayUp: 0
-    delayDown: 0
-    speedPrec: 0
-    speedUp: 0
-    speedDown: 0
-    carryTrim: 0
-    mltpx: ADD
-    mixWarn: 0
-    flightModes: 000000000
-    offset: 0
-    name: ""
-  - destCh: 5
-    srcRaw: I2
-    weight: gv(2)
-    swtch: NONE
-    curve:
-      type: 0
-      value: 0
-    delayPrec: 0
-    delayUp: 0
-    delayDown: 0
-    speedPrec: 0
-    speedUp: 0
-    speedDown: 0
-    carryTrim: 1
-    mltpx: ADD
-    mixWarn: 0
-    flightModes: 000000000
-    offset: 0
-    name: AilRud
   - destCh: 3
     srcRaw: ch(31)
     weight: 100
@@ -424,6 +384,44 @@ mixData:
     flightModes: 000000000
     offset: 0
     name: ""
+  - destCh: 5
+    srcRaw: I0
+    weight: 100
+    swtch: NONE
+    curve:
+      type: 0
+      value: 0
+    delayPrec: 0
+    delayUp: 0
+    delayDown: 0
+    speedPrec: 0
+    speedUp: 0
+    speedDown: 0
+    carryTrim: 0
+    mltpx: ADD
+    mixWarn: 0
+    flightModes: 000000000
+    offset: 0
+    name: ""
+  - destCh: 5
+    srcRaw: I2
+    weight: gv(2)
+    swtch: NONE
+    curve:
+      type: 0
+      value: 0
+    delayPrec: 0
+    delayUp: 0
+    delayDown: 0
+    speedPrec: 0
+    speedUp: 0
+    speedDown: 0
+    carryTrim: 1
+    mltpx: ADD
+    mixWarn: 0
+    flightModes: 000000000
+    offset: 0
+    name: AilRud
   - destCh: 6
     srcRaw: ch(21)
     weight: 100
@@ -1910,7 +1908,7 @@ logicalSw:
     lsState: 0
   2:
     func: FUNC_AND
-    def: SC0,NONE
+    def: SD0,NONE
     delay: 0
     duration: 0
     andsw: NONE
@@ -1918,7 +1916,7 @@ logicalSw:
     lsState: 0
   3:
     func: FUNC_AND
-    def: SC2,NONE
+    def: SD2,NONE
     delay: 0
     duration: 0
     andsw: NONE
@@ -1934,7 +1932,7 @@ logicalSw:
     lsState: 0
   5:
     func: FUNC_AND
-    def: SE2,!FM2
+    def: SF0,!FM2
     delay: 0
     duration: 0
     andsw: NONE
@@ -1942,7 +1940,7 @@ logicalSw:
     lsState: 0
   6:
     func: FUNC_AND
-    def: SD2,NONE
+    def: SC2,NONE
     delay: 0
     duration: 0
     andsw: NONE
@@ -1958,7 +1956,7 @@ logicalSw:
     lsState: 0
   8:
     func: FUNC_OR
-    def: SF2,L11
+    def: SE2,L11
     delay: 0
     duration: 0
     andsw: NONE
@@ -2131,7 +2129,7 @@ logicalSw:
     duration: 0
     andsw: NONE
     lsPersist: 0
-    lsState: 0
+    lsState: 1
   36:
     func: FUNC_AND
     def: L36,!L34
@@ -2174,7 +2172,7 @@ logicalSw:
     lsState: 0
   44:
     func: FUNC_AND
-    def: SE0,!FM2
+    def: SF2,!FM2
     delay: 0
     duration: 0
     andsw: NONE
@@ -2186,14 +2184,6 @@ logicalSw:
     delay: 0
     duration: 0
     andsw: NONE
-    lsPersist: 0
-    lsState: 0
-  46:
-    func: FUNC_EDGE
-    def: SE0,0,-
-    delay: 0
-    duration: 0
-    andsw: "!FM2"
     lsPersist: 0
     lsState: 0
 customFn:
@@ -2300,25 +2290,29 @@ customFn:
   26:
     swtch: L37
     func: PLAY_TRACK
-    def: "flapup\x00\x00,1,5"
+    def: "\x00\x00\x00\x00\x00\x00\x00\x00,1,5"
   32:
     swtch: FM0
     func: PLAY_TRACK
-    def: "cruise\x00\x00,1,1x"
+    def: "f3j_t2\x00\x00,1,1x"
   33:
     swtch: FM2
     func: PLAY_TRACK
-    def: "power\x00\x00\x00,1,1x"
+    def: "f3jlau\x00\x00,1,1x"
   34:
     swtch: FM5
     func: PLAY_TRACK
-    def: "therml\x00\x00,1,1x"
+    def: "f3j_t1\x00\x00,1,1x"
   35:
     swtch: FM4
     func: PLAY_TRACK
-    def: "speed\x00\x00\x00,1,1x"
+    def: "f3j_t3\x00\x00,1,1x"
+  36:
+    swtch: L35
+    func: PLAY_TRACK
+    def: "f3jlnd\x00\x00,1,1x"
   37:
-    swtch: L47
+    swtch: L45
     func: PLAY_TRACK
     def: "crowof\x00\x00,1,1x"
 thrTraceSrc: Thr
@@ -2437,7 +2431,7 @@ moduleData:
     mod:
       crsf:
         telemetryBaudrate: 0
-        crsfArmingMode: 0
+        crsfArmingMode: 1
         crsfArmingTrigger: NONE
 failsafeChannels:
   0:
@@ -2702,79 +2696,6 @@ screenData:
           type: Color
           value:
             color: COLIDX0
-  2:
-    LayoutId: Layout2P1
-    layoutData:
-      zones:
-        0:
-          widgetName: Outputs
-          widgetData:
-            options:
-              0:
-                type: Signed
-                value:
-                  signedValue: 1
-              1:
-                type: Bool
-                value:
-                  boolValue: 0
-              2:
-                type: Color
-                value:
-                  color: COLIDX5
-              3:
-                type: Color
-                value:
-                  color: COLIDX0
-              4:
-                type: Color
-                value:
-                  color: COLIDX3
-        1:
-          widgetName: ModelBmp
-          widgetData:
-            options:
-              0:
-                type: Color
-                value:
-                  color: COLIDX3
-              1:
-                type: Unsigned
-                value:
-                  unsignedValue: 0
-              2:
-                type: Bool
-                value:
-                  boolValue: 0
-              3:
-                type: Color
-                value:
-                  color: COLIDX5
-              4:
-                type: Bool
-                value:
-                  boolValue: 1
-      options:
-        0:
-          type: Bool
-          value:
-            boolValue: 1
-        1:
-          type: Bool
-          value:
-            boolValue: 1
-        2:
-          type: Bool
-          value:
-            boolValue: 1
-        3:
-          type: Bool
-          value:
-            boolValue: 1
-        4:
-          type: Bool
-          value:
-            boolValue: 0
 topbarData:
   zones:
     4:
@@ -2814,7 +2735,7 @@ topbarWidgetWidth:
     val: 1
   5:
     val: 1
-view: 0
+view: 1
 modelRegistrationID: mYzzdzBE
 hatsMode: GLOBAL
 customSwitches:
