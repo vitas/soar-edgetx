@@ -60,8 +60,6 @@ flightModeData:
     gvars:
       0:
         val: 57
-      1:
-        val: 24
       2:
         val: 15
       3:
@@ -653,7 +651,7 @@ mixData:
   - destCh: 20
     srcRaw: MAX
     weight: 100
-    swtch: L36
+    swtch: L44
     curve:
       type: 0
       value: 0
@@ -1344,19 +1342,19 @@ limitData:
     name: Moto
     curve: 0
   3:
-    min: 0
-    max: 2
-    revert: 1
-    offset: 0
+    min: 1000
+    max: 220
+    revert: 0
+    offset: 650
     ppmCenter: 0
     symetrical: 0
     name: Fl-L
     curve: 3
   4:
-    min: 0
-    max: 0
-    revert: 1
-    offset: 0
+    min: -160
+    max: -950
+    revert: 0
+    offset: -700
     ppmCenter: 0
     symetrical: 0
     name: Fl-R
@@ -1382,7 +1380,7 @@ limitData:
   7:
     min: 0
     max: 0
-    revert: 0
+    revert: 1
     offset: 0
     ppmCenter: 0
     symetrical: 0
@@ -1766,21 +1764,21 @@ points:
   10:
     val: -100
   11:
-    val: -50
+    val: -47
   12:
     val: 0
   13:
-    val: 50
+    val: 53
   14:
     val: 100
   15:
     val: -100
   16:
-    val: -50
+    val: -52
   17:
     val: 0
   18:
-    val: 50
+    val: 52
   19:
     val: 100
   20:
@@ -1932,7 +1930,7 @@ logicalSw:
     lsState: 0
   5:
     func: FUNC_AND
-    def: SF0,!FM2
+    def: SF2,!FM2
     delay: 0
     duration: 0
     andsw: NONE
@@ -2172,7 +2170,7 @@ logicalSw:
     lsState: 0
   44:
     func: FUNC_AND
-    def: SF2,!FM2
+    def: SF0,!FM2
     delay: 0
     duration: 0
     andsw: NONE
@@ -2419,8 +2417,8 @@ varioData:
   max: 0
 rssiSource: none
 rfAlarms:
-  warning: 45
-  critical: 42
+  warning: 95
+  critical: 90
 disableTelemetryWarning: 0
 moduleData:
   0:
@@ -2544,6 +2542,272 @@ telemetrySensors:
     label: VSpd
     unit: 5
     prec: 1
+    autoOffset: 0
+    filter: 0
+    logs: 1
+    persistent: 0
+    onlyPositive: 0
+    cfg:
+      custom:
+        ratio: 0
+        offset: 0
+  5:
+    type: TYPE_CUSTOM
+    id1:
+      id: 20
+    subId: 0
+    id2:
+      instance: 0
+    label: 1RSS
+    unit: 17
+    prec: 0
+    autoOffset: 0
+    filter: 0
+    logs: 1
+    persistent: 0
+    onlyPositive: 0
+    cfg:
+      custom:
+        ratio: 0
+        offset: 0
+  6:
+    type: TYPE_CUSTOM
+    id1:
+      id: 20
+    subId: 0
+    id2:
+      instance: 1
+    label: 2RSS
+    unit: 17
+    prec: 0
+    autoOffset: 0
+    filter: 0
+    logs: 1
+    persistent: 0
+    onlyPositive: 0
+    cfg:
+      custom:
+        ratio: 0
+        offset: 0
+  7:
+    type: TYPE_CUSTOM
+    id1:
+      id: 20
+    subId: 0
+    id2:
+      instance: 2
+    label: RQly
+    unit: 13
+    prec: 0
+    autoOffset: 0
+    filter: 0
+    logs: 1
+    persistent: 0
+    onlyPositive: 0
+    cfg:
+      custom:
+        ratio: 0
+        offset: 0
+  8:
+    type: TYPE_CUSTOM
+    id1:
+      id: 20
+    subId: 0
+    id2:
+      instance: 3
+    label: RSNR
+    unit: 17
+    prec: 0
+    autoOffset: 0
+    filter: 0
+    logs: 1
+    persistent: 0
+    onlyPositive: 0
+    cfg:
+      custom:
+        ratio: 0
+        offset: 0
+  9:
+    type: TYPE_CUSTOM
+    id1:
+      id: 20
+    subId: 0
+    id2:
+      instance: 4
+    label: ANT
+    unit: 0
+    prec: 0
+    autoOffset: 0
+    filter: 0
+    logs: 1
+    persistent: 0
+    onlyPositive: 0
+    cfg:
+      custom:
+        ratio: 0
+        offset: 0
+  10:
+    type: TYPE_CUSTOM
+    id1:
+      id: 20
+    subId: 0
+    id2:
+      instance: 5
+    label: RFMD
+    unit: 0
+    prec: 0
+    autoOffset: 0
+    filter: 0
+    logs: 1
+    persistent: 0
+    onlyPositive: 0
+    cfg:
+      custom:
+        ratio: 0
+        offset: 0
+  11:
+    type: TYPE_CUSTOM
+    id1:
+      id: 20
+    subId: 0
+    id2:
+      instance: 6
+    label: TPWR
+    unit: 16
+    prec: 0
+    autoOffset: 0
+    filter: 0
+    logs: 1
+    persistent: 0
+    onlyPositive: 0
+    cfg:
+      custom:
+        ratio: 0
+        offset: 0
+  12:
+    type: TYPE_CUSTOM
+    id1:
+      id: 20
+    subId: 0
+    id2:
+      instance: 7
+    label: TRSS
+    unit: 17
+    prec: 0
+    autoOffset: 0
+    filter: 0
+    logs: 1
+    persistent: 0
+    onlyPositive: 0
+    cfg:
+      custom:
+        ratio: 0
+        offset: 0
+  13:
+    type: TYPE_CUSTOM
+    id1:
+      id: 20
+    subId: 0
+    id2:
+      instance: 8
+    label: TQly
+    unit: 13
+    prec: 0
+    autoOffset: 0
+    filter: 0
+    logs: 1
+    persistent: 0
+    onlyPositive: 0
+    cfg:
+      custom:
+        ratio: 0
+        offset: 0
+  14:
+    type: TYPE_CUSTOM
+    id1:
+      id: 20
+    subId: 0
+    id2:
+      instance: 9
+    label: TSNR
+    unit: 17
+    prec: 0
+    autoOffset: 0
+    filter: 0
+    logs: 1
+    persistent: 0
+    onlyPositive: 0
+    cfg:
+      custom:
+        ratio: 0
+        offset: 0
+  15:
+    type: TYPE_CUSTOM
+    id1:
+      id: 8
+    subId: 0
+    id2:
+      instance: 0
+    label: RxBt
+    unit: 1
+    prec: 1
+    autoOffset: 0
+    filter: 0
+    logs: 1
+    persistent: 0
+    onlyPositive: 0
+    cfg:
+      custom:
+        ratio: 0
+        offset: 0
+  16:
+    type: TYPE_CUSTOM
+    id1:
+      id: 8
+    subId: 0
+    id2:
+      instance: 1
+    label: Curr
+    unit: 2
+    prec: 1
+    autoOffset: 0
+    filter: 0
+    logs: 1
+    persistent: 0
+    onlyPositive: 0
+    cfg:
+      custom:
+        ratio: 0
+        offset: 0
+  17:
+    type: TYPE_CUSTOM
+    id1:
+      id: 8
+    subId: 0
+    id2:
+      instance: 2
+    label: Capa
+    unit: 14
+    prec: 0
+    autoOffset: 0
+    filter: 0
+    logs: 1
+    persistent: 0
+    onlyPositive: 0
+    cfg:
+      custom:
+        ratio: 0
+        offset: 0
+  18:
+    type: TYPE_CUSTOM
+    id1:
+      id: 8
+    subId: 0
+    id2:
+      instance: 3
+    label: Bat%
+    unit: 13
+    prec: 0
     autoOffset: 0
     filter: 0
     logs: 1

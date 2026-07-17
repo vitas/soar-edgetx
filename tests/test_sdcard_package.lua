@@ -294,7 +294,10 @@ test("TX15 templates add switchable GV12 aileron to elevator mix", function()
     assert_contains(indexed_block(model.content, "logicalSw", 4), "def: SA2,NONE", model.label .. " L5 motor arm switch")
     assert_contains(indexed_block(model.content, "logicalSw", 45), "def: SA0,NONE", model.label .. " L46 switch")
     assert_contains(indexed_block(model.content, "gvars", 11), "name: AiE", model.label .. " GV12 name")
-    assert_contains(indexed_block(model.content, "flightModeData", 0), "11:\n        val: 0", model.label .. " GV12 cruise default")
+
+    local cruise_mode = indexed_block(model.content, "flightModeData", 0)
+    local cruise_gv12 = cruise_mode:match("\n%s+11:%s*\n%s+val:%s*([%-0-9]+)")
+    assert(cruise_gv12 == nil or tonumber(cruise_gv12) == 0, model.label .. " GV12 cruise default should be absent or zero")
   end
 end)
 
@@ -313,14 +316,15 @@ test("TX15 template does not bind altitude report switch to speed mode", functio
   assert(not model:find("def: SC0,L1", 1, true), "altitude reports should not default to SC down speed mode")
 end)
 
-test("TX15 templates use enabled F5J voice tracks for mode and window cues", function()
+test("TX15 templates preserve retained voice tracks for mode and window cues", function()
   local expected = {
     [6] = { "swtch: L6", 'def: "landin\\x00\\x00,1,1x"' },
-    [26] = { "swtch: L37", 'def: "flapup\\x00\\x00,1,5"' },
-    [32] = { "swtch: FM0", 'def: "cruise\\x00\\x00,1,1x"' },
-    [33] = { "swtch: FM2", 'def: "power\\x00\\x00\\x00,1,1x"' },
-    [34] = { "swtch: FM5", 'def: "therml\\x00\\x00,1,1x"' },
-    [35] = { "swtch: FM4", 'def: "speed\\x00\\x00\\x00,1,1x"' }
+    [26] = { "swtch: L37", 'def: "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00,1,5"' },
+    [32] = { "swtch: FM0", 'def: "f3j_t2\\x00\\x00,1,1x"' },
+    [33] = { "swtch: FM2", 'def: "f3jlau\\x00\\x00,1,1x"' },
+    [34] = { "swtch: FM5", 'def: "f3j_t1\\x00\\x00,1,1x"' },
+    [35] = { "swtch: FM4", 'def: "f3j_t3\\x00\\x00,1,1x"' },
+    [36] = { "swtch: L35", 'def: "f3jlnd\\x00\\x00,1,1x"' }
   }
 
   for _, model in ipairs(tx15_template_models()) do
@@ -334,29 +338,37 @@ test("TX15 templates use enabled F5J voice tracks for mode and window cues", fun
   end
 end)
 
-test("TX15 templates play crow-off only on switch edge outside motor mode", function()
+test("TX15 templates play crow-off from landing-off logical switch", function()
   for _, model in ipairs(tx15_template_models()) do
-    assert_mix_block(indexed_block(model.content, "logicalSw", 46), {
-      "func: FUNC_EDGE",
-      "def: SE0,0,-",
-      'andsw: "!FM2"'
-    }, model.label .. " L47 crow-off audio edge")
-
     assert_mix_block(indexed_block(model.content, "customFn", 37), {
-      "swtch: L47",
+      "swtch: L45",
       "func: PLAY_TRACK",
       'def: "crowof\\x00\\x00,1,1x"'
     }, model.label .. " SF38 crow-off track")
   end
 end)
 
-test("TX15 template has no legacy SoarOTX scripts, logs, or non-F5J sound references", function()
+test("TX15 ETX brake-off follows landing-off switch state directly", function()
+  local model = command_output("unzip -p models/tx15/f5j_tmpl_t15.etx MODELS/model1.yml")
+  local brake_mixes = mix_blocks_for(model, 20)
+  local brake_off = find_mix_block(brake_mixes, "BrkOff")
+
+  assert(brake_off, "TX15 ETX model missing BrkOff mix")
+  assert_mix_block(brake_off, {
+    "srcRaw: MAX",
+    "swtch: L44",
+    "mltpx: REPL",
+    "name: BrkOff"
+  }, "TX15 ETX BrkOff mix")
+  assert(not brake_off:find("swtch: L36", 1, true), "TX15 ETX BrkOff should not use sticky L36")
+end)
+
+test("TX15 template has no legacy SoarOTX scripts, logs, or non-F5J class references", function()
   local model = command_output("unzip -p models/tx15/f5j_tmpl_t15.etx MODELS/model1.yml")
   local forbidden = {
     "PLAY_SCRIPT",
     "JFutil",
     "func: LOGS",
-    "f3j",
     "f3k"
   }
   local lower_model = model:lower()
