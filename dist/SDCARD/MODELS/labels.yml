@@ -1,4 +1,37 @@
 Labels:
-  f5j: ~
-  Favorites: ~
+  "f5j":
+  "Favorites":
 Sort: 1
+Models:
+  model1.yml:
+    hash: "fdb70000f45c196b"
+    name: "Challenger Std"
+    mod0id: 1
+    mod0type: 5
+    labels: "f5j,Favorites"
+    bitmap: "sense.png"
+    lastopen: 0
+  model2.yml:
+    hash: "ceb70000f45c196b"
+    name: "Challenger Wind"
+    mod0id: 2
+    mod0type: 5
+    labels: "f5j"
+    bitmap: "sense.png"
+    lastopen: 0
+  model3.yml:
+    hash: "3fcc0000f45c8d6e"
+    name: "Challenger tmpl"
+    mod0type: 5
+    labels: ""
+    bitmap: "sense.png"
+    lastopen: 1784555116
+  model4.yml:
+    hash: "96cc0000f45c206b"
+    name: "Challenger W"
+    mod0id: 2
+    mod0type: 5
+    labels: "f5j"
+    bitmap: "sense.png"
+    lastopen: 0
+
