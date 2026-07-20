@@ -367,16 +367,26 @@ widget_test("target adjustment normalizes stale one second residue", function()
   assert_equal(env.drawTimers[1].value, 60, "normalized target timer")
 end)
 
-widget_test("target time follows edited timer value while ready", function()
+widget_test("target time ignores stale countdown value while ready", function()
   local env = new_widget_env()
 
-  env.timers[0].value = 480
-  env.widget.background()
+  env.timers[0].value = 589
   env.widget.background()
   env.drawTimers = {}
   env.widget.refresh(nil, nil)
 
-  assert_equal(env.drawTimers[1].value, 480, "ready target timer")
+  assert_equal(env.drawTimers[1].value, 600, "ready target timer")
+end)
+
+widget_test("arm reset keeps configured target when countdown value is stale", function()
+  local env = new_widget_env()
+
+  env.timers[0].value = 589
+  env.switches[22] = true
+  env.widget.background()
+
+  assert_equal(env.timers[0].start, 600, "radio flight timer start")
+  assert_equal(env.timers[0].value, 600, "radio flight timer value")
 end)
 
 widget_test("target time follows edited timer start while ready", function()

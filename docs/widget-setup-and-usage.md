@@ -300,14 +300,12 @@ Timer 1 has no usable start or current value, the widget falls back to 10
 minutes.
 
 To change the working window in the emulator or on the radio, keep the widget in
-the `Ready` state and change Timer 1. Editing the Timer 1 `Start` value changes
-the configured model default. Editing the current Timer 1 value while the widget
-is ready before the first launch also updates the visible target time. To use
-the widget `Inc` / `Dec` controls, first open the competition widget full-screen;
-EdgeTX does not send those key events to the normal main-view widget after radio
-startup. After the widget has started or reset a flight, stale Timer 1 countdown
-values are ignored so the next flight does not inherit the previous remaining
-time.
+the `Ready` state and change Timer 1 `Start`; that is the configured model
+default. The current Timer 1 value is treated as runtime countdown state and is
+not used to change the target when a start value exists, so a stale remaining
+time cannot become the next working window. To use the widget `Inc` / `Dec`
+controls, first open the competition widget full-screen; EdgeTX does not send
+those key events to the normal main-view widget after radio startup.
 
 To reset the working-window timer back to the target time, use the model's arm
 or reset control while the widget is on the competition page. After a flight,

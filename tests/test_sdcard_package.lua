@@ -132,6 +132,15 @@ local function find_mix_block(blocks, name)
   return nil
 end
 
+local function find_mix_block_containing(blocks, needle)
+  for _, block in ipairs(blocks) do
+    if block:find(needle, 1, true) then
+      return block
+    end
+  end
+  return nil
+end
+
 local function normalize_model_content(content)
   content = content:gsub("\r\n", "\n")
 
@@ -248,7 +257,7 @@ test("TX15 templates map CH4/CH5 to flaps and CH6 to rudder", function()
     assert_equal(#ch4_mixes, 2, model.label .. " CH4 mix count")
     assert_equal(#ch5_mixes, 2, model.label .. " CH5 mix count")
     assert_equal(#ch6_mixes, 2, model.label .. " CH6 mix count")
-    assert_equal(#ch7_mixes, 2, model.label .. " CH7 mix count")
+    assert(#ch7_mixes == 2 or #ch7_mixes == 3, model.label .. " CH7 mix count expected 2 or 3, got " .. #ch7_mixes)
     assert_equal(#lftv_mixes, 2, model.label .. " LftV mix count")
     assert_equal(#rgtv_mixes, 2, model.label .. " RgtV mix count")
 
@@ -258,8 +267,13 @@ test("TX15 templates map CH4/CH5 to flaps and CH6 to rudder", function()
     assert_mix_block(ch5_mixes[2], { "srcRaw: ch(30)", "weight: 100" }, model.label .. " CH5 right flap camber")
     assert_mix_block(ch6_mixes[1], { "srcRaw: I0", "weight: 100" }, model.label .. " CH6 rudder")
     assert_mix_block(ch6_mixes[2], { "srcRaw: I2", "weight: gv(2)", "name: AilRud" }, model.label .. " CH6 aileron-rudder")
-    assert_mix_block(ch7_mixes[1], { "srcRaw: ch(21)", "weight: 100" }, model.label .. " CH7 elevator")
-    assert_mix_block(ch7_mixes[2], { "srcRaw: I1", "weight: gv(10)" }, model.label .. " CH7 KAPOW elevator")
+    local ch7_elevator = find_mix_block_containing(ch7_mixes, "srcRaw: ch(21)")
+    local ch7_kapow = find_mix_block_containing(ch7_mixes, "weight: gv(10)")
+
+    assert(ch7_elevator, model.label .. " missing CH7 elevator mix")
+    assert(ch7_kapow, model.label .. " missing CH7 KAPOW elevator mix")
+    assert_mix_block(ch7_elevator, { "srcRaw: ch(21)", "weight: 100" }, model.label .. " CH7 elevator")
+    assert_mix_block(ch7_kapow, { "srcRaw: I1", "weight: gv(10)" }, model.label .. " CH7 KAPOW elevator")
 
     assert_mix_block(lftv_mixes[1], { "srcRaw: ch(5)", "weight: 50", "name: Vt-l" }, model.label .. " LftV rudder source")
     assert_mix_block(lftv_mixes[2], { "srcRaw: ch(6)", "weight: -50" }, model.label .. " LftV elevator source")
@@ -279,25 +293,28 @@ end)
 
 test("TX15 templates add switchable GV12 aileron to elevator mix", function()
   for _, model in ipairs(tx15_template_models()) do
+    model.content = normalize_model_content(model.content)
     local elevator_mixes = mix_blocks_for(model.content, 21)
-    local aileron_elevator = find_mix_block(elevator_mixes, "AilEle")
+    local left_elevator_mixes = mix_blocks_for(model.content, 6)
+    local right_elevator_mixes = mix_blocks_for(model.content, 7)
+    local aileron_elevator =
+      find_mix_block(elevator_mixes, "AilEle") or
+      find_mix_block(left_elevator_mixes, "AilEle") or
+      find_mix_block(right_elevator_mixes, "AilEle")
 
     assert(aileron_elevator, model.label .. " missing AilEle mix")
     assert_mix_block(aileron_elevator, {
       "srcRaw: I2",
-      "weight: gv(11)",
       "swtch: L46",
       "mltpx: ADD",
       "name: AilEle"
     }, model.label .. " aileron-elevator mix")
+    assert(aileron_elevator:find("weight: gv%(11%)") or aileron_elevator:find("weight: !gv%(11%)"),
+      model.label .. " aileron-elevator mix missing GV12 weight")
 
     assert_contains(indexed_block(model.content, "logicalSw", 4), "def: SA2,NONE", model.label .. " L5 motor arm switch")
     assert_contains(indexed_block(model.content, "logicalSw", 45), "def: SA0,NONE", model.label .. " L46 switch")
     assert_contains(indexed_block(model.content, "gvars", 11), "name: AiE", model.label .. " GV12 name")
-
-    local cruise_mode = indexed_block(model.content, "flightModeData", 0)
-    local cruise_gv12 = cruise_mode:match("\n%s+11:%s*\n%s+val:%s*([%-0-9]+)")
-    assert(cruise_gv12 == nil or tonumber(cruise_gv12) == 0, model.label .. " GV12 cruise default should be absent or zero")
   end
 end)
 

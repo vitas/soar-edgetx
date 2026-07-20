@@ -44,8 +44,6 @@ local nextAltitudeCall = 0
 local nextMotorCall = MOTOR_CALL_INTERVAL
 local lastHeightCall
 local observedTimerStart
-local observedTimerValue
-local allowTimerValueTargetSync = true
 
 local modeLabels = {
   initial = "Ready",
@@ -89,7 +87,7 @@ local function read_target_time()
   local value = timer_number(timer.value, 0)
   local target = state and state.target_time or nil
 
-  if observedTimerStart == nil and observedTimerValue == nil then
+  if observedTimerStart == nil then
     if start > 0 then
       target = start
     elseif value > 0 then
@@ -97,8 +95,6 @@ local function read_target_time()
     end
   elseif start > 0 and start ~= observedTimerStart then
     target = start
-  elseif allowTimerValueTargetSync and value > 0 and value ~= observedTimerValue then
-    target = value
   elseif type(target) ~= "number" or target <= 0 then
     if start > 0 then
       target = start
@@ -108,7 +104,6 @@ local function read_target_time()
   end
 
   observedTimerStart = start
-  observedTimerValue = value
 
   if type(target) ~= "number" or target < 0 then
     return DEFAULT_TARGET_TIME
@@ -170,8 +165,6 @@ local function reset_radio_timers()
     model.resetTimer(1)
   end
   observedTimerStart = target
-  observedTimerValue = target
-  allowTimerValueTargetSync = false
 end
 
 local function initialize_flight(resetAltitude)
