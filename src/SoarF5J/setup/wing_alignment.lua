@@ -44,6 +44,7 @@ local BUTTON_H =  36
 local BUTTON_Y =  (LCD_H + TOP + HEIGHT - BUTTON_H) / 2
 local stepSwitchPrevious
 local adjustPrevious
+local editingEnabled = false
 local beginEditing
 
 -- Setup warning prompt
@@ -95,6 +96,16 @@ local function safeFieldId(name)
   return field.id
 end
 
+local function optionalFieldId(names)
+  for _, name in ipairs(names) do
+    local field = getFieldInfo(name)
+    if field and field.id then
+      return field.id
+    end
+  end
+  return nil
+end
+
 local function drawError()
   local text = errMsg or "Setup page error"
   lcd.drawFilledRectangle(6, 6, widget.zone.w - 12, widget.zone.h - 12, colors.focus)
@@ -108,11 +119,17 @@ end
 
 -- Other constants
 local INP_STEP = safeFieldId("input8")      -- Step input
+local INP_FLP_ALIGN = optionalFieldId({ "trim-rud", "T1" })
+local INP_FLP_MOVE = optionalFieldId({ "trim-thr", "T3" })
+local INP_AIL_ALIGN = optionalFieldId({ "trim-ail", "T4" })
+local INP_AIL_MOVE = optionalFieldId({ "trim-ele", "T2" })
 local LS_STEP = nil                         -- Set this LS to apply step input and adjust
 local GV_ADJUST = 7                         -- GV8: adjustment enabled
 local N = 5                                 -- Number of curve points
 local MAX_Y = 1500                          -- Max output value
 local MINDIF = 100                          -- Minimum difference between lower, center and upper values
+local TRIM_DEADBAND = 256
+local TRIM_STEP = 10
 local NC = 32																-- Number of channels
 
 -- Flaperon curve indices (LA, LF, RF, RA)
@@ -134,6 +151,22 @@ local labels = {
 	"Rgt flp",
 	"Rgt ail"
 }
+local trimAxes = {
+  { source = INP_FLP_ALIGN, adjustments = { { 2, 1 }, { 3, -1 } }, last = 0 },
+  { source = INP_FLP_MOVE, adjustments = { { 2, 1 }, { 3, 1 } }, last = 0 },
+  { source = INP_AIL_ALIGN, adjustments = { { 1, 1 }, { 4, -1 } }, last = 0 },
+  { source = INP_AIL_MOVE, adjustments = { { 1, 1 }, { 4, 1 } }, last = 0 }
+}
+
+local function clamp(value, minimum, maximum)
+  return math.min(math.max(value, minimum), maximum)
+end
+
+local function resetTrimTracking()
+  for _, axis in ipairs(trimAxes) do
+    axis.last = 0
+  end
+end
 
 -- Step Adjusting input has be turned on by this widget
 local function isAdjustin()
@@ -153,6 +186,8 @@ local function stepOff()
     model.setGlobalVariable(GV_ADJUST, 0, adjustPrevious)
     adjustPrevious = nil
   end
+  editingEnabled = false
+  resetTrimTracking()
 end
 
 local function stepOn()
@@ -230,6 +265,8 @@ beginEditing = function()
     return
   end
   stepOn()
+  editingEnabled = true
+  resetTrimTracking()
 end -- beginEditing()
 
 -- Find index of the curve point that corresponds to the value of the step input
@@ -368,6 +405,43 @@ local function sliderPoint(i)
   return 10 * math.floor(0.1 * (value - offset()) + 0.5)
 end
 
+local function trimDirection(source)
+  if not source then
+    return 0
+  end
+
+  local value = getValue(source)
+  if type(value) ~= "number" then
+    return 0
+  elseif value > TRIM_DEADBAND then
+    return 1
+  elseif value < -TRIM_DEADBAND then
+    return -1
+  end
+  return 0
+end
+
+local function adjustSurfaceFromTrim(surfaceIndex, direction)
+  local value = clamp(sliderPoint(surfaceIndex) + direction * TRIM_STEP, -750, 750)
+  adjustPoint(surfaceIndex, { value = value })
+end
+
+local function handleTrimAdjustments()
+  if not editingEnabled or not activeP then
+    return
+  end
+
+  for _, axis in ipairs(trimAxes) do
+    local direction = trimDirection(axis.source)
+    if direction ~= 0 and axis.last == 0 then
+      for _, adjustment in ipairs(axis.adjustments) do
+        adjustSurfaceFromTrim(adjustment[1], direction * adjustment[2])
+      end
+    end
+    axis.last = direction
+  end
+end
+
 -- Reset outputs
 local function reset()
   local midpt = (N + 1) / 2
@@ -416,7 +490,8 @@ local function setup_gui()
 
     -- Help text
     local txt = "Use the throttle stick to select a point on the\n" ..
-                "curve, and adjust with the sliders on the screen.\n" ..
+                "curve. Thr/Ele trims move flap/aileron pairs.\n" ..
+                "Rud/Ail trims align left-right pairs.\n" ..
                 "First end points, then center, and finally +/-50%."
     lcd.drawTextLines(MARGIN, TEXT_Y, BUTTON_X - MARGIN, LCD_H - TEXT_Y, txt, colors.primary1)
   end
@@ -487,6 +562,7 @@ function widget.refresh(event, touchState)
   end
 
   activeP = FindPoint()
+  handleTrimAdjustments()
   ComputeYs()
 
   gui.run(event, touchState)

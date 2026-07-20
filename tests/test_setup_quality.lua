@@ -173,6 +173,7 @@ local function setup_env(options)
     outputs = options.outputs or {},
     gvs = options.gvs or {},
     logicalSwitches = options.logicalSwitches or {},
+    values = options.values or {},
     input8 = options.input8,
     parameterValue = options.parameterValue
   }
@@ -295,11 +296,18 @@ local function setup_env(options)
   function getFieldInfo(name)
     if name == "input8" and env.input8 then
       return { id = env.input8 }
+    elseif name == "trim-rud" or name == "trim-thr" or name == "trim-ail" or name == "trim-ele" then
+      return { id = name }
+    elseif name == "T1" or name == "T2" or name == "T3" or name == "T4" then
+      return { id = name }
     end
     return nil
   end
 
-  function getValue()
+  function getValue(source)
+    if source ~= nil and env.values[source] ~= nil then
+      return env.values[source]
+    end
     return 0
   end
 
@@ -704,6 +712,45 @@ setup_quality_test("brake curves supports radios without getStickySwitch", funct
   assert(brake.stickyWrites[1] and brake.stickyWrites[1].value == true, "brake curves did not enable step switch")
 end)
 
+setup_quality_test("brake curves trims adjust selected flap and aileron landing points", function()
+  local brake = setup_env({
+    input8 = 800,
+    values = { [800] = -512 },
+    curves = {
+      [4] = five_point_curve(),
+      [5] = five_point_curve()
+    }
+  })
+
+  load_setup_page("src/SoarF5J/setup/brake_curves.lua", brake)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  brake.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+  assert(brake.stickyWrites[1] and brake.stickyWrites[1].index == 11 and brake.stickyWrites[1].value == true,
+    "brake curves did not enable live step switch")
+
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  local flapBefore = brake.curves[4].y[2]
+  local aileronBefore = brake.curves[5].y[2]
+
+  brake.values["trim-thr"] = 1024
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  assert_equal(brake.curves[4].y[2], flapBefore + 1, "throttle trim flap point")
+  assert_equal(brake.curves[5].y[2], aileronBefore, "throttle trim aileron point")
+
+  brake.values["trim-thr"] = 0
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  flapBefore = brake.curves[4].y[2]
+  aileronBefore = brake.curves[5].y[2]
+
+  brake.values["trim-ele"] = -1024
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  assert_equal(brake.curves[4].y[2], flapBefore, "elevator trim flap point")
+  assert_equal(brake.curves[5].y[2], aileronBefore - 1, "elevator trim aileron point")
+end)
+
 setup_quality_test("curve setup pages report missing step input without load crash", function()
   local brake = setup_env({
     curves = {
@@ -933,6 +980,67 @@ setup_quality_test("wing alignment cleanup tracks owned GV8 state", function()
     if write.index == 7 and write.value == 3 then restoredPrevious = true end
   end
   assert(restoredPrevious, "wing alignment did not restore previous GV8 mode")
+end)
+
+setup_quality_test("wing alignment trims move and align flap and aileron curve pairs", function()
+  local function new_wing()
+    local wing = setup_env({
+      input8 = 800,
+      values = { [800] = -512 },
+      curves = {
+        [0] = five_point_curve(),
+        [1] = five_point_curve(),
+        [2] = five_point_curve(),
+        [3] = five_point_curve()
+      },
+      outputs = valid_wing_outputs()
+    })
+
+    load_setup_page("src/SoarF5J/setup/wing_alignment.lua", wing)
+    wing.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+    wing.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+    return wing
+  end
+
+  local function deltas_after(source)
+    local wing = new_wing()
+    local before = {
+      leftAileron = wing.curves[0].y[4],
+      rightAileron = wing.curves[1].y[2],
+      leftFlap = wing.curves[2].y[4],
+      rightFlap = wing.curves[3].y[2]
+    }
+
+    wing.values[source] = 1024
+    wing.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+    return {
+      leftAileron = wing.curves[0].y[4] - before.leftAileron,
+      rightAileron = wing.curves[1].y[2] - before.rightAileron,
+      leftFlap = wing.curves[2].y[4] - before.leftFlap,
+      rightFlap = wing.curves[3].y[2] - before.rightFlap
+    }
+  end
+
+  local flapMove = deltas_after("trim-thr")
+  assert_equal(flapMove.leftAileron, 0, "left aileron unchanged by flap move")
+  assert_equal(flapMove.rightAileron, 0, "right aileron unchanged by flap move")
+  assert(flapMove.leftFlap * flapMove.rightFlap < 0, "flap move did not move pair together")
+
+  local aileronMove = deltas_after("trim-ele")
+  assert_equal(aileronMove.leftFlap, 0, "left flap unchanged by aileron move")
+  assert_equal(aileronMove.rightFlap, 0, "right flap unchanged by aileron move")
+  assert(aileronMove.leftAileron * aileronMove.rightAileron < 0, "aileron move did not move pair together")
+
+  local flapAlign = deltas_after("trim-rud")
+  assert_equal(flapAlign.leftAileron, 0, "left aileron unchanged by flap align")
+  assert_equal(flapAlign.rightAileron, 0, "right aileron unchanged by flap align")
+  assert(flapAlign.leftFlap * flapAlign.rightFlap > 0, "flap align did not move sides opposite each other")
+
+  local aileronAlign = deltas_after("trim-ail")
+  assert_equal(aileronAlign.leftFlap, 0, "left flap unchanged by aileron align")
+  assert_equal(aileronAlign.rightFlap, 0, "right flap unchanged by aileron align")
+  assert(aileronAlign.leftAileron * aileronAlign.rightAileron > 0, "aileron align did not move sides opposite each other")
 end)
 
 setup_quality_test("brake curves cleanup tracks owned step switch state", function()

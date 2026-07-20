@@ -196,6 +196,12 @@ each function.
 The TX15 template defaults motor arm to `SA down`.
 The TX15 template defaults the aileron to elevator mix enable switch to `SA up`.
 
+If `S1` or `S2` is used for motor control, configure that pot as a slider in
+the radio settings first. Check the live motor channel with the motor
+disconnected: if turning the pot clockwise moves the channel from minimum to
+maximum throttle in the wrong direction for your ESC setup, reverse that slider
+in the radio settings before connecting the motor.
+
 The TX15 template defaults the 10-second altitude report switch to the same
 physical switch used for voice reporting. The competition widget reads that
 logical switch during glide and calls the current `Alt` telemetry value every
@@ -225,9 +231,12 @@ Aligns the four flaperon outputs:
 - Right flap.
 - Right aileron.
 
-Use the throttle stick to select one of the five curve points. Use the screen
-sliders to adjust the selected point. The page writes to the flaperon curves and
-the related output center/endpoints.
+Use the throttle stick to select one of the five curve points. Throttle trim
+moves the flap pair up/down, and elevator trim moves the aileron pair up/down.
+Rudder trim aligns the left/right flap pair, and aileron trim aligns the
+left/right aileron pair. The screen sliders can still adjust individual
+surfaces. The page writes to the flaperon curves and the related output
+center/endpoints.
 
 Use `Reset` only when you intentionally want to return the flaperon alignment
 curves and endpoints to the page defaults.
@@ -236,9 +245,11 @@ curves and endpoints to the page defaults.
 
 Edits the airbrake flap and aileron curves.
 
-Use the throttle stick to select one of the five curve points, then adjust the
-flap and aileron sliders. The page writes to the flap and aileron airbrake
-curves.
+Use the throttle stick to select one of the five curve points. Throttle trim
+adjusts the flap landing curve, and elevator trim adjusts the aileron landing
+curve. The flap and aileron sliders on the screen still work. While editing is
+enabled, the page turns on the model step switch so the surfaces move live with
+the selected curve point.
 
 Use `Reset` only when you intentionally want to restore the default airbrake
 curve shapes.

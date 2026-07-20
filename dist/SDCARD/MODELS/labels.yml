@@ -1,14 +1,4 @@
 Labels:
-  "New":
-  "Favorites":
-Sort: 0
-Models:
-  model1.yml:
-    hash: "bac30000e15c5068"
-    name: "f5J"
-    mod0id: 1
-    mod0type: 5
-    labels: ""
-    bitmap: "sense.png"
-    lastopen: 1782910507
-
+  f5j: ~
+  Favorites: ~
+Sort: 1

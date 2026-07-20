@@ -1,11 +1,11 @@
 semver: 2.12.2
 header:
-  name: Challenger Std
+  name: Challenger Wind
   bitmap: sense.png
-  labels: f5j,Favorites
+  labels: f5j
   modelId:
     0:
-      val: 1
+      val: 2
 timers:
   0:
     swtch: L19
@@ -13,7 +13,7 @@ timers:
     name: Fli
     minuteBeep: 0
     countdownBeep: 0
-    start: 240
+    start: 600
     persistent: 0
     countdownStart: -1
     value: 0
@@ -52,7 +52,7 @@ flightModeData:
         value: 12
         mode: 0
       2:
-        value: -20
+        value: -24
         mode: 0
     name: Cruise
     fadeIn: 0
@@ -63,7 +63,7 @@ flightModeData:
       2:
         val: 15
       3:
-        val: 18
+        val: 10
       4:
         val: 35
       5:
@@ -96,13 +96,13 @@ flightModeData:
     fadeOut: 0
     gvars:
       0:
-        val: 4
+        val: 3
       1:
-        val: 6
+        val: 8
       2:
-        val: 11
+        val: 13
       3:
-        val: -10
+        val: -8
       4:
         val: 1
       6:
@@ -1336,19 +1336,19 @@ mixData:
     name: AilFlp
 limitData:
   0:
-    min: 500
-    max: -640
+    min: 410
+    max: -580
     revert: 0
-    offset: -100
+    offset: -10
     ppmCenter: 0
     symetrical: 0
     name: Ai-L
     curve: 1
   1:
-    min: 360
-    max: -820
+    min: 190
+    max: -790
     revert: 0
-    offset: -140
+    offset: -510
     ppmCenter: 0
     symetrical: 0
     name: Ai-R
@@ -1363,7 +1363,7 @@ limitData:
     name: Moto
     curve: 0
   3:
-    min: 960
+    min: 940
     max: 150
     revert: 0
     offset: 710
@@ -1372,37 +1372,37 @@ limitData:
     name: Fl-L
     curve: 3
   4:
-    min: -150
-    max: -900
+    min: -80
+    max: -730
     revert: 0
-    offset: -670
+    offset: -530
     ppmCenter: 0
     symetrical: 0
     name: Fl-R
     curve: 4
   5:
-    min: 390
-    max: -300
+    min: 280
+    max: -280
     revert: 1
-    offset: 80
+    offset: 0
     ppmCenter: 0
     symetrical: 0
     name: Rudd
     curve: 0
   6:
-    min: 100
-    max: -400
+    min: -50
+    max: -670
     revert: 0
-    offset: -100
+    offset: -350
     ppmCenter: 0
     symetrical: 0
     name: ElevL
     curve: 0
   7:
-    min: 90
-    max: -400
+    min: 100
+    max: -490
     revert: 1
-    offset: -160
+    offset: -290
     ppmCenter: 0
     symetrical: 0
     name: ElevR
@@ -1770,27 +1770,27 @@ points:
   0:
     val: -100
   1:
-    val: -46
+    val: -47
   2:
     val: 0
   3:
-    val: 31
+    val: 45
   4:
     val: 100
   5:
     val: -100
   6:
-    val: -32
+    val: -51
   7:
     val: 0
   8:
-    val: 29
+    val: 42
   9:
     val: 100
   10:
     val: -100
   11:
-    val: -50
+    val: -40
   12:
     val: 0
   13:
@@ -1800,11 +1800,11 @@ points:
   15:
     val: -100
   16:
-    val: -54
+    val: -56
   17:
     val: 0
   18:
-    val: 49
+    val: 31
   19:
     val: 100
   20:
@@ -1914,7 +1914,7 @@ points:
   72:
     val: 0
   163:
-    val: -46
+    val: -22
   164:
     val: 0
   165:
@@ -2350,9 +2350,6 @@ customFn:
     func: PLAY_TRACK
     def: "crowof\x00\x00,1,1x"
 thrTraceSrc: Thr
-switchWarning:
-  SA:
-    pos: down
 thrTrimSw: 0
 potsWarnMode: WARN_OFF
 potsWarnEnabled: 0

@@ -93,6 +93,16 @@ local function safeFieldId(name)
   return field.id
 end
 
+local function optionalFieldId(names)
+  for _, name in ipairs(names) do
+    local field = getFieldInfo(name)
+    if field and field.id then
+      return field.id
+    end
+  end
+  return nil
+end
+
 local function drawError()
   local text = errMsg or "Setup page error"
   lcd.drawFilledRectangle(6, 6, widget.zone.w - 12, widget.zone.h - 12, colors.focus)
@@ -106,15 +116,34 @@ end
 
 -- Global variables
 local INP_STEP = safeFieldId("input8")      -- Step input for selecting curve point
+local INP_FLP_TRIM = optionalFieldId({ "trim-thr", "T3" })
+local INP_AIL_TRIM = optionalFieldId({ "trim-ele", "T2" })
 local LS_STEP = 11                          -- Set this LS to apply step input
 local N = 5 																-- Number of points on the curves
 local MAX_Y = 100   												-- Max plot value
+local TRIM_DEADBAND = 256
+local TRIM_STEP = 1
 local CRV_FLP = 4 													-- Index of the  flap curve
 local CRV_AIL = 5 													-- Index of the  aileron curve
 local tblFlp 																-- Table with data for the flap curve
 local tblAil 																-- Table with data for the aileron curve
 local activeP   														-- The point currently being edited
 local stepOwned = false											-- Step input has be turned on by this widget
+local editingEnabled = false
+local trimAxes = {
+  { source = INP_FLP_TRIM, curve = CRV_FLP, last = 0 },
+  { source = INP_AIL_TRIM, curve = CRV_AIL, last = 0 }
+}
+
+local function clamp(value, minimum, maximum)
+  return math.min(math.max(value, minimum), maximum)
+end
+
+local function resetTrimTracking()
+  for _, axis in ipairs(trimAxes) do
+    axis.last = 0
+  end
+end
 
 local function stickySwitchValue(index)
   if type(getStickySwitch) == "function" then
@@ -131,6 +160,8 @@ local function stepOff()
     stepOwned = false
     setStickySwitch(LS_STEP, false)
   end
+  editingEnabled = false
+  resetTrimTracking()
 end
 
 local function stepOn()
@@ -184,6 +215,8 @@ beginEditing = function()
     return
   end
   stepOn()
+  editingEnabled = true
+  resetTrimTracking()
 end -- beginEditing()
 
 local function drawCurve(x, y, w, h, yValues)
@@ -233,6 +266,46 @@ local function adjustPoint(crvIdx, crvTbl, slider)
   model.setCurve(crvIdx, crvTbl)
 end
 
+local function trimDirection(source)
+  if not source then
+    return 0
+  end
+
+  local value = getValue(source)
+  if type(value) ~= "number" then
+    return 0
+  elseif value > TRIM_DEADBAND then
+    return 1
+  elseif value < -TRIM_DEADBAND then
+    return -1
+  end
+  return 0
+end
+
+local function adjustCurveFromTrim(axis, direction)
+  local crvTbl = axis.curve == CRV_FLP and tblFlp or tblAil
+  if not crvTbl or not crvTbl.y or not activeP then
+    return
+  end
+
+  crvTbl.y[activeP] = clamp(crvTbl.y[activeP] + direction * TRIM_STEP, -MAX_Y, MAX_Y)
+  model.setCurve(axis.curve, crvTbl)
+end
+
+local function handleTrimAdjustments()
+  if not editingEnabled or not activeP then
+    return
+  end
+
+  for _, axis in ipairs(trimAxes) do
+    local direction = trimDirection(axis.source)
+    if direction ~= 0 and axis.last == 0 then
+      adjustCurveFromTrim(axis, direction)
+    end
+    axis.last = direction
+  end
+end
+
 -- Reset curves to defaults
 local function reset()
 	local ys = { -100, -50, 0, 25, 50 }
@@ -246,6 +319,7 @@ local function reset()
 		tblAil.y[i] = y
 	end
 	model.setCurve(CRV_AIL, tblAil)
+  resetTrimTracking()
 end
 -------------------------------- Setup GUI --------------------------------
 
@@ -270,7 +344,8 @@ local function setup_gui()
 
     -- Help text
     local txt = "Use the throttle stick to select a point on the\n" ..
-                "curve, and adjust with the sliders on the screen."
+                "curve. Thr trim adjusts flaps; Ele trim adjusts ailerons.\n" ..
+                "Sliders on screen also work."
     lcd.drawTextLines(MARGIN, TEXT_Y, BUTTON_X - MARGIN, LCD_H - TEXT_Y, txt, colors.primary1)
   end
 
@@ -342,5 +417,6 @@ function widget.refresh(event, touchState)
   end
 
   activeP = math.floor((N - 1) / 2048 * (getValue(INP_STEP) + 1024) + 1.5)
+  handleTrimAdjustments()
   gui.run(event, touchState)
 end -- refresh(...)
