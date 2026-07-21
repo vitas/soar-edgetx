@@ -256,8 +256,8 @@ curve shapes.
 
 ### `setup/aileron_camber`
 
-Sets aileron travel and aileron-to-flap behavior around the maximum reflex
-position.
+Sets aileron travel, aileron-to-flap behavior, camber-to-aileron coupling, and
+thermal camber around the maximum reflex position.
 
 Use the vertical slider to adjust the flaperon position. The page writes the
 related global variables and temporarily enables the model adjustment mode while
@@ -277,9 +277,9 @@ Edits mix-related global variables for the current flight mode:
 - Aileron to flap.
 - Aileron to elevator.
 - Aileron differential.
+- Flap differential for the aileron-to-flap path.
 - Brake to elevator.
 - Snap flap.
-- Camber to aileron.
 - Battery warning level.
 
 Some values are flight-mode specific. Select the flight mode first, then edit

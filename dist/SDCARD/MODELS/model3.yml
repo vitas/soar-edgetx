@@ -1,8 +1,11 @@
 semver: 2.12.2
 header: 
-   name: "Challenger tmpl"
+   name: "Challenger Wind"
+   modelId: 
+      0:
+         val: 2
    bitmap: "sense.png"
-   labels: ""
+   labels: "f5j"
 timers: 
    0:
       start: 600
@@ -34,7 +37,7 @@ noGlobalFunctions: 0
 displayTrims: 2
 ignoreSensorIds: 0
 trimInc: 0
-disableThrottleWarning: 1
+disableThrottleWarning: 0
 displayChecklist: 0
 extendedLimits: 1
 extendedTrims: 0
@@ -188,7 +191,7 @@ mixData:
    swtch: "NONE"
    curve: 
       type: 0
-      value: "!gv(3)"
+      value: "!gv(12)"
    delayUp: 0
    delayDown: 0
    speedUp: 0
@@ -225,7 +228,7 @@ mixData:
    swtch: "NONE"
    curve: 
       type: 0
-      value: "gv(3)"
+      value: "gv(12)"
    delayUp: 0
    delayDown: 0
    speedUp: 0
@@ -1146,7 +1149,7 @@ mixData:
 limitData: 
    0:
       min: 300
-      max: -500
+      max: -100
       ppmCenter: 0
       offset: 0
       symetrical: 0
@@ -1155,7 +1158,7 @@ limitData:
       name: "Ai-L"
    1:
       min: 300
-      max: -500
+      max: -100
       ppmCenter: 0
       offset: 0
       symetrical: 0
@@ -1172,17 +1175,17 @@ limitData:
       curve: 0
       name: "Moto"
    3:
-      min: 900
+      min: 1000
       max: 200
       ppmCenter: 0
-      offset: 700
+      offset: 650
       symetrical: 0
       revert: 0
       curve: 3
       name: "Fl-L"
    4:
-      min: -200
-      max: -900
+      min: -160
+      max: -950
       ppmCenter: 0
       offset: -700
       symetrical: 0
@@ -1190,8 +1193,8 @@ limitData:
       curve: 4
       name: "Fl-R"
    5:
-      min: 296
-      max: -300
+      min: 280
+      max: -280
       ppmCenter: 0
       offset: 0
       symetrical: 0
@@ -1199,19 +1202,19 @@ limitData:
       curve: 0
       name: "Rudd"
    6:
-      min: 100
-      max: -100
+      min: 0
+      max: -970
       ppmCenter: 0
-      offset: 0
+      offset: -410
       symetrical: 0
       revert: 0
       curve: 0
       name: "ElevL"
    7:
-      min: 100
-      max: -100
+      min: -160
+      max: -950
       ppmCenter: 0
-      offset: 0
+      offset: -700
       symetrical: 0
       revert: 1
       curve: 0
@@ -1554,17 +1557,17 @@ points:
    0:
       val: -100
    1:
-      val: -50
+      val: -46
    3:
-      val: 50
+      val: 31
    4:
       val: 100
    5:
       val: -100
    6:
-      val: -50
+      val: -32
    8:
-      val: 50
+      val: 29
    9:
       val: 100
    10:
@@ -1572,15 +1575,15 @@ points:
    11:
       val: -50
    13:
-      val: 50
+      val: 53
    14:
       val: 100
    15:
       val: -100
    16:
-      val: -50
+      val: -54
    18:
-      val: 50
+      val: 49
    19:
       val: 100
    20:
@@ -2136,7 +2139,7 @@ flightModeData:
          11:
             val: 20
          12:
-            val: 0
+            val: -10
          13:
             val: 0
          14:
@@ -2161,7 +2164,7 @@ flightModeData:
       fadeOut: 0
       gvars: 
          0:
-            val: 6
+            val: 4
          1:
             val: 6
          2:
@@ -2178,6 +2181,8 @@ flightModeData:
             val: 0
          11:
             val: 0
+         12:
+            val: -11
    2:
       trim: 
          2:
@@ -2240,6 +2245,9 @@ flightModeData:
          11:
             val: 0
 thrTraceSrc: Thr
+switchWarning: 
+   SA:
+      pos: down
 gvars: 
    0:
       name: "Ail"
@@ -2325,6 +2333,13 @@ gvars:
       popup: 0
       prec: 0
       unit: 0
+   12:
+      name: "FlD"
+      min: 0
+      max: 0
+      popup: 0
+      prec: 0
+      unit: 0
 varioData: 
    source: none
    centerSilent: 1
@@ -2350,7 +2365,7 @@ moduleData:
          crsf: 
             telemetryBaudrate: 0
             crsfArmingMode: 1
-            crsfArmingTrigger: "NONE"
+            crsfArmingTrigger: "ON"
             spare3: 0
 failsafeChannels: 
    0:

@@ -151,6 +151,8 @@ local function normalize_model_content(content)
   return content
 end
 
+local EXPORTED_TX15_TEMPLATE = "dist/SDCARD/TEMPLATES/3.SoarEdgeTx/f5J-t15.yml"
+
 local function tx15_template_models()
   return {
     {
@@ -159,7 +161,7 @@ local function tx15_template_models()
     },
     {
       label = "exported TX15 template",
-      content = read_file("dist/SDCARD/TEMPLATES/f5J-t15.yml")
+      content = read_file(EXPORTED_TX15_TEMPLATE)
     }
   }
 end
@@ -181,7 +183,7 @@ test("static SD card content survives package rebuild", function()
     "dist/SDCARD/edgetx.sdcard.version",
     "dist/SDCARD/RADIO/README.txt",
     "dist/SDCARD/MODELS/README.txt",
-    "dist/SDCARD/TEMPLATES/4.SoarETX_v2/F5J_v2.yml",
+    EXPORTED_TX15_TEMPLATE,
     "dist/SDCARD/WIDGETS/ShowAll/main.lua"
   }
 
@@ -227,7 +229,7 @@ test("TX15 template assigns SoarF5J widget", function()
 end)
 
 test("exported TX15 template assigns SoarF5J pages 1 through 7", function()
-  local model = read_file("dist/SDCARD/TEMPLATES/f5J-t15.yml")
+  local model = read_file(EXPORTED_TX15_TEMPLATE)
   local pages = {}
 
   assert(model:find("LayoutId: Layout1x1", 1, true), "missing competition 1x1 screen")
@@ -261,9 +263,9 @@ test("TX15 templates map CH4/CH5 to flaps and CH6 to rudder", function()
     assert_equal(#lftv_mixes, 2, model.label .. " LftV mix count")
     assert_equal(#rgtv_mixes, 2, model.label .. " RgtV mix count")
 
-    assert_mix_block(ch4_mixes[1], { "srcRaw: ch(31)", "weight: 100", "value: !gv(3)" }, model.label .. " CH4 left flap")
+    assert_mix_block(ch4_mixes[1], { "srcRaw: ch(31)", "weight: 100", "value: !gv(12)" }, model.label .. " CH4 left flap")
     assert_mix_block(ch4_mixes[2], { "srcRaw: ch(30)", "weight: -100" }, model.label .. " CH4 left flap camber")
-    assert_mix_block(ch5_mixes[1], { "srcRaw: ch(31)", "weight: 100", "value: gv(3)" }, model.label .. " CH5 right flap")
+    assert_mix_block(ch5_mixes[1], { "srcRaw: ch(31)", "weight: 100", "value: gv(12)" }, model.label .. " CH5 right flap")
     assert_mix_block(ch5_mixes[2], { "srcRaw: ch(30)", "weight: 100" }, model.label .. " CH5 right flap camber")
     assert_mix_block(ch6_mixes[1], { "srcRaw: I0", "weight: 100" }, model.label .. " CH6 rudder")
     assert_mix_block(ch6_mixes[2], { "srcRaw: I2", "weight: gv(2)", "name: AilRud" }, model.label .. " CH6 aileron-rudder")
@@ -284,6 +286,7 @@ test("TX15 templates map CH4/CH5 to flaps and CH6 to rudder", function()
     assert_contains(indexed_block(model.content, "limitData", 4), "name: Fl-R", model.label .. " CH5 output")
     assert_contains(indexed_block(model.content, "limitData", 5), "name: Rudd", model.label .. " CH6 output")
     assert_contains(indexed_block(model.content, "limitData", 6), "name: ElevL", model.label .. " CH7 output")
+    assert_contains(indexed_block(model.content, "gvars", 12), "name: FlD", model.label .. " GV13 name")
     assert_contains(indexed_block(model.content, "failsafeChannels", 3), "val: 38", model.label .. " CH4 failsafe")
     assert_contains(indexed_block(model.content, "failsafeChannels", 4), "val: 57", model.label .. " CH5 failsafe")
     assert_contains(indexed_block(model.content, "failsafeChannels", 5), "val: -189", model.label .. " CH6 failsafe")

@@ -103,6 +103,39 @@ local function optionalFieldId(names)
   return nil
 end
 
+local function optionalSwitchId(names)
+  if type(getSwitchIndex) ~= "function" then
+    return nil
+  end
+
+  for _, name in ipairs(names) do
+    local ok, index = pcall(getSwitchIndex, name)
+    if ok and index ~= nil then
+      return index
+    end
+  end
+  return nil
+end
+
+local function trimSwitchNames(switchNames)
+  local names = {}
+  for _, name in ipairs(switchNames) do
+    names[#names + 1] = name
+    if type(CHAR_TRIM) == "string" then
+      names[#names + 1] = CHAR_TRIM .. name
+    end
+  end
+  return names
+end
+
+local function trimInput(valueNames, upNames, downNames)
+  return {
+    value = optionalFieldId(valueNames),
+    up = optionalSwitchId(trimSwitchNames(upNames)),
+    down = optionalSwitchId(trimSwitchNames(downNames))
+  }
+end
+
 local function drawError()
   local text = errMsg or "Setup page error"
   lcd.drawFilledRectangle(6, 6, widget.zone.w - 12, widget.zone.h - 12, colors.focus)
@@ -116,13 +149,13 @@ end
 
 -- Global variables
 local INP_STEP = safeFieldId("input8")      -- Step input for selecting curve point
-local INP_FLP_TRIM = optionalFieldId({ "trim-thr", "T3" })
-local INP_AIL_TRIM = optionalFieldId({ "trim-ele", "T2" })
+local INP_FLP_TRIM = trimInput({ "trim-thr", "T3" }, { "Thr+", "Tu" }, { "Thr-", "Td" })
+local INP_AIL_TRIM = trimInput({ "trim-ele", "T2" }, { "Ele+", "Eu" }, { "Ele-", "Ed" })
 local LS_STEP = 11                          -- Set this LS to apply step input
 local N = 5 																-- Number of points on the curves
 local MAX_Y = 100   												-- Max plot value
 local TRIM_DEADBAND = 256
-local TRIM_STEP = 1
+local TRIM_STEP = 5
 local CRV_FLP = 4 													-- Index of the  flap curve
 local CRV_AIL = 5 													-- Index of the  aileron curve
 local tblFlp 																-- Table with data for the flap curve
@@ -271,7 +304,15 @@ local function trimDirection(source)
     return 0
   end
 
-  local value = getValue(source)
+  if type(getSwitchValue) == "function" and source.up and getSwitchValue(source.up) then
+    return 1
+  elseif type(getSwitchValue) == "function" and source.down and getSwitchValue(source.down) then
+    return -1
+  elseif not source.value then
+    return 0
+  end
+
+  local value = getValue(source.value)
   if type(value) ~= "number" then
     return 0
   elseif value > TRIM_DEADBAND then

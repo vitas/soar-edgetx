@@ -34,7 +34,8 @@ The competition page can:
 The setup pages can:
 
 - Assign the model switches used for launch, motor, timer, and flight controls.
-- Edit flight-mode-specific mix global variables and battery warning level.
+- Edit flight-mode-specific mix global variables, including separate aileron
+  and flap differential, and battery warning level.
 - Reorder named output channels while preserving their mixer lines.
 - Align four-servo wing outputs and curves.
 - Tune airbrake flap and aileron curves.

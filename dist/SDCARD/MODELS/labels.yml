@@ -4,7 +4,7 @@ Labels:
 Sort: 1
 Models:
   model1.yml:
-    hash: "fdb70000f45c196b"
+    hash: "85b80000f55cf955"
     name: "Challenger Std"
     mod0id: 1
     mod0type: 5
@@ -12,26 +12,18 @@ Models:
     bitmap: "sense.png"
     lastopen: 0
   model2.yml:
-    hash: "ceb70000f45c196b"
+    hash: "cccc0000f55c7057"
+    name: "Challenger tmpl"
+    mod0type: 5
+    labels: ""
+    bitmap: "sense.png"
+    lastopen: 1784631463
+  model3.yml:
+    hash: "26cd0000f55c3758"
     name: "Challenger Wind"
     mod0id: 2
     mod0type: 5
     labels: "f5j"
     bitmap: "sense.png"
-    lastopen: 0
-  model3.yml:
-    hash: "3fcc0000f45c8d6e"
-    name: "Challenger tmpl"
-    mod0type: 5
-    labels: ""
-    bitmap: "sense.png"
-    lastopen: 1784555116
-  model4.yml:
-    hash: "96cc0000f45c206b"
-    name: "Challenger W"
-    mod0id: 2
-    mod0type: 5
-    labels: "f5j"
-    bitmap: "sense.png"
-    lastopen: 0
+    lastopen: 1784631679
 

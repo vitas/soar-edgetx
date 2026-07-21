@@ -31,7 +31,7 @@ local adjustModePrevious
 -- Screen drawing constants
 local LCD_W2 = LCD_W / 2
 local HEADER = 40
-local LINE = 32
+local LINE = 28
 local HEIGHT = LINE - 4
 local MARGIN = 15
 local W1 = 170
@@ -44,9 +44,9 @@ local mixes = {
   { "Aileron -> Flap", 1, -100, 100 },
   { "Aileron -> Elevator", 11, -100, 100 },
   { "Aileron Differential", 3, -100, 100 },
+  { "Flap Differential", 12, -100, 100 },
   { "Brake -> Elevator", 4, 0, 40 },
-  { "Snap - flap", 5, 0, 50 },
-  { "Camber -> Aileron", 6, 0, 400 }
+  { "Snap - flap", 5, 0, 50 }
 }
 
 local GV_ADJUST_MODE = 7
@@ -152,7 +152,7 @@ local function init()
       return value
     end
 
-    local number = gui.number(x + W1, y, W2, HEIGHT, 0, changeGV, RIGHT + libGUI.flags)
+    local number = gui.number(x + W1, y, W2, HEIGHT, 0, changeGV, RIGHT + libGUI.flags, min, max)
 
     function number.update()
       number.value = model.getGlobalVariable(gv, fm)

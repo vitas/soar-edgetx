@@ -76,6 +76,8 @@ flightModeData:
         val: 85
       11:
         val: 20
+      12:
+        val: -10
   1:
     trim:
       0:
@@ -98,7 +100,7 @@ flightModeData:
       0:
         val: 4
       1:
-        val: 6
+        val: 12
       2:
         val: 11
       3:
@@ -113,6 +115,8 @@ flightModeData:
         val: 0
       11:
         val: 0
+      12:
+        val: -11
   2:
     trim:
       2:
@@ -314,7 +318,7 @@ mixData:
     swtch: NONE
     curve:
       type: 0
-      value: "!gv(3)"
+      value: "!gv(12)"
     delayPrec: 0
     delayUp: 0
     delayDown: 0
@@ -352,7 +356,7 @@ mixData:
     swtch: NONE
     curve:
       type: 0
-      value: gv(3)
+      value: gv(12)
     delayPrec: 0
     delayUp: 0
     delayDown: 0
@@ -2443,6 +2447,13 @@ gvars:
     popup: 0
     prec: 0
     unit: 0
+  12:
+    name: FlD
+    min: 0
+    max: 0
+    popup: 0
+    prec: 0
+    unit: 0
 telemetryProtocol: 0
 varioData:
   source: none
@@ -2997,7 +3008,7 @@ topbarWidgetWidth:
     val: 1
   5:
     val: 1
-view: 1
+view: 0
 modelRegistrationID: mYzzdzBE
 hatsMode: GLOBAL
 customSwitches:

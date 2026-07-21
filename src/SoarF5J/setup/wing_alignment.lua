@@ -106,6 +106,39 @@ local function optionalFieldId(names)
   return nil
 end
 
+local function optionalSwitchId(names)
+  if type(getSwitchIndex) ~= "function" then
+    return nil
+  end
+
+  for _, name in ipairs(names) do
+    local ok, index = pcall(getSwitchIndex, name)
+    if ok and index ~= nil then
+      return index
+    end
+  end
+  return nil
+end
+
+local function trimSwitchNames(switchNames)
+  local names = {}
+  for _, name in ipairs(switchNames) do
+    names[#names + 1] = name
+    if type(CHAR_TRIM) == "string" then
+      names[#names + 1] = CHAR_TRIM .. name
+    end
+  end
+  return names
+end
+
+local function trimInput(valueNames, upNames, downNames)
+  return {
+    value = optionalFieldId(valueNames),
+    up = optionalSwitchId(trimSwitchNames(upNames)),
+    down = optionalSwitchId(trimSwitchNames(downNames))
+  }
+end
+
 local function drawError()
   local text = errMsg or "Setup page error"
   lcd.drawFilledRectangle(6, 6, widget.zone.w - 12, widget.zone.h - 12, colors.focus)
@@ -119,17 +152,17 @@ end
 
 -- Other constants
 local INP_STEP = safeFieldId("input8")      -- Step input
-local INP_FLP_ALIGN = optionalFieldId({ "trim-rud", "T1" })
-local INP_FLP_MOVE = optionalFieldId({ "trim-thr", "T3" })
-local INP_AIL_ALIGN = optionalFieldId({ "trim-ail", "T4" })
-local INP_AIL_MOVE = optionalFieldId({ "trim-ele", "T2" })
+local INP_FLP_ALIGN = trimInput({ "trim-rud", "T1" }, { "Rud+", "Rr", "Ru" }, { "Rud-", "Rl", "Rd" })
+local INP_FLP_MOVE = trimInput({ "trim-thr", "T3" }, { "Thr+", "Tu" }, { "Thr-", "Td" })
+local INP_AIL_ALIGN = trimInput({ "trim-ail", "T4" }, { "Ail+", "Ar", "Au" }, { "Ail-", "Al", "Ad" })
+local INP_AIL_MOVE = trimInput({ "trim-ele", "T2" }, { "Ele+", "Eu" }, { "Ele-", "Ed" })
 local LS_STEP = nil                         -- Set this LS to apply step input and adjust
 local GV_ADJUST = 7                         -- GV8: adjustment enabled
 local N = 5                                 -- Number of curve points
 local MAX_Y = 1500                          -- Max output value
 local MINDIF = 100                          -- Minimum difference between lower, center and upper values
 local TRIM_DEADBAND = 256
-local TRIM_STEP = 10
+local TRIM_STEP = 60
 local NC = 32																-- Number of channels
 
 -- Flaperon curve indices (LA, LF, RF, RA)
@@ -410,7 +443,15 @@ local function trimDirection(source)
     return 0
   end
 
-  local value = getValue(source)
+  if type(getSwitchValue) == "function" and source.up and getSwitchValue(source.up) then
+    return 1
+  elseif type(getSwitchValue) == "function" and source.down and getSwitchValue(source.down) then
+    return -1
+  elseif not source.value then
+    return 0
+  end
+
+  local value = getValue(source.value)
   if type(value) ~= "number" then
     return 0
   elseif value > TRIM_DEADBAND then

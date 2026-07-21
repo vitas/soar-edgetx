@@ -132,6 +132,7 @@ test("mixes page leaves thermal camber to aileron camber setup", function()
 
   assert(not content:find("Thermal camber", 1, true), "thermal camber belongs on aileron/camber page")
   assert(not content:find('{ "Thermal camber", 9, 0, 100 }', 1, true), "GV10 CbX should not be on mixes page")
+  assert(not content:find('{ "Camber -> Aileron", 6, 0, 400 }', 1, true), "GV7 CbA should not be on mixes page")
 end)
 
 test("setup pages expose aileron to elevator mix controls", function()
@@ -139,6 +140,7 @@ test("setup pages expose aileron to elevator mix controls", function()
   local switches = read_file("src/SoarF5J/setup/switches.lua")
 
   assert(mixes:find('{ "Aileron -> Elevator", 11, -100, 100 }', 1, true), "mixes page missing GV12 aileron-elevator control")
+  assert(mixes:find('{ "Flap Differential", 12, -100, 100 }', 1, true), "mixes page missing GV13 flap-differential control")
   assert(switches:find('{ "Aileron -> Elevator", 45 }', 1, true), "switches page missing L46 aileron-elevator switch")
 end)
 

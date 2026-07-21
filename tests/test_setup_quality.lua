@@ -31,12 +31,15 @@ local globalNames = {
   "getFieldInfo",
   "getValue",
   "getFlightMode",
+  "getSwitchIndex",
+  "getSwitchValue",
   "switches",
   "setStickySwitch",
   "getStickySwitch",
   "getLogicalSwitchValue",
   "playTone",
-  "loadScript"
+  "loadScript",
+  "CHAR_TRIM"
 }
 
 for _, name in ipairs(globalNames) do
@@ -125,11 +128,15 @@ local function new_gui_stub(env)
         env.labels[#env.labels + 1] = text
         return element()
       end,
-      number = function(x, y, w, h, value, onChangeValue)
+      number = function(x, y, w, h, value, onChangeValue, flags, min, max)
         env.numbers[#env.numbers + 1] = value
         local number = element()
         number.value = value
         number.onChangeValue = onChangeValue
+        number.flags = flags
+        number.min_val = min or 0
+        number.max_val = max or 100
+        env.numberControls[#env.numberControls + 1] = number
         return number
       end
     }
@@ -164,6 +171,7 @@ local function setup_env(options)
     labels = {},
     dropDowns = {},
     numbers = {},
+    numberControls = {},
     prompts = {},
     dismissedPrompts = 0,
     gvWrites = {},
@@ -174,6 +182,8 @@ local function setup_env(options)
     gvs = options.gvs or {},
     logicalSwitches = options.logicalSwitches or {},
     values = options.values or {},
+    switchValues = options.switchValues or {},
+    availableSwitches = options.availableSwitches,
     input8 = options.input8,
     parameterValue = options.parameterValue
   }
@@ -204,6 +214,7 @@ local function setup_env(options)
   DOTTED = 2
   FORCE = 4
   EVT_VIRTUAL_ENTER = 1
+  CHAR_TRIM = "~"
   bit32 = {
     band = function(a, b) return 0 end,
     rshift = function(a, b) return 0 end,
@@ -311,6 +322,17 @@ local function setup_env(options)
     return 0
   end
 
+  function getSwitchIndex(name)
+    if env.availableSwitches and not env.availableSwitches[name] then
+      return nil
+    end
+    return name
+  end
+
+  function getSwitchValue(index)
+    return env.switchValues[index] or false
+  end
+
   function getFlightMode()
     return 0, "Normal"
   end
@@ -370,6 +392,22 @@ local function text_rendered(env)
   for _, text in ipairs(env.drawTexts) do out[#out + 1] = text end
   for _, text in ipairs(env.drawTextLines) do out[#out + 1] = text end
   return table.concat(out, "\n")
+end
+
+local function reset_draw_output(env)
+  env.drawCalls = {}
+  env.drawTexts = {}
+  env.drawTextLines = {}
+end
+
+local function active_curve_markers(env)
+  local markers = {}
+  for _, call in ipairs(env.drawCalls) do
+    if call.method == "drawFilledCircle" and call.args[3] == 4 then
+      markers[#markers + 1] = { x = call.args[1], y = call.args[2] }
+    end
+  end
+  return markers
 end
 
 local function five_point_curve()
@@ -735,7 +773,7 @@ setup_quality_test("brake curves trims adjust selected flap and aileron landing 
   brake.values["trim-thr"] = 1024
   brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
 
-  assert_equal(brake.curves[4].y[2], flapBefore + 1, "throttle trim flap point")
+  assert_equal(brake.curves[4].y[2], flapBefore + 5, "throttle trim flap point")
   assert_equal(brake.curves[5].y[2], aileronBefore, "throttle trim aileron point")
 
   brake.values["trim-thr"] = 0
@@ -748,7 +786,104 @@ setup_quality_test("brake curves trims adjust selected flap and aileron landing 
   brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
 
   assert_equal(brake.curves[4].y[2], flapBefore, "elevator trim flap point")
-  assert_equal(brake.curves[5].y[2], aileronBefore - 1, "elevator trim aileron point")
+  assert_equal(brake.curves[5].y[2], aileronBefore - 5, "elevator trim aileron point")
+end)
+
+setup_quality_test("brake curves trims respond to physical trim button switches", function()
+  local brake = setup_env({
+    input8 = 800,
+    values = { [800] = -512 },
+    availableSwitches = {
+      ["~Tu"] = true,
+      ["~Ed"] = true
+    },
+    curves = {
+      [4] = five_point_curve(),
+      [5] = five_point_curve()
+    }
+  })
+
+  load_setup_page("src/SoarF5J/setup/brake_curves.lua", brake)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  brake.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  local flapBefore = brake.curves[4].y[2]
+  local aileronBefore = brake.curves[5].y[2]
+
+  brake.switchValues[CHAR_TRIM .. "Tu"] = true
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  assert_equal(brake.curves[4].y[2], flapBefore + 5, "throttle trim button flap point")
+  assert_equal(brake.curves[5].y[2], aileronBefore, "throttle trim button aileron point")
+
+  brake.switchValues[CHAR_TRIM .. "Tu"] = false
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  flapBefore = brake.curves[4].y[2]
+  aileronBefore = brake.curves[5].y[2]
+
+  brake.switchValues[CHAR_TRIM .. "Ed"] = true
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  assert_equal(brake.curves[4].y[2], flapBefore, "elevator trim button flap point")
+  assert_equal(brake.curves[5].y[2], aileronBefore - 5, "elevator trim button aileron point")
+end)
+
+setup_quality_test("brake curves trims respond to EdgeTX menu trim switch names", function()
+  local brake = setup_env({
+    input8 = 800,
+    values = { [800] = -512 },
+    curves = {
+      [4] = five_point_curve(),
+      [5] = five_point_curve()
+    }
+  })
+
+  load_setup_page("src/SoarF5J/setup/brake_curves.lua", brake)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  brake.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  local flapBefore = brake.curves[4].y[2]
+  brake.switchValues["Thr+"] = true
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_equal(brake.curves[4].y[2], flapBefore + 5, "throttle trim plus name")
+
+  brake.switchValues["Thr+"] = false
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  local aileronBefore = brake.curves[5].y[2]
+  brake.switchValues["Ele-"] = true
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_equal(brake.curves[5].y[2], aileronBefore - 5, "elevator trim minus name")
+end)
+
+setup_quality_test("brake curve trim button visibly redraws the active curve point", function()
+  local brake = setup_env({
+    input8 = 800,
+    values = { [800] = -512 },
+    curves = {
+      [4] = five_point_curve(),
+      [5] = five_point_curve()
+    }
+  })
+
+  load_setup_page("src/SoarF5J/setup/brake_curves.lua", brake)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  brake.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+
+  reset_draw_output(brake)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  local before = active_curve_markers(brake)
+
+  brake.switchValues["Thr+"] = true
+  reset_draw_output(brake)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  local after = active_curve_markers(brake)
+
+  assert(before[1] and after[1], "missing flap active point marker")
+  assert(math.abs(after[1].y - before[1].y) >= 3, "flap active point did not visibly move")
 end)
 
 setup_quality_test("curve setup pages report missing step input without load crash", function()
@@ -807,6 +942,38 @@ setup_quality_test("battery threshold values are clamped in setup pages", functi
     assert(pcall(function() mixes.widget.refresh(EVT_VIRTUAL_ENTER, nil) end), "mixes page crashed")
     assert(mixes.numbers[#mixes.numbers] and mixes.numbers[#mixes.numbers] >= 0 and mixes.numbers[#mixes.numbers] <= 200, "mixes value not clamped")
   end
+end)
+
+setup_quality_test("mixes page signed values can be edited negative", function()
+  local mixes = setup_env({ gvs = { [3] = 0, [12] = 0 } })
+  load_setup_page("src/SoarF5J/setup/mixes.lua", mixes)
+  mixes.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  local differential
+  local flapDifferential
+  for index, label in ipairs(mixes.labels) do
+    if label == "Aileron Differential" then
+      differential = mixes.numberControls[index]
+    elseif label == "Flap Differential" then
+      flapDifferential = mixes.numberControls[index]
+    end
+  end
+
+  assert(differential, "missing aileron differential number control")
+  assert_equal(differential.min_val, -100, "aileron differential minimum")
+  assert_equal(differential.max_val, 100, "aileron differential maximum")
+
+  differential.value = 0
+  assert_equal(differential.onChangeValue(-1, differential), -1, "aileron differential decrement")
+  assert_equal(mixes.gvs[3], -1, "aileron differential GV write")
+
+  assert(flapDifferential, "missing flap differential number control")
+  assert_equal(flapDifferential.min_val, -100, "flap differential minimum")
+  assert_equal(flapDifferential.max_val, 100, "flap differential maximum")
+
+  flapDifferential.value = 0
+  assert_equal(flapDifferential.onChangeValue(-1, flapDifferential), -1, "flap differential decrement")
+  assert_equal(mixes.gvs[12], -1, "flap differential GV write")
 end)
 
 setup_quality_test("mixes page enables and restores trim adjustment mode", function()
@@ -1041,6 +1208,119 @@ setup_quality_test("wing alignment trims move and align flap and aileron curve p
   assert_equal(aileronAlign.leftFlap, 0, "left flap unchanged by aileron align")
   assert_equal(aileronAlign.rightFlap, 0, "right flap unchanged by aileron align")
   assert(aileronAlign.leftAileron * aileronAlign.rightAileron > 0, "aileron align did not move sides opposite each other")
+end)
+
+setup_quality_test("wing alignment trims respond to physical trim button switches", function()
+  local wing = setup_env({
+    input8 = 800,
+    values = { [800] = -512 },
+    availableSwitches = {
+      ["~Tu"] = true,
+      ["~Ed"] = true
+    },
+    curves = {
+      [0] = five_point_curve(),
+      [1] = five_point_curve(),
+      [2] = five_point_curve(),
+      [3] = five_point_curve()
+    },
+    outputs = valid_wing_outputs()
+  })
+
+  load_setup_page("src/SoarF5J/setup/wing_alignment.lua", wing)
+  wing.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  wing.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+
+  local leftFlapBefore = wing.curves[2].y[4]
+  local rightFlapBefore = wing.curves[3].y[2]
+
+  wing.switchValues[CHAR_TRIM .. "Tu"] = true
+  wing.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  assert(wing.curves[2].y[4] ~= leftFlapBefore, "throttle trim button left flap point")
+  assert(wing.curves[3].y[2] ~= rightFlapBefore, "throttle trim button right flap point")
+
+  wing.switchValues[CHAR_TRIM .. "Tu"] = false
+  wing.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  local leftAileronBefore = wing.curves[0].y[4]
+  local rightAileronBefore = wing.curves[1].y[2]
+
+  wing.switchValues[CHAR_TRIM .. "Ed"] = true
+  wing.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  assert(wing.curves[0].y[4] ~= leftAileronBefore, "elevator trim button left aileron point")
+  assert(wing.curves[1].y[2] ~= rightAileronBefore, "elevator trim button right aileron point")
+end)
+
+setup_quality_test("wing alignment trims respond to EdgeTX menu trim switch names", function()
+  local wing = setup_env({
+    input8 = 800,
+    values = { [800] = -512 },
+    curves = {
+      [0] = five_point_curve(),
+      [1] = five_point_curve(),
+      [2] = five_point_curve(),
+      [3] = five_point_curve()
+    },
+    outputs = valid_wing_outputs()
+  })
+
+  load_setup_page("src/SoarF5J/setup/wing_alignment.lua", wing)
+  wing.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  wing.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+
+  local leftFlapBefore = wing.curves[2].y[4]
+  local rightFlapBefore = wing.curves[3].y[2]
+
+  wing.switchValues["Rud+"] = true
+  wing.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  assert(wing.curves[2].y[4] ~= leftFlapBefore, "rudder plus left flap point")
+  assert(wing.curves[3].y[2] ~= rightFlapBefore, "rudder plus right flap point")
+
+  wing.switchValues["Rud+"] = false
+  wing.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  local leftAileronBefore = wing.curves[0].y[4]
+  local rightAileronBefore = wing.curves[1].y[2]
+
+  wing.switchValues["Ail+"] = true
+  wing.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  assert(wing.curves[0].y[4] ~= leftAileronBefore, "aileron plus left aileron point")
+  assert(wing.curves[1].y[2] ~= rightAileronBefore, "aileron plus right aileron point")
+end)
+
+setup_quality_test("wing alignment trim button visibly redraws the active curve points", function()
+  local wing = setup_env({
+    input8 = 800,
+    values = { [800] = -512 },
+    curves = {
+      [0] = five_point_curve(),
+      [1] = five_point_curve(),
+      [2] = five_point_curve(),
+      [3] = five_point_curve()
+    },
+    outputs = valid_wing_outputs()
+  })
+
+  load_setup_page("src/SoarF5J/setup/wing_alignment.lua", wing)
+  wing.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  wing.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+
+  reset_draw_output(wing)
+  wing.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  local before = active_curve_markers(wing)
+
+  wing.switchValues["Thr+"] = true
+  reset_draw_output(wing)
+  wing.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  local after = active_curve_markers(wing)
+
+  assert(before[2] and before[3] and after[2] and after[3], "missing flap active point markers")
+  assert(math.abs(after[2].y - before[2].y) >= 3, "left flap active point did not visibly move")
+  assert(math.abs(after[3].y - before[3].y) >= 3, "right flap active point did not visibly move")
 end)
 
 setup_quality_test("brake curves cleanup tracks owned step switch state", function()
