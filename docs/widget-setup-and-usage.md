@@ -202,6 +202,22 @@ disconnected: if turning the pot clockwise moves the channel from minimum to
 maximum throttle in the wrong direction for your ESC setup, reverse that slider
 in the radio settings before connecting the motor.
 
+To use the throttle stick for motor control only during the launch phase,
+change the motor input source instead of changing the launch switch logic:
+
+1. Disconnect the motor or remove the propeller.
+2. Open the model's **Inputs** page.
+3. Edit `I4:Mot`, line `On`.
+4. Change the source from `S1` / `P1` to `Thr`.
+5. Keep this `On` line enabled only in the `Motor` flight mode.
+6. Leave the `Off` line as `MAX -100`.
+7. Check the servo monitor before connecting the motor again.
+
+With the launch/motor switch off, the motor channel must stay at idle. With the
+launch/motor switch on, the throttle stick should drive the motor channel. When
+the model leaves the launch/motor flight mode, the motor input is disabled and
+the throttle stick remains available for landing/brake control.
+
 The TX15 template defaults the 10-second altitude report switch to the same
 physical switch used for voice reporting. The competition widget reads that
 logical switch during glide and calls the current `Alt` telemetry value every
