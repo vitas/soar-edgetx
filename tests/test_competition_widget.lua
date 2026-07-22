@@ -228,6 +228,16 @@ local function duration_values(env)
   return table.concat(values, ",")
 end
 
+local function number_values(env)
+  local values = {}
+  for _, call in ipairs(env.playNumbers) do
+    if call.unit == 0 then
+      values[#values + 1] = tostring(call.value)
+    end
+  end
+  return table.concat(values, ",")
+end
+
 local function play_numbers_with_unit(env, unit)
   local values = {}
   for _, call in ipairs(env.playNumbers) do
@@ -503,6 +513,67 @@ widget_test("motor voice reports elapsed motor time every 10 seconds", function(
   env.timers[1].value = 20
   env.widget.background()
   assert_equal(duration_values(env), "10,20", "second motor voice")
+end)
+
+widget_test("flight window voice follows legacy countdown schedule", function()
+  local env = new_widget_env()
+
+  env.flightMode = 2
+  env.widget.background()
+  env.now = 500
+  env.flightMode = 0
+  env.widget.background()
+  env.now = 1600
+  env.widget.background()
+  env.playDurations = {}
+  env.playNumbers = {}
+
+  env.timers[0].value = 301
+  env.widget.background()
+  env.playDurations = {}
+  env.playNumbers = {}
+
+  env.timers[0].value = 300
+  env.widget.background()
+  env.widget.background()
+  assert_equal(duration_values(env), "300", "five minute duration voice")
+  assert_equal(number_values(env), "", "five minute number voice")
+
+  env.timers[0].value = 119
+  env.widget.background()
+  env.playDurations = {}
+  env.playNumbers = {}
+
+  env.timers[0].value = 105
+  env.widget.background()
+  env.widget.background()
+  assert_equal(duration_values(env), "105", "one forty five duration voice")
+  assert_equal(number_values(env), "", "one forty five number voice")
+
+  env.timers[0].value = 59
+  env.widget.background()
+  env.playDurations = {}
+  env.playNumbers = {}
+
+  env.timers[0].value = 55
+  env.widget.background()
+  env.widget.background()
+  assert_equal(duration_values(env), "55", "fifty five second duration voice")
+  assert_equal(number_values(env), "", "fifty five second number voice")
+
+  env.timers[0].value = 10
+  env.widget.background()
+  env.playDurations = {}
+  env.playNumbers = {}
+
+  env.timers[0].value = 9
+  env.widget.background()
+  env.widget.background()
+  env.timers[0].value = 1
+  env.widget.background()
+
+  assert_equal(duration_values(env), "", "final countdown duration voice")
+  assert_equal(number_values(env), "9,1", "plain number voice calls")
 end)
 
 widget_test("height window voice counts down after motor stops", function()

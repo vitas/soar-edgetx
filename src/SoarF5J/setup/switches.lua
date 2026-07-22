@@ -43,7 +43,7 @@ local items = {
   { "Landing", 5 },
   { "Landing off / crow off", 44, 46 },
   { "Aileron -> Elevator", 45 },
-  { "Report remaining window time every 10 sec.", 6 },
+  { "Model Timer 1 report every 10 sec.", 6 },
   { "Report current altitude every 10 sec.", 7 }
 }
 

@@ -187,7 +187,7 @@ The page currently covers:
 - Landing.
 - Landing off / crow off.
 - Aileron to elevator mix enable.
-- Window time reports every 10 seconds.
+- Optional model Timer 1 reports every 10 seconds.
 - Altitude reports every 10 seconds.
 
 Use the drop-down fields to select the desired physical switch position for
@@ -338,6 +338,12 @@ To reset the working-window timer back to the target time, use the model's arm
 or reset control while the widget is on the competition page. After a flight,
 press the trigger or `Enter` once to finish timing, then press it again from the
 `Finished` or `Zero result` state to reset for the next flight.
+
+During glide, the widget announces the remaining working-window time using the
+legacy SoarETX schedule: minute boundaries above 2 minutes, 15-second boundaries
+from 2 minutes to 1 minute, 5-second boundaries from 1 minute to 10 seconds,
+then every second from 10 to 1. Values above 10 seconds use the normal duration
+voice; the final 10..1 countdown uses plain number voice calls.
 
 Basic flow:
 

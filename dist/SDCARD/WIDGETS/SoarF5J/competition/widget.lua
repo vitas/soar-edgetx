@@ -43,6 +43,7 @@ local flightTimerRunning
 local nextAltitudeCall = 0
 local nextMotorCall = MOTOR_CALL_INTERVAL
 local lastHeightCall
+local previousFlightCallValue
 local observedTimerStart
 
 local modeLabels = {
@@ -154,6 +155,7 @@ end
 local function reset_voice_calls()
   nextMotorCall = MOTOR_CALL_INTERVAL
   lastHeightCall = nil
+  previousFlightCallValue = nil
 end
 
 local function reset_radio_timers()
@@ -344,6 +346,40 @@ local function report_height_window()
   lastHeightCall = heightRemaining
 end
 
+local function flight_call_interval(remaining)
+  if remaining > 120 then
+    return 60
+  elseif remaining > 60 then
+    return 15
+  elseif remaining > 10 then
+    return 5
+  end
+  return 1
+end
+
+local function report_flight_time()
+  local remaining = math.floor(timer_number(read_timer(0).value, state.target_time or DEFAULT_TARGET_TIME))
+  if remaining < 0 then
+    remaining = 0
+  end
+
+  if previousFlightCallValue == nil then
+    previousFlightCallValue = remaining
+    return
+  end
+
+  local interval = flight_call_interval(remaining)
+  if math.ceil(previousFlightCallValue / interval) > math.ceil(remaining / interval) then
+    if remaining > 10 then
+      announce_seconds(remaining)
+    elseif remaining > 0 then
+      announce_number(remaining)
+    end
+  end
+
+  previousFlightCallValue = remaining
+end
+
 local function report_altitude(now)
   if state.height_capture_pending or not getLogicalSwitchValue(LS_ALT10) then
     return
@@ -406,6 +442,7 @@ local function run_runtime(event)
       zero_result()
     else
       enforce_flight_timer_floor()
+      report_flight_time()
       update_height_window(now)
       report_height_window()
       report_altitude(now)
