@@ -43,5 +43,15 @@ luac.out
 *.x86_64
 *.hex
 
-# Local EdgeTX SD-card sound packs are large and should not be committed.
-dist/SDCARD/SOUNDS/
+# Local EdgeTX SD-card sound packs are large. Track only custom model prompts.
+dist/SDCARD/SOUNDS/**
+!dist/SDCARD/SOUNDS/
+!dist/SDCARD/SOUNDS/en/
+!dist/SDCARD/SOUNDS/en/crowof.wav
+!dist/SDCARD/SOUNDS/en/engoff.wav
+!dist/SDCARD/SOUNDS/en/f3j_t1.wav
+!dist/SDCARD/SOUNDS/en/f3j_t2.wav
+!dist/SDCARD/SOUNDS/en/f3j_t3.wav
+!dist/SDCARD/SOUNDS/en/f3jlau.wav
+!dist/SDCARD/SOUNDS/en/f3jlnd.wav
+!dist/SDCARD/SOUNDS/en/landin.wav

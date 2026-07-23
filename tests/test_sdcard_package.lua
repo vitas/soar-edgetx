@@ -185,6 +185,26 @@ local TX15_TEMPLATE_VARIANTS = {
   }
 }
 
+local TX15_CUSTOM_SOUND_TRACKS = {
+  "crowof",
+  "engoff",
+  "f3j_t1",
+  "f3j_t2",
+  "f3j_t3",
+  "f3jlau",
+  "f3jlnd",
+  "landin"
+}
+
+local function tx15_custom_sound_paths()
+  local paths = {}
+  for _, track in ipairs(TX15_CUSTOM_SOUND_TRACKS) do
+    paths[#paths + 1] = "dist/SDCARD/SOUNDS/en/" .. track .. ".wav"
+  end
+  table.sort(paths)
+  return paths
+end
+
 local function tx15_variant(id)
   for _, variant in ipairs(TX15_TEMPLATE_VARIANTS) do
     if variant.id == id then
@@ -360,12 +380,26 @@ test("TX15 templates keep output blocks out of input and curve sections", functi
   end
 end)
 
-test("SD card sounds are ignored and untracked", function()
+test("only custom TX15 model sounds are committed", function()
   local ignore = read_file(".gitignore")
-  assert(ignore:find("dist/SDCARD/SOUNDS/", 1, true), "missing exact SD card sounds ignore rule")
+  assert(ignore:find("dist/SDCARD/SOUNDS/", 1, true) or ignore:find("dist/SDCARD/SOUNDS/**", 1, true),
+    "missing SD card sounds ignore rule")
 
+  local expected = tx15_custom_sound_paths()
   local tracked = command_lines("git ls-files dist/SDCARD/SOUNDS")
-  assert_equal(#tracked, 0, "tracked SD card sound file count")
+  table.sort(tracked)
+
+  assert_equal(#tracked, #expected, "tracked custom TX15 sound file count")
+
+  for index, path in ipairs(expected) do
+    assert_equal(tracked[index], path, "tracked custom TX15 sound path " .. tostring(index))
+    assert(file_exists(path), "missing custom TX15 sound file: " .. path)
+    assert(ignore:find("!" .. path, 1, true), "missing custom TX15 sound allowlist rule: " .. path)
+  end
+
+  local ignored_examples = command_lines(
+    "git check-ignore dist/SDCARD/SOUNDS/en/acro.wav dist/SDCARD/SOUNDS/en/SYSTEM/0000.wav")
+  assert_equal(#ignored_examples, 2, "non-custom SD card sound ignore example count")
 end)
 
 test("compiled Lua bytecode is ignored and untracked", function()
@@ -563,6 +597,7 @@ end)
 test("TX15 templates preserve retained voice tracks for mode and window cues", function()
   local expected = {
     [6] = { "swtch: L6", 'def: "landin\\x00\\x00,1,1x"' },
+    [25] = { "swtch: L28", 'def: "engoff\\x00\\x00,1,1x"' },
     [26] = { "swtch: L37", 'def: "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00,1,5"' },
     [32] = { "swtch: FM0", 'def: "f3j_t2\\x00\\x00,1,1x"' },
     [33] = { "swtch: FM2", 'def: "f3jlau\\x00\\x00,1,1x"' },
