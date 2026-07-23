@@ -1,98 +1,50 @@
 # SoarF5J EdgeTX
 
-F5J-only EdgeTX landscape color-radio widget project with Radiomaster TX15
-model templates.
+`SoarF5J` is an F5J contest widget and TX15 model-template package for EdgeTX
+landscape color radios.
 
-## Status
+The widget runs from the radio SD card. The active model template supplies the
+flight modes, timers, logical switches, global variables, curves, mixes, and
+named outputs that the widget reads or edits.
 
-Early development. The widget targets EdgeTX landscape color radios with
-`480x272`, `480x320`, or `800x480` screens. Local layout tests cover those
-three screen sizes; manual radio/simulator testing is currently limited to
-TX15 and T16/TX16S-class radios.
+## How It Works
 
-The committed model templates are still TX15-specific. Other radios can use the
-widget when their model template provides the same F5J model structure.
+- Copy `dist/SDCARD` to the radio SD card, or use it as the Companion SD
+  Structure folder.
+- Use one TX15 template from `models/tx15/`: `tx15-MTail`, `tx15-VTail`, or
+  `tx15-XTail`.
+- Add the `SoarF5J` widget to a model screen.
+- Set widget `Page = 1` for the contest page. Pages `2..7` are setup pages.
+- The contest page handles launch, motor, glide, finish, zero result, working
+  window voice, motor timer, and F5J start-height capture from `Alt+`.
+- Setup pages write model changes immediately, so disconnect the motor before
+  output, wing, brake, or camber setup.
 
-## What It Can Do
+## What To Configure
 
-`SoarF5J` is an F5J-only EdgeTX color-radio widget for compatible landscape
-color radios and F5J model templates. It does not include F3K, F5K, portrait
-or black-and-white radio support, or flight log saving.
+| Area | Configure | Details |
+| --- | --- | --- |
+| Template | Pick the correct tail template and wire outputs. | [TX15 model templates](docs/tx15-model-template.md) |
+| SD card | Install the widget package and custom sound prompts. | [SD-card structure](docs/sdcard-structure.md) |
+| Widget | Add `SoarF5J`, choose `Page`, and use the competition flow. | [widget setup and usage](docs/widget-setup-and-usage.md) |
+| Switches | Confirm launch, motor, landing, voice, vario, and flight-mode switches. | [control assignments](docs/tx15-model-template.md#current-control-assignments) |
+| Model setup | Tune outputs, wing alignment, brake curves, camber, mixes, and battery warning. | [setup pages](docs/widget-setup-and-usage.md#setup-pages) |
+| Simulator | Test layout and setup pages before using the radio. | [emulator workflow](docs/emulator.md) |
 
-The competition page can:
-
-- Show the F5J contest state, target/flight timer, motor timer, maximum launch
-  altitude, and current flight mode.
-- Run the F5J launch, motor, glide, finish, and zero-result state flow.
-- Capture maximum altitude from `Alt+` telemetry during motor run and the
-  10-second window after motor-off.
-- Force a zero result when the motor is restarted after launch.
-- Sync the radio timers used by the template so normal EdgeTX timer voices and
-  warnings can still be used.
-
-The setup pages can:
-
-- Assign the model switches used for launch, motor, timer, and flight controls.
-- Edit flight-mode-specific mix global variables, including separate aileron
-  and flap differential, and battery warning level.
-- Reorder named output channels while preserving their mixer lines.
-- Align four-servo wing outputs and curves.
-- Tune airbrake flap and aileron curves.
-- Set aileron travel, aileron-to-flap, camber-to-aileron, and thermal camber
-  values, including trim-button adjustment for `Ail`, `AiF`, `CbA`, and
-  `GV10` / `CbX` in the TX15 template.
-- Configure the receiver low-battery warning threshold.
-
-The repository also provides:
-
-- TX15 EdgeTX model templates under `models/tx15/` for M-tail, V-tail, and
-  single-elevator X-tail airframes.
-- A generated landscape color-radio SD-card package under `dist/SDCARD/`.
-- `make install-widget SDCARD=/path/to/card` for copying the current widget to
-  a mounted radio SD card.
-
-## Structure
-
-- `src/SoarF5J/`: maintainable Lua source.
-- `dist/SDCARD/`: EdgeTX SD-card root with generated SoarF5J widget output.
-- `models/tx15/`: TX15 model template artifacts.
-- `docs/`: project structure, emulator, TX15 template, setup, and SD-card documentation.
-- `tools/`: local build, lint, packaging, and test helpers.
-- `tests/`: local Lua tests for state modules, widgets, setup pages, and packaging checks.
-
-## Verification
-
-Run the full local gate with:
+## Build And Verify
 
 ```sh
+make package
 make verify
 ```
 
-Individual targets are also available:
-
-```sh
-make lint
-make package
-make test
-```
-
-`make test` rebuilds the SoarF5J widget package before running tests because packaging checks compare `src/SoarF5J` with `dist/SDCARD/WIDGETS/SoarF5J`.
-
-To rebuild the widget and install it onto a mounted SD card:
+Install to a mounted SD card:
 
 ```sh
 make install-widget SDCARD=/Volumes/TX15
 ```
 
-`make sdcard SDCARD=/Volumes/TX15` is an alias. Replace `/Volumes/TX15` with
-the mounted SD-card path for the radio being updated. The target deletes the
-old `WIDGETS/SoarF5J` folder first so stale Lua or `.luac` files are not kept.
+## More Docs
 
-## Documentation
-
-- `docs/project-structure.md`: source layout and generated package output.
-- `docs/sdcard-structure.md`: landscape color-radio SD-card install layout.
-- `docs/widget-setup-and-usage.md`: widget install, setup page, and competition usage guide.
-- `docs/emulator.md`: local EdgeTX Companion simulator workflow.
-- `docs/tx15-model-template.md`: committed TX15 template notes.
-- `models/tx15/README.md`: TX15 template artifact and receiver channel notes.
+- [project structure](docs/project-structure.md)
+- [TX15 artifact notes](models/tx15/README.md)

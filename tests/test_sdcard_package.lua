@@ -419,6 +419,25 @@ test("user-facing documentation does not expose migration-only project reference
   end
 end)
 
+test("README stays short and links to the setup documentation", function()
+  local readme = read_file("README.md")
+  local lines = lines_from(readme)
+  local expected = {
+    "## How It Works",
+    "## What To Configure",
+    "[TX15 model templates](docs/tx15-model-template.md)",
+    "[widget setup and usage](docs/widget-setup-and-usage.md)",
+    "[SD-card structure](docs/sdcard-structure.md)",
+    "[emulator workflow](docs/emulator.md)"
+  }
+
+  assert(#lines <= 75, "README line count should stay short, got " .. tostring(#lines))
+
+  for _, needle in ipairs(expected) do
+    assert_contains(readme, needle, "README entry point")
+  end
+end)
+
 test("TX15 templates keep output blocks out of input and curve sections", function()
   for _, model in ipairs(tx15_template_models()) do
     for _, section_name in ipairs({ "inputNames", "curves", "points" }) do
