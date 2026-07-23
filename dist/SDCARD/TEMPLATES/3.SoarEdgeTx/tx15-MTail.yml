@@ -2,7 +2,7 @@ semver: 2.12.2
 header:
   name: tx15-MTail
   bitmap: sense.png
-  labels: f5j,Favorites
+  labels: ""
   modelId:
     0:
       val: 0
@@ -37,7 +37,7 @@ trimInc: 0
 displayTrims: 2
 ignoreSensorIds: 0
 showInstanceIds: 0
-disableThrottleWarning: 0
+disableThrottleWarning: 1
 enableCustomThrottleWarning: 0
 customThrottleWarningPosition: 0
 beepANACenter: 0
@@ -64,8 +64,6 @@ flightModeData:
         val: 15
       3:
         val: 18
-      12:
-        val: 18
       4:
         val: 35
       5:
@@ -80,6 +78,8 @@ flightModeData:
         val: 85
       11:
         val: 20
+      12:
+        val: -10
   1:
     trim:
       0:
@@ -100,14 +100,12 @@ flightModeData:
     fadeOut: 0
     gvars:
       0:
-        val: 4
-      1:
         val: 6
+      1:
+        val: 8
       2:
         val: 11
       3:
-        val: -10
-      12:
         val: -10
       4:
         val: 1
@@ -119,6 +117,8 @@ flightModeData:
         val: 0
       11:
         val: 0
+      12:
+        val: -11
   2:
     trim:
       2:
@@ -2356,9 +2356,6 @@ customFn:
     func: PLAY_TRACK
     def: "crowof\x00\x00,1,1x"
 thrTraceSrc: Thr
-switchWarning:
-  SA:
-    pos: down
 thrTrimSw: 0
 potsWarnMode: WARN_OFF
 potsWarnEnabled: 0
@@ -2451,8 +2448,8 @@ gvars:
     unit: 0
   12:
     name: FlD
-    min: 924
-    max: 924
+    min: 0
+    max: 0
     popup: 0
     prec: 0
     unit: 0
@@ -3010,7 +3007,7 @@ topbarWidgetWidth:
     val: 1
   5:
     val: 1
-view: 0
+view: 1
 modelRegistrationID: mYzzdzBE
 hatsMode: GLOBAL
 customSwitches:

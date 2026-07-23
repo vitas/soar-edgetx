@@ -208,13 +208,15 @@ The page currently covers:
 Use the drop-down fields to select the desired physical switch position for
 each function.
 
-The TX15 templates default motor arm to `SA down`.
+The TX15 templates default motor arm to `SA down` and motor input source to
+`P1`.
 The TX15 MTail and VTail templates default the aileron to elevator mix enable
 switch to `SA up`. The XTail template keeps the setup field, but its single
 elevator output does not use the aileron-to-elevator mix.
 
-If `S1` or `S2` is used for motor control, configure that pot as a slider in
-the radio settings first. Check the live motor channel with the motor
+If `P1`, `S1`, or `S2` is used for motor control, configure that pot as a
+slider in the radio settings first. The committed TX15 `.etx` archives set `P1`
+as an inverted slider named `mot`. Check the live motor channel with the motor
 disconnected: if turning the pot clockwise moves the channel from minimum to
 maximum throttle in the wrong direction for your ESC setup, reverse that slider
 in the radio settings before connecting the motor.

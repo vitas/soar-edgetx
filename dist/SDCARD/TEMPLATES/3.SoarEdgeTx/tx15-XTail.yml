@@ -2,7 +2,7 @@ semver: 2.12.2
 header:
   name: tx15-XTail
   bitmap: sense.png
-  labels: f5j,Favorites
+  labels: ""
   modelId:
     0:
       val: 0
@@ -37,7 +37,7 @@ trimInc: 0
 displayTrims: 2
 ignoreSensorIds: 0
 showInstanceIds: 0
-disableThrottleWarning: 0
+disableThrottleWarning: 1
 enableCustomThrottleWarning: 0
 customThrottleWarningPosition: 0
 beepANACenter: 0
@@ -64,8 +64,6 @@ flightModeData:
         val: 15
       3:
         val: 18
-      12:
-        val: 18
       4:
         val: 35
       5:
@@ -80,6 +78,8 @@ flightModeData:
         val: 85
       11:
         val: 20
+      12:
+        val: -10
   1:
     trim:
       0:
@@ -100,14 +100,12 @@ flightModeData:
     fadeOut: 0
     gvars:
       0:
-        val: 4
-      1:
         val: 6
+      1:
+        val: 8
       2:
         val: 11
       3:
-        val: -10
-      12:
         val: -10
       4:
         val: 1
@@ -119,6 +117,8 @@ flightModeData:
         val: 0
       11:
         val: 0
+      12:
+        val: -11
   2:
     trim:
       2:
@@ -1546,23 +1546,10 @@ inputNames:
   5:
     val: CbP
   6:
-    min: 100
-    max: -100
-    revert: 0
-    offset: 0
-    ppmCenter: 0
-    symetrical: 0
-    name: Elev
-    curve: 0
+    val: Cmb
   7:
-    min: 0
-    max: 0
-    revert: 0
-    offset: 0
-    ppmCenter: 0
-    symetrical: 0
-    name: Unused
-    curve: 0
+    val: Adj
+curves:
   0:
     type: 0
     smooth: 1
@@ -1594,41 +1581,25 @@ inputNames:
     points: 0
     name: BrA
   6:
-    min: 100
-    max: -100
-    revert: 0
-    offset: 0
-    ppmCenter: 0
-    symetrical: 0
-    name: Elev
-    curve: 0
+    type: 1
+    smooth: 0
+    points: -1
+    name: Snp
   7:
-    min: 0
-    max: 0
-    revert: 0
-    offset: 0
-    ppmCenter: 0
-    symetrical: 0
-    name: Unused
-    curve: 0
+    type: 1
+    smooth: 0
+    points: 5
+    name: Adj
   8:
-    min: 0
-    max: 0
-    revert: 0
-    offset: 0
-    ppmCenter: 0
-    symetrical: 0
-    name: Unused
-    curve: 0
+    type: 1
+    smooth: 0
+    points: -1
+    name: Mot
   9:
-    min: 0
-    max: 0
-    revert: 0
-    offset: 0
-    ppmCenter: 0
-    symetrical: 0
-    name: Unused
-    curve: 0
+    type: 0
+    smooth: 0
+    points: -2
+    name: Abs
   10:
     type: 1
     smooth: 0
@@ -1663,41 +1634,13 @@ points:
   5:
     val: -100
   6:
-    min: 100
-    max: -100
-    revert: 0
-    offset: 0
-    ppmCenter: 0
-    symetrical: 0
-    name: Elev
-    curve: 0
+    val: -50
   7:
-    min: 0
-    max: 0
-    revert: 0
-    offset: 0
-    ppmCenter: 0
-    symetrical: 0
-    name: Unused
-    curve: 0
+    val: 0
   8:
-    min: 0
-    max: 0
-    revert: 0
-    offset: 0
-    ppmCenter: 0
-    symetrical: 0
-    name: Unused
-    curve: 0
+    val: 50
   9:
-    min: 0
-    max: 0
-    revert: 0
-    offset: 0
-    ppmCenter: 0
-    symetrical: 0
-    name: Unused
-    curve: 0
+    val: 100
   10:
     val: -100
   11:
@@ -2261,9 +2204,6 @@ customFn:
     func: PLAY_TRACK
     def: "crowof\x00\x00,1,1x"
 thrTraceSrc: Thr
-switchWarning:
-  SA:
-    pos: down
 thrTrimSw: 0
 potsWarnMode: WARN_OFF
 potsWarnEnabled: 0
@@ -2356,8 +2296,8 @@ gvars:
     unit: 0
   12:
     name: FlD
-    min: 924
-    max: 924
+    min: 0
+    max: 0
     popup: 0
     prec: 0
     unit: 0
@@ -2915,7 +2855,7 @@ topbarWidgetWidth:
     val: 1
   5:
     val: 1
-view: 0
+view: 1
 modelRegistrationID: mYzzdzBE
 hatsMode: GLOBAL
 customSwitches:

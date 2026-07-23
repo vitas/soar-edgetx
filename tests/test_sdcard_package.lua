@@ -262,6 +262,85 @@ test("TX15 F5J template variant artifacts are committed", function()
   assert(not file_exists("dist/SDCARD/TEMPLATES/3.SoarEdgeTx/f5J-t15.yml"), "legacy exported TX15 template should be renamed")
 end)
 
+test("TX15 ETX archives match exported template YAML", function()
+  for _, variant in ipairs(TX15_TEMPLATE_VARIANTS) do
+    local etx_model = normalize_model_content(command_output("unzip -p " .. variant.etx .. " MODELS/model1.yml"))
+    local exported_model = normalize_model_content(read_file(variant.exported))
+
+    assert_equal(etx_model, exported_model, variant.id .. " ETX model and exported template should match")
+  end
+end)
+
+test("TX15 templates keep Vitas TX15 template base setup", function()
+  for _, model in ipairs(tx15_template_models()) do
+    model.content = normalize_model_content(model.content)
+
+    assert_contains(model.content, "disableThrottleWarning: 1", model.label .. " throttle warning setting")
+    assert(not model.content:find("srcRaw: P2", 1, true), model.label .. " should not use P2 for motor input")
+    assert_contains(model.content, "srcRaw: P1", model.label .. " motor input source")
+    assert_contains(model.content, "rfAlarms:\n  warning: 90\n  critical: 80", model.label .. " RF alarms")
+    assert_contains(model.content, "label: RQly", model.label .. " receiver link quality sensor")
+    assert_contains(model.content, "label: Bat%", model.label .. " receiver battery percent sensor")
+
+    assert_mix_block(indexed_block(model.content, "limitData", 0), {
+      "name: Ai-L",
+      "min: 300",
+      "max: -500",
+      "revert: 0"
+    }, model.label .. " CH1 output")
+    assert_mix_block(indexed_block(model.content, "limitData", 1), {
+      "name: Ai-R",
+      "min: 300",
+      "max: -500",
+      "revert: 0"
+    }, model.label .. " CH2 output")
+    assert_mix_block(indexed_block(model.content, "limitData", 3), {
+      "name: Fl-L",
+      "min: 900",
+      "max: 200",
+      "revert: 0",
+      "offset: 700"
+    }, model.label .. " CH4 output")
+    assert_mix_block(indexed_block(model.content, "limitData", 4), {
+      "name: Fl-R",
+      "min: -200",
+      "max: -900",
+      "revert: 0",
+      "offset: -700"
+    }, model.label .. " CH5 output")
+    assert_mix_block(indexed_block(model.content, "gvars", 12), {
+      "name: FlD",
+      "min: 0",
+      "max: 0"
+    }, model.label .. " GV13 definition")
+  end
+end)
+
+test("TX15 ETX radio config supports default P1 motor control", function()
+  for _, variant in ipairs(TX15_TEMPLATE_VARIANTS) do
+    local radio = command_output("unzip -p " .. variant.etx .. " RADIO/radio.yml")
+
+    assert_contains(radio, "potsConfig:\n  P1:\n    name: mot\n    inv: 1\n    type: slider", variant.id .. " P1 slider config")
+    assert_contains(radio, "switchConfig:\n  SA:\n    type: 3POS", variant.id .. " SA switch type")
+    assert_contains(radio, "  SD:\n    type: 3POS", variant.id .. " SD switch type")
+    assert_contains(radio, "  SF:\n    type: 2POS", variant.id .. " SF switch type")
+    assert_contains(radio, "ownerRegistrationID: \"\"", variant.id .. " should not copy personal owner registration")
+  end
+end)
+
+test("TX15 templates keep output blocks out of input and curve sections", function()
+  for _, model in ipairs(tx15_template_models()) do
+    for _, section_name in ipairs({ "inputNames", "curves", "points" }) do
+      local section = top_level_section(model.content, section_name)
+
+      assert(not section:find("    min:", 1, true), model.label .. " " .. section_name .. " should not contain output limits")
+      assert(not section:find("    revert:", 1, true), model.label .. " " .. section_name .. " should not contain output reversal")
+      assert(not section:find("    ppmCenter:", 1, true), model.label .. " " .. section_name .. " should not contain output centers")
+      assert(not section:find("    symetrical:", 1, true), model.label .. " " .. section_name .. " should not contain output symmetry")
+    end
+  end
+end)
+
 test("SD card sounds are ignored and untracked", function()
   local ignore = read_file(".gitignore")
   assert(ignore:find("dist/SDCARD/SOUNDS/", 1, true), "missing exact SD card sounds ignore rule")
