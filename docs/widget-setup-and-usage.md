@@ -210,7 +210,8 @@ The page currently covers:
 - Altitude reports every 10 seconds.
 
 Use the drop-down fields to select the desired physical switch position for
-each function.
+each function. The current TX15 defaults are listed in
+`docs/tx15-model-template.md`.
 
 The TX15 templates default motor arm to `SA down` and motor input source to
 `P1`.
@@ -241,10 +242,10 @@ launch/motor switch on, the throttle stick should drive the motor channel. When
 the model leaves the launch/motor flight mode, the motor input is disabled and
 the throttle stick remains available for landing/brake control.
 
-The TX15 template defaults the 10-second altitude report switch to the same
-physical switch used for voice reporting. The competition widget reads that
-logical switch during glide and calls the current `Alt` telemetry value every
-10 seconds after the F5J height window has closed.
+The TX15 templates default the altitude voice/vario gate `L1` to `SB down` and
+the 10-second altitude report `L8` to `SB up`, gated by `L1`. The competition
+widget reads `L8` during glide and calls the current `Alt` telemetry value
+every 10 seconds after the F5J height window has closed.
 
 ### `setup/outputs`
 

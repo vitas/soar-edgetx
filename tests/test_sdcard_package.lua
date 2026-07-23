@@ -367,6 +367,21 @@ test("TX15 ETX radio config supports default P1 motor control", function()
   end
 end)
 
+test("TX15 template documentation lists current default control assignments", function()
+  local docs = read_file("docs/tx15-model-template.md")
+  local expected = {
+    "| `P1` | `mot` / `I4:Mot` | `P1` slider, inverted |",
+    "| `T3` | `CambPs` / `I6:CbP` | Trim source `T3` |",
+    "| `L5` | Launch mode (Motor Arm) and flight timer control | `SA down` / `SA2` |",
+    "| `L8` | Report current altitude every 10 sec. | `SB up` / `SB0`, gated by `L1` |",
+    "| `L46` | Aileron -> Elevator | `SA up` / `SA0` |"
+  }
+
+  for _, needle in ipairs(expected) do
+    assert_contains(docs, needle, "TX15 template control documentation")
+  end
+end)
+
 test("TX15 templates keep output blocks out of input and curve sections", function()
   for _, model in ipairs(tx15_template_models()) do
     for _, section_name in ipairs({ "inputNames", "curves", "points" }) do
@@ -589,8 +604,10 @@ end)
 
 test("TX15 templates do not bind altitude report switch to speed mode", function()
   for _, model in ipairs(tx15_template_models()) do
-    assert(model.content:find("def: SB2,L1", 1, true), model.label .. " missing voice-reporting default for L8 altitude reports")
-    assert(not model.content:find("def: SC0,L1", 1, true), model.label .. " altitude reports should not default to SC down speed mode")
+    local altitude_report = indexed_block(model.content, "logicalSw", 7)
+    assert_contains(altitude_report, "def: SB0,L1", model.label .. " L8 altitude report switch")
+    assert(not altitude_report:find("def: SC0,L1", 1, true),
+      model.label .. " altitude reports should not default to SC down speed mode")
   end
 end)
 
