@@ -5,6 +5,9 @@ luac.out
 # Local git worktrees
 .worktrees/
 
+# Local planning notes are for development only, not user-facing docs.
+docs/plans/
+
 # luarocks build files
 *.src.rock
 *.zip

@@ -438,6 +438,14 @@ test("README stays short and links to the setup documentation", function()
   end
 end)
 
+test("planning documents are local-only and ignored", function()
+  local ignore = read_file(".gitignore")
+  assert(ignore:find("docs/plans/", 1, true), "missing docs/plans ignore rule")
+
+  local tracked = command_lines("git ls-files docs/plans")
+  assert_equal(#tracked, 0, "tracked planning document count")
+end)
+
 test("TX15 templates keep output blocks out of input and curve sections", function()
   for _, model in ipairs(tx15_template_models()) do
     for _, section_name in ipairs({ "inputNames", "curves", "points" }) do
