@@ -2068,7 +2068,7 @@ logicalSw:
     lsState: 0
   45:
     func: FUNC_AND
-    def: SA0,NONE
+    def: NONE,NONE
     delay: 0
     duration: 0
     andsw: NONE

@@ -383,6 +383,15 @@ local function setup_env(options)
   return env
 end
 
+local function drop_down_item_index(dropDown, item)
+  for index, value in ipairs(dropDown.items) do
+    if value == item then
+      return index
+    end
+  end
+  return nil
+end
+
 local function load_setup_page(path, env)
   return assert(loadfile(path))(env.widget, env.soarGlobals)
 end
@@ -663,6 +672,34 @@ setup_quality_test("switches page exposes landing and landing-off switches", fun
   assert(sawLandingSwitch, "switches page missing L06 dropdown")
   assert(sawLandingOffSwitch, "switches page missing L45 dropdown")
   assert(sawAileronElevatorSwitch, "switches page missing L46 dropdown")
+
+  for _, dropDown in ipairs(switchesPage.dropDowns) do
+    assert_equal(dropDown.items[1], "NONE", "switch dropdown first item")
+  end
+end)
+
+setup_quality_test("switches page can disable logical switches", function()
+  local switchesPage = setup_env({
+    logicalSwitches = {
+      [45] = { v1 = 1 }
+    }
+  })
+  load_setup_page("src/SoarF5J/setup/switches.lua", switchesPage)
+  switchesPage.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  local aileronElevator
+  for _, dropDown in ipairs(switchesPage.dropDowns) do
+    if dropDown.ls == 45 then
+      aileronElevator = dropDown
+      break
+    end
+  end
+
+  assert(aileronElevator, "missing L46 aileron-elevator dropdown")
+  aileronElevator.selected = assert(drop_down_item_index(aileronElevator, "NONE"), "missing NONE switch option")
+  aileronElevator.onChange(aileronElevator)
+
+  assert_equal(switchesPage.logicalSwitches[45].v1, 0, "L46 disabled switch")
 end)
 
 setup_quality_test("switches page keeps crow-off audio edge switch aligned", function()
@@ -684,11 +721,17 @@ setup_quality_test("switches page keeps crow-off audio edge switch aligned", fun
   end
 
   assert(landingOff, "missing L45 landing-off dropdown")
-  landingOff.selected = 3
+  landingOff.selected = assert(drop_down_item_index(landingOff, "SB-"), "missing SB- switch option")
   landingOff.onChange(landingOff)
 
   assert_equal(switchesPage.logicalSwitches[44].v1, 3, "L45 landing-off switch")
   assert_equal(switchesPage.logicalSwitches[46].v1, 3, "L47 crow-off audio switch")
+
+  landingOff.selected = assert(drop_down_item_index(landingOff, "NONE"), "missing NONE switch option")
+  landingOff.onChange(landingOff)
+
+  assert_equal(switchesPage.logicalSwitches[44].v1, 0, "L45 disabled switch")
+  assert_equal(switchesPage.logicalSwitches[46].v1, 0, "L47 disabled crow-off audio switch")
 end)
 
 setup_quality_test("curve setup pages show motor warning prompt before edits", function()

@@ -84,7 +84,7 @@ uses normal position names and also shows the raw template value.
 | `L4` | Float flight mode | `SD down` / `SD2` | Selects the `Float` flight mode. |
 | `L6` | Landing | `SF down` / `SF2`, blocked in `Motor` | Enables landing/crow mode and plays the landing voice prompt. |
 | `L45` | Landing off / crow off | `SF up` / `SF0`, blocked in `Motor` | Leaves landing/crow mode and plays the crow-off voice prompt. The setup page also mirrors this assignment to the linked crow-off audio helper. |
-| `L46` | Aileron -> Elevator | `SA up` / `SA0` | Enables the `AilEle` mix on `tx15-MTail` and `tx15-VTail`; `tx15-XTail` leaves that mix disconnected. |
+| `L46` | Aileron -> Elevator | `tx15-MTail`: `SA up` / `SA0`; `tx15-VTail` and `tx15-XTail`: `NONE` | Enables the optional `AilEle` mix only on `tx15-MTail`. It is disabled in the V-tail and single-elevator templates. |
 | `L7` | Model Timer 1 report every 10 sec. | `SC down` / `SC2` | Speaks Timer 1 every 10 seconds. |
 | `L8` | Report current altitude every 10 sec. | `SB up` / `SB0`, gated by `L1` | Speaks current altitude every 10 seconds after the F5J height window has closed. |
 

@@ -211,13 +211,14 @@ The page currently covers:
 
 Use the drop-down fields to select the desired physical switch position for
 each function. The current TX15 defaults are listed in
-`docs/tx15-model-template.md`.
+`docs/tx15-model-template.md`. Select `NONE` when a function should be disabled
+or should not be assigned to any physical switch.
 
 The TX15 templates default motor arm to `SA down` and motor input source to
 `P1`.
-The TX15 MTail and VTail templates default the aileron to elevator mix enable
-switch to `SA up`. The XTail template keeps the setup field, but its single
-elevator output does not use the aileron-to-elevator mix.
+The TX15 MTail template defaults the aileron to elevator mix enable switch to
+`SA up`. The VTail and XTail templates default that switch to `NONE` and do not
+use the aileron-to-elevator mix.
 
 If `P1`, `S1`, or `S2` is used for motor control, configure that pot as a
 slider in the radio settings first. The committed TX15 `.etx` archives set `P1`

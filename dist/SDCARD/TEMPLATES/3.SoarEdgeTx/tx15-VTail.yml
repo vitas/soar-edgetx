@@ -429,25 +429,6 @@ mixData:
     offset: 0
     name: 
   - destCh: 6
-    srcRaw: I2
-    weight: gv(11)
-    swtch: L46
-    curve:
-      type: 0
-      value: 0
-    delayPrec: 0
-    delayUp: 0
-    delayDown: 0
-    speedPrec: 0
-    speedUp: 0
-    speedDown: 0
-    carryTrim: 0
-    mltpx: ADD
-    mixWarn: 0
-    flightModes: 011100111
-    offset: 0
-    name: AilEle
-  - destCh: 6
     srcRaw: I1
     weight: gv(10)
     swtch: NONE
@@ -504,25 +485,6 @@ mixData:
     flightModes: 000000000
     offset: 0
     name: Vt-R
-  - destCh: 7
-    srcRaw: I2
-    weight: !gv(11)
-    swtch: L46
-    curve:
-      type: 0
-      value: 0
-    delayPrec: 0
-    delayUp: 0
-    delayDown: 0
-    speedPrec: 0
-    speedUp: 0
-    speedDown: 0
-    carryTrim: 0
-    mltpx: ADD
-    mixWarn: 0
-    flightModes: 011100111
-    offset: 0
-    name: AilEle
   - destCh: 7
     srcRaw: I1
     weight: gv(10)
@@ -2144,7 +2106,7 @@ logicalSw:
     lsState: 0
   45:
     func: FUNC_AND
-    def: SA0,NONE
+    def: NONE,NONE
     delay: 0
     duration: 0
     andsw: NONE

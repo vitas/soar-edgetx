@@ -95,8 +95,8 @@ local function init()
   local w1 = COL2 - MARGIN
 
   -- Build lists of physical switch position indices and names.
-  local swIndices = {}
-  local swNames = {}
+  local swIndices = { 0 }
+  local swNames = { "NONE" }
 
   for swIdx, swName in switches() do
     if string.find(swName, "^!?S[A-H][+-]?") then

@@ -278,8 +278,10 @@ test("TX15 F5J template variant artifacts are committed", function()
     assert(file_exists(variant.exported), "missing TX15 " .. variant.id .. " exported template")
   end
 
-  assert(not file_exists("models/tx15/f5j_tmpl_t15.etx"), "legacy single TX15 template artifact should be renamed")
-  assert(not file_exists("dist/SDCARD/TEMPLATES/3.SoarEdgeTx/f5J-t15.yml"), "legacy exported TX15 template should be renamed")
+  assert_equal(#command_lines("git ls-files models/tx15/f5j_tmpl_t15.etx"), 0,
+    "legacy single TX15 template artifact should not be tracked")
+  assert_equal(#command_lines("git ls-files dist/SDCARD/TEMPLATES/3.SoarEdgeTx/f5J-t15.yml"), 0,
+    "legacy exported TX15 template should not be tracked")
 end)
 
 test("TX15 ETX archives match exported template YAML", function()
@@ -374,7 +376,7 @@ test("TX15 template documentation lists current default control assignments", fu
     "| `T3` | `CambPs` / `I6:CbP` | Trim source `T3` |",
     "| `L5` | Launch mode (Motor Arm) and flight timer control | `SA down` / `SA2` |",
     "| `L8` | Report current altitude every 10 sec. | `SB up` / `SB0`, gated by `L1` |",
-    "| `L46` | Aileron -> Elevator | `SA up` / `SA0` |"
+    "| `L46` | Aileron -> Elevator | `tx15-MTail`: `SA up` / `SA0`; `tx15-VTail` and `tx15-XTail`: `NONE` |"
   }
 
   for _, needle in ipairs(expected) do
@@ -596,12 +598,13 @@ test("TX15 VTail template maps V-tail servos to CH7/CH8 only", function()
     assert_equal(#ch10_mixes, 0, model.label .. " CH10 should not be required")
     assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I0", "weight: 50", "name: Vt-l" }), model.label .. " missing CH7 V-tail rudder source")
     assert(find_mix_block_matching(ch7_mixes, { "srcRaw: ch(21)", "weight: -50" }), model.label .. " missing CH7 V-tail elevator source")
-    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I2", "weight: gv(11)", "name: AilEle" }), model.label .. " missing CH7 AilEle")
     assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I1", "weight: gv(10)" }), model.label .. " missing CH7 KAPOW elevator")
     assert(find_mix_block_matching(ch8_mixes, { "srcRaw: I0", "weight: 50" }), model.label .. " missing CH8 V-tail rudder source")
     assert(find_mix_block_matching(ch8_mixes, { "srcRaw: ch(21)", "weight: 50", "name: Vt-R" }), model.label .. " missing CH8 V-tail elevator source")
-    assert(find_mix_block_matching(ch8_mixes, { "srcRaw: I2", "weight: !gv(11)", "name: AilEle" }), model.label .. " missing CH8 AilEle")
     assert(find_mix_block_matching(ch8_mixes, { "srcRaw: I1", "weight: gv(10)" }), model.label .. " missing CH8 KAPOW elevator")
+    assert(not find_mix_block(ch7_mixes, "AilEle"), model.label .. " CH7 should not include AilEle")
+    assert(not find_mix_block(ch8_mixes, "AilEle"), model.label .. " CH8 should not include AilEle")
+    assert_contains(indexed_block(model.content, "logicalSw", 45), "def: NONE,NONE", model.label .. " L46 should be disabled")
     assert_contains(indexed_block(model.content, "limitData", 5), "name: Unused", model.label .. " CH6 output")
     assert_contains(indexed_block(model.content, "limitData", 6), "name: LftV", model.label .. " CH7 output")
     assert_contains(indexed_block(model.content, "limitData", 7), "name: RgtV", model.label .. " CH8 output")
@@ -625,36 +628,35 @@ test("TX15 XTail template maps one elevator to CH7 without aileron-elevator mix"
     assert(find_mix_block_matching(ch7_mixes, { "srcRaw: ch(21)", "weight: 100" }), model.label .. " missing CH7 elevator")
     assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I1", "weight: gv(10)" }), model.label .. " missing CH7 KAPOW elevator")
     assert(not find_mix_block(ch7_mixes, "AilEle"), model.label .. " CH7 should not include AilEle")
+    assert_contains(indexed_block(model.content, "logicalSw", 45), "def: NONE,NONE", model.label .. " L46 should be disabled")
     assert_contains(indexed_block(model.content, "limitData", 5), "name: Rudd", model.label .. " CH6 output")
     assert_contains(indexed_block(model.content, "limitData", 6), "name: Elev", model.label .. " CH7 output")
     assert_contains(indexed_block(model.content, "limitData", 7), "name: Unused", model.label .. " CH8 output")
   end
 end)
 
-test("TX15 MTail and VTail templates add switchable GV12 aileron to elevator mix", function()
-  for _, id in ipairs({ "MTail", "VTail" }) do
-    for _, model in ipairs(tx15_variant_models(id)) do
-      model.content = normalize_model_content(model.content)
-      local left_elevator_mixes = mix_blocks_for(model.content, 6)
-      local right_elevator_mixes = mix_blocks_for(model.content, 7)
-      local aileron_elevator =
-        find_mix_block(left_elevator_mixes, "AilEle") or
-        find_mix_block(right_elevator_mixes, "AilEle")
+test("TX15 MTail template adds switchable GV12 aileron to elevator mix", function()
+  for _, model in ipairs(tx15_variant_models("MTail")) do
+    model.content = normalize_model_content(model.content)
+    local left_elevator_mixes = mix_blocks_for(model.content, 6)
+    local right_elevator_mixes = mix_blocks_for(model.content, 7)
+    local aileron_elevator =
+      find_mix_block(left_elevator_mixes, "AilEle") or
+      find_mix_block(right_elevator_mixes, "AilEle")
 
-      assert(aileron_elevator, model.label .. " missing AilEle mix")
-      assert_mix_block(aileron_elevator, {
-      "srcRaw: I2",
-      "swtch: L46",
-      "mltpx: ADD",
-      "name: AilEle"
-      }, model.label .. " aileron-elevator mix")
-      assert(aileron_elevator:find("weight: gv%(11%)") or aileron_elevator:find("weight: !gv%(11%)"),
-        model.label .. " aileron-elevator mix missing GV12 weight")
+    assert(aileron_elevator, model.label .. " missing AilEle mix")
+    assert_mix_block(aileron_elevator, {
+    "srcRaw: I2",
+    "swtch: L46",
+    "mltpx: ADD",
+    "name: AilEle"
+    }, model.label .. " aileron-elevator mix")
+    assert(aileron_elevator:find("weight: gv%(11%)") or aileron_elevator:find("weight: !gv%(11%)"),
+      model.label .. " aileron-elevator mix missing GV12 weight")
 
-      assert_contains(indexed_block(model.content, "logicalSw", 4), "def: SA2,NONE", model.label .. " L5 motor arm switch")
-      assert_contains(indexed_block(model.content, "logicalSw", 45), "def: SA0,NONE", model.label .. " L46 switch")
-      assert_contains(indexed_block(model.content, "gvars", 11), "name: AiE", model.label .. " GV12 name")
-    end
+    assert_contains(indexed_block(model.content, "logicalSw", 4), "def: SA2,NONE", model.label .. " L5 motor arm switch")
+    assert_contains(indexed_block(model.content, "logicalSw", 45), "def: SA0,NONE", model.label .. " L46 switch")
+    assert_contains(indexed_block(model.content, "gvars", 11), "name: AiE", model.label .. " GV12 name")
   end
 end)
 
