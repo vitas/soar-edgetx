@@ -1,4 +1,4 @@
-checksum: 14067
+checksum: 32908
 manuallyEdited: 0
 timezoneMinutes: 0
 ppmunit: 0
@@ -30,7 +30,7 @@ calib:
       spanNeg: 1008
       spanPos: 1008
 vBatWarn: 67
-txVoltageCalibration: 14
+txVoltageCalibration: 3
 backlightMode: backlight_mode_all
 antennaMode: MODE_PER_MODEL
 disableRtcWarning: 0
@@ -82,7 +82,7 @@ speakerVolume: 14
 vBatMin: 62
 vBatMax: 80
 backlightBright: 28
-globalTimer: 37493
+globalTimer: 50753
 bluetoothBaudrate: 0
 bluetoothMode: OFF
 countryCode: 0
@@ -218,7 +218,7 @@ switchConfig:
          r: 0
          g: 0
          b: 0
-currModelFilename: "model3.yml"
+currModelFilename: "model1.yml"
 blOffBright: 0
 bluetoothName: "taranis"
 ownerRegistrationID: "626423Q-"
