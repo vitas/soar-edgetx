@@ -75,6 +75,10 @@ for flaps. `tx15-VTail` uses `CH7/CH8` for the V-tail so an 8-channel receiver
 can be wired without receiver remapping. `tx15-XTail` has no aileron-to-elevator
 mix on the single elevator output.
 
+The templates start with neutral output endpoints, centers, reversals, and
+setup-owned curve points. Tune those values for the actual airframe during
+output, wing alignment, and brake curve setup.
+
 The widget expects the model to provide the template structure:
 
 - Flight modes, timers, logical switches, global variables, mixes, outputs,

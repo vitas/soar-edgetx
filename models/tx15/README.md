@@ -31,6 +31,10 @@ tx15-XTail  CH6 rudder, CH7 elevator, CH8 unused
 output. `tx15-VTail` uses `CH7/CH8` for the tail so an 8-channel receiver can
 be wired without receiver remapping.
 
+The templates intentionally do not include aircraft-specific output endpoints,
+centers, reversals, or setup curve values. Start from the template, then use the
+setup pages and normal EdgeTX output checks to tune the actual airframe.
+
 Create or update the templates in EdgeTX Companion or on the TX15, then export
 them here once the model structure is repeatable and reviewed.
 

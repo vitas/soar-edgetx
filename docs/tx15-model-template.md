@@ -45,6 +45,11 @@ without receiver output remapping.
 elevator output intentionally does not include the switchable
 aileron-to-elevator mix.
 
+Template artifacts must stay airframe-neutral: no copied output endpoints,
+centers, reversals, or setup-owned curve point values from a flown aircraft.
+Those values should start at zero and be tuned on the actual model through the
+setup pages and EdgeTX output checks.
+
 ## Referenced OpenTX Scripts
 
 The reference model is expected to use these SoarOTX scripts:

@@ -271,7 +271,7 @@ test("TX15 ETX archives match exported template YAML", function()
   end
 end)
 
-test("TX15 templates keep Vitas TX15 template base setup", function()
+test("TX15 templates keep Vitas TX15 shared base setup", function()
   for _, model in ipairs(tx15_template_models()) do
     model.content = normalize_model_content(model.content)
 
@@ -281,38 +281,57 @@ test("TX15 templates keep Vitas TX15 template base setup", function()
     assert_contains(model.content, "rfAlarms:\n  warning: 90\n  critical: 80", model.label .. " RF alarms")
     assert_contains(model.content, "label: RQly", model.label .. " receiver link quality sensor")
     assert_contains(model.content, "label: Bat%", model.label .. " receiver battery percent sensor")
-
-    assert_mix_block(indexed_block(model.content, "limitData", 0), {
-      "name: Ai-L",
-      "min: 300",
-      "max: -500",
-      "revert: 0"
-    }, model.label .. " CH1 output")
-    assert_mix_block(indexed_block(model.content, "limitData", 1), {
-      "name: Ai-R",
-      "min: 300",
-      "max: -500",
-      "revert: 0"
-    }, model.label .. " CH2 output")
-    assert_mix_block(indexed_block(model.content, "limitData", 3), {
-      "name: Fl-L",
-      "min: 900",
-      "max: 200",
-      "revert: 0",
-      "offset: 700"
-    }, model.label .. " CH4 output")
-    assert_mix_block(indexed_block(model.content, "limitData", 4), {
-      "name: Fl-R",
-      "min: -200",
-      "max: -900",
-      "revert: 0",
-      "offset: -700"
-    }, model.label .. " CH5 output")
     assert_mix_block(indexed_block(model.content, "gvars", 12), {
       "name: FlD",
       "min: 0",
       "max: 0"
     }, model.label .. " GV13 definition")
+  end
+end)
+
+test("TX15 templates start output endpoints and centers neutral", function()
+  for _, model in ipairs(tx15_template_models()) do
+    model.content = normalize_model_content(model.content)
+    local section = top_level_section(model.content, "limitData")
+    local block = nil
+    local channel = nil
+    local count = 0
+
+    local function finish_block()
+      if not block then return end
+      local text = table.concat(block, "\n")
+      count = count + 1
+      assert_contains(text, "min: 0", model.label .. " CH" .. tostring(channel) .. " lower endpoint")
+      assert_contains(text, "max: 0", model.label .. " CH" .. tostring(channel) .. " upper endpoint")
+      assert_contains(text, "revert: 0", model.label .. " CH" .. tostring(channel) .. " direction")
+      assert_contains(text, "offset: 0", model.label .. " CH" .. tostring(channel) .. " center offset")
+      assert_contains(text, "ppmCenter: 0", model.label .. " CH" .. tostring(channel) .. " ppm center")
+    end
+
+    for _, line in ipairs(lines_from(section)) do
+      local index_text = line:match("^%s+(%d+):%s*$")
+      if index_text then
+        finish_block()
+        channel = tonumber(index_text) + 1
+        block = { line }
+      elseif block then
+        block[#block + 1] = line
+      end
+    end
+    finish_block()
+
+    assert(count > 0, model.label .. " output block count")
+  end
+end)
+
+test("TX15 templates start setup-owned curve points neutral", function()
+  for _, model in ipairs(tx15_template_models()) do
+    model.content = normalize_model_content(model.content)
+
+    for index = 0, 29 do
+      assert_contains(indexed_block(model.content, "points", index), "val: 0",
+        model.label .. " setup curve point " .. tostring(index))
+    end
   end
 end)
 

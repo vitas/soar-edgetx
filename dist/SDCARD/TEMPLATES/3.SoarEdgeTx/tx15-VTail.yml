@@ -1266,8 +1266,8 @@ mixData:
     name: AilFlp
 limitData:
   0:
-    min: 300
-    max: -500
+    min: 0
+    max: 0
     revert: 0
     offset: 0
     ppmCenter: 0
@@ -1275,8 +1275,8 @@ limitData:
     name: Ai-L
     curve: 1
   1:
-    min: 300
-    max: -500
+    min: 0
+    max: 0
     revert: 0
     offset: 0
     ppmCenter: 0
@@ -1284,8 +1284,8 @@ limitData:
     name: Ai-R
     curve: 2
   2:
-    min: 20
-    max: -20
+    min: 0
+    max: 0
     revert: 0
     offset: 0
     ppmCenter: 0
@@ -1293,19 +1293,19 @@ limitData:
     name: Moto
     curve: 0
   3:
-    min: 900
-    max: 200
+    min: 0
+    max: 0
     revert: 0
-    offset: 700
+    offset: 0
     ppmCenter: 0
     symetrical: 0
     name: Fl-L
     curve: 3
   4:
-    min: -200
-    max: -900
+    min: 0
+    max: 0
     revert: 0
-    offset: -700
+    offset: 0
     ppmCenter: 0
     symetrical: 0
     name: Fl-R
@@ -1320,8 +1320,8 @@ limitData:
     name: Unused
     curve: 0
   6:
-    min: 100
-    max: -100
+    min: 0
+    max: 0
     revert: 0
     offset: 0
     ppmCenter: 0
@@ -1329,9 +1329,9 @@ limitData:
     name: LftV
     curve: 0
   7:
-    min: 100
-    max: -100
-    revert: 1
+    min: 0
+    max: 0
+    revert: 0
     offset: 0
     ppmCenter: 0
     symetrical: 0
@@ -1698,65 +1698,65 @@ curves:
     name: ""
 points:
   0:
-    val: -100
+    val: 0
   1:
-    val: -50
+    val: 0
   2:
     val: 0
   3:
-    val: 50
+    val: 0
   4:
-    val: 100
+    val: 0
   5:
-    val: -100
+    val: 0
   6:
-    val: -50
+    val: 0
   7:
     val: 0
   8:
-    val: 50
+    val: 0
   9:
-    val: 100
+    val: 0
   10:
-    val: -100
+    val: 0
   11:
-    val: -50
+    val: 0
   12:
     val: 0
   13:
-    val: 50
+    val: 0
   14:
-    val: 100
+    val: 0
   15:
-    val: -100
+    val: 0
   16:
-    val: -50
+    val: 0
   17:
     val: 0
   18:
-    val: 50
+    val: 0
   19:
-    val: 100
+    val: 0
   20:
-    val: -100
+    val: 0
   21:
-    val: -50
+    val: 0
   22:
     val: 0
   23:
-    val: 50
+    val: 0
   24:
-    val: 100
+    val: 0
   25:
-    val: -16
+    val: 0
   26:
-    val: -3
+    val: 0
   27:
-    val: -2
+    val: 0
   28:
-    val: 4
+    val: 0
   29:
-    val: 37
+    val: 0
   30:
     val: -100
   31:
