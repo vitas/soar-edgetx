@@ -1,7 +1,7 @@
 # SoarF5J EdgeTX
 
-F5J-only EdgeTX landscape color-radio widget project with a Radiomaster TX15
-model template.
+F5J-only EdgeTX landscape color-radio widget project with Radiomaster TX15
+model templates.
 
 ## Status
 
@@ -10,7 +10,7 @@ Early development. The widget targets EdgeTX landscape color radios with
 three screen sizes; manual radio/simulator testing is currently limited to
 TX15 and T16/TX16S-class radios.
 
-The committed model template is still TX15-specific. Other radios can use the
+The committed model templates are still TX15-specific. Other radios can use the
 widget when their model template provides the same F5J model structure.
 
 ## What It Can Do
@@ -46,7 +46,8 @@ The setup pages can:
 
 The repository also provides:
 
-- A TX15 EdgeTX model template under `models/tx15/`.
+- TX15 EdgeTX model templates under `models/tx15/` for M-tail, V-tail, and
+  single-elevator X-tail airframes.
 - A generated landscape color-radio SD-card package under `dist/SDCARD/`.
 - `make install-widget SDCARD=/path/to/card` for copying the current widget to
   a mounted radio SD card.
@@ -95,4 +96,4 @@ old `WIDGETS/SoarF5J` folder first so stale Lua or `.luac` files are not kept.
 - `docs/widget-setup-and-usage.md`: widget install, setup page, and competition usage guide.
 - `docs/emulator.md`: local EdgeTX Companion simulator workflow.
 - `docs/tx15-model-template.md`: committed TX15 template notes.
-- `models/tx15/README.md`: TX15 template artifact notes.
+- `models/tx15/README.md`: TX15 template artifact and receiver channel notes.

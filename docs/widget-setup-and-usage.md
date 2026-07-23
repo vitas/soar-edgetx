@@ -54,11 +54,26 @@ or old widget code being left behind.
 
 ## Model Requirements
 
-Use the committed TX15 template when possible on TX15:
+Use one of the committed TX15 templates when possible on TX15:
 
 ```text
-models/tx15/f5j_tmpl_t15.etx
+models/tx15/tx15-MTail.etx
+models/tx15/tx15-VTail.etx
+models/tx15/tx15-XTail.etx
 ```
+
+Choose the variant by tail type:
+
+```text
+tx15-MTail  CH6 rudder, CH7/CH8 elevator servos
+tx15-VTail  CH7/CH8 left/right V-tail, CH6 unused
+tx15-XTail  CH6 rudder, CH7 elevator, CH8 unused
+```
+
+All three variants keep `CH1/CH2` for ailerons, `CH3` for motor, and `CH4/CH5`
+for flaps. `tx15-VTail` uses `CH7/CH8` for the V-tail so an 8-channel receiver
+can be wired without receiver remapping. `tx15-XTail` has no aileron-to-elevator
+mix on the single elevator output.
 
 The widget expects the model to provide the template structure:
 
@@ -186,15 +201,17 @@ The page currently covers:
 - Float flight mode.
 - Landing.
 - Landing off / crow off.
-- Aileron to elevator mix enable.
+- Aileron to elevator mix enable, for templates that use that mix.
 - Optional model Timer 1 reports every 10 seconds.
 - Altitude reports every 10 seconds.
 
 Use the drop-down fields to select the desired physical switch position for
 each function.
 
-The TX15 template defaults motor arm to `SA down`.
-The TX15 template defaults the aileron to elevator mix enable switch to `SA up`.
+The TX15 templates default motor arm to `SA down`.
+The TX15 MTail and VTail templates default the aileron to elevator mix enable
+switch to `SA up`. The XTail template keeps the setup field, but its single
+elevator output does not use the aileron-to-elevator mix.
 
 If `S1` or `S2` is used for motor control, configure that pot as a slider in
 the radio settings first. Check the live motor channel with the motor
@@ -302,7 +319,8 @@ Edits mix-related global variables for the current flight mode:
 - Aileron travel.
 - Elevator travel.
 - Aileron to flap.
-- Aileron to elevator.
+- Aileron to elevator. This is used by TX15 MTail and VTail; XTail
+  intentionally leaves it disconnected from the single elevator output.
 - Aileron differential.
 - Flap differential for the aileron-to-flap path.
 - Brake to elevator.

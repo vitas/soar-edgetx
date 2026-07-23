@@ -1,6 +1,6 @@
 semver: 2.12.2
 header:
-  name: Challenger tmpl
+  name: tx15-MTail
   bitmap: sense.png
   labels: f5j,Favorites
   modelId:
