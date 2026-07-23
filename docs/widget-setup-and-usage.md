@@ -275,13 +275,24 @@ curve shapes.
 Sets aileron travel, aileron-to-flap behavior, camber-to-aileron coupling, and
 thermal camber around the maximum reflex position.
 
-Use the vertical slider to adjust the flaperon position. The page writes the
-related global variables and temporarily enables the model adjustment mode while
-editing. When the page exits, it restores the previous adjustment state.
+Use the vertical slider to set maximum reflex. In normal flying, the TX15
+template drives the thermal camber position from the EdgeTX trim source
+`T3`/`CambPs`; on Mode 2 radios this is commonly the throttle trim, but the
+physical trim depends on the radio's stick mode. Moving that trim source changes
+how much thermal camber is applied between maximum reflex and the configured
+camber amount. The page writes the related global variables and temporarily
+enables the model adjustment mode while editing. When the page exits, it
+restores the previous adjustment state.
 
 The TX15 template uses the page's adjustment mode for these trim-button edits:
 aileron trim adjusts `Ail`, rudder trim adjusts `AiF`, elevator trim adjusts
-`CbA`, and throttle trim adjusts the thermal camber amount `GV10` / `CbX`.
+`CbA`, and `T3` adjusts the thermal camber amount `GV10` / `CbX`.
+
+To put thermal camber selection on a switch instead, edit the TX15 model in
+Companion and change the `CambPs` input source from `T3` to the desired physical
+or logical switch. Use weight/offset or a curve if the switch positions need
+specific camber percentages. This is a model-template change, not a Lua widget
+setting.
 
 ### `setup/mixes`
 
