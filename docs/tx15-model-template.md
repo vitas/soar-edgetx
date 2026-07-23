@@ -17,7 +17,7 @@ MODELS/f5j.txt
 MODELS/labels.yml
 ```
 
-It was created manually in Companion from the F5J migration work.
+These archives are the current TX15 EdgeTX template artifacts for this project.
 
 ## Tail Variants
 
@@ -103,17 +103,6 @@ the setup page unless you are intentionally editing the template logic.
 | `Speed` | `L3` | Speed flight mode, defaulted to `SD up`. |
 | `Float` | `L4` | Float flight mode, defaulted to `SD down`. |
 
-## Referenced OpenTX Scripts
-
-The reference model is expected to use these SoarOTX scripts:
-
-- `JF5Jsk`
-- `JFXJcf`
-- `JFgrph`
-- `JFutil`
-
-These names are migration references. They should not be copied as runtime dependencies for the F5J-only EdgeTX widget unless a specific behavior still needs to be ported.
-
 ## TX15 Template Scope
 
 The TX15 templates should define:
@@ -127,7 +116,8 @@ The TX15 templates should define:
 - Outputs.
 - Widget screen assignments.
 
-Manual Companion migration is acceptable until a repeatable model export path exists.
+Manual Companion editing is acceptable until a repeatable model export path
+exists.
 
 ## Current Artifact Policy
 

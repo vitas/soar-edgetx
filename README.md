@@ -16,9 +16,8 @@ widget when their model template provides the same F5J model structure.
 ## What It Can Do
 
 `SoarF5J` is an F5J-only EdgeTX color-radio widget for compatible landscape
-color radios and F5J model templates. It is not a general SoarOTX replacement
-and does not include F3K, F5K, portrait or black-and-white radio support, or
-flight log saving.
+color radios and F5J model templates. It does not include F3K, F5K, portrait
+or black-and-white radio support, or flight log saving.
 
 The competition page can:
 

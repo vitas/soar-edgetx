@@ -6,12 +6,10 @@ Observed on this machine:
 
 - EdgeTX Companion 2.10: `/Applications/EdgeTX Companion 2.10.app`
 - EdgeTX Companion 2.12: `/Applications/EdgeTX Companion 2.12.app`
-- OpenTX Companion 2.3: `/Applications/OpenTX Companion 2.3.app`
 
 The planned EdgeTX Companion 2.11 path, `/Applications/EdgeTX Companion 2.11.app`, was not present when checked.
 
-Use OpenTX Companion 2.3 only for inspecting the Xlite reference archive. Use
-EdgeTX Companion for landscape color-radio simulation and model work.
+Use EdgeTX Companion for landscape color-radio simulation and model work.
 
 ## Prepare The SD Card Folder
 

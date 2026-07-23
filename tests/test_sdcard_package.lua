@@ -382,6 +382,43 @@ test("TX15 template documentation lists current default control assignments", fu
   end
 end)
 
+test("user-facing documentation does not expose migration-only project references", function()
+  local docs = {
+    "README.md",
+    "docs/emulator.md",
+    "docs/project-structure.md",
+    "docs/sdcard-structure.md",
+    "docs/tx15-model-template.md",
+    "docs/widget-setup-and-usage.md",
+    "models/tx15/README.md"
+  }
+  local forbidden = {
+    "SoarOTX",
+    "SoarETX",
+    "OpenTX",
+    "migration",
+    "migrated",
+    "reference archive",
+    "reference model",
+    "legacy",
+    "replacement",
+    "JF5Jsk",
+    "JFXJcf",
+    "JFgrph",
+    "JFutil"
+  }
+
+  for _, path in ipairs(docs) do
+    local content = read_file(path)
+    local lower_content = content:lower()
+
+    for _, pattern in ipairs(forbidden) do
+      assert(not lower_content:find(pattern:lower(), 1, true),
+        path .. " contains migration-only documentation reference: " .. pattern)
+    end
+  end
+end)
+
 test("TX15 templates keep output blocks out of input and curve sections", function()
   for _, model in ipairs(tx15_template_models()) do
     for _, section_name in ipairs({ "inputNames", "curves", "points" }) do
