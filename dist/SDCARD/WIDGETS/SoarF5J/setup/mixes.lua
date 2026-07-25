@@ -46,7 +46,7 @@ local mixes = {
   { "Aileron Differential", 3, -100, 100 },
   { "Flap Differential", 12, -100, 100 },
   { "Brake -> Elevator", 4, 0, 40 },
-  { "Snap - flap", 5, 0, 50 }
+  { "Snap - flap", 5, -50, 50 }
 }
 
 local GV_ADJUST_MODE = 7

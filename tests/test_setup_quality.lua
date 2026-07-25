@@ -988,17 +988,20 @@ setup_quality_test("battery threshold values are clamped in setup pages", functi
 end)
 
 setup_quality_test("mixes page signed values can be edited negative", function()
-  local mixes = setup_env({ gvs = { [3] = 0, [12] = 0 } })
+  local mixes = setup_env({ gvs = { [3] = 0, [5] = -16, [12] = 0 } })
   load_setup_page("src/SoarF5J/setup/mixes.lua", mixes)
   mixes.widget.refresh(EVT_VIRTUAL_ENTER, nil)
 
   local differential
   local flapDifferential
+  local snapFlap
   for index, label in ipairs(mixes.labels) do
     if label == "Aileron Differential" then
       differential = mixes.numberControls[index]
     elseif label == "Flap Differential" then
       flapDifferential = mixes.numberControls[index]
+    elseif label == "Snap - flap" then
+      snapFlap = mixes.numberControls[index]
     end
   end
 
@@ -1017,6 +1020,14 @@ setup_quality_test("mixes page signed values can be edited negative", function()
   flapDifferential.value = 0
   assert_equal(flapDifferential.onChangeValue(-1, flapDifferential), -1, "flap differential decrement")
   assert_equal(mixes.gvs[12], -1, "flap differential GV write")
+
+  assert(snapFlap, "missing snap flap number control")
+  assert_equal(snapFlap.min_val, -50, "snap flap minimum")
+  assert_equal(snapFlap.max_val, 50, "snap flap maximum")
+
+  snapFlap.value = -16
+  assert_equal(snapFlap.onChangeValue(-1, snapFlap), -17, "snap flap decrement")
+  assert_equal(mixes.gvs[5], -17, "snap flap GV write")
 end)
 
 setup_quality_test("mixes page enables and restores trim adjustment mode", function()

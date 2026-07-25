@@ -245,13 +245,6 @@ local function tx15_output_models(id)
   for _, model in ipairs(models) do
     model.content = normalize_model_content(model.content)
   end
-  if id == "MTail" then
-    models[#models + 1] = {
-      label = "SD card model",
-      variant = id,
-      content = normalize_model_content(read_file("dist/SDCARD/MODELS/model1.yml"))
-    }
-  end
   return models
 end
 
