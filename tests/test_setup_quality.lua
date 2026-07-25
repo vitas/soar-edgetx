@@ -987,19 +987,22 @@ setup_quality_test("battery threshold values are clamped in setup pages", functi
   end
 end)
 
-setup_quality_test("mixes page signed values can be edited negative", function()
+setup_quality_test("mixes page exposes expected mix adjustment ranges", function()
   local mixes = setup_env({ gvs = { [3] = 0, [5] = -16, [12] = 0 } })
   load_setup_page("src/SoarF5J/setup/mixes.lua", mixes)
   mixes.widget.refresh(EVT_VIRTUAL_ENTER, nil)
 
   local differential
   local flapDifferential
+  local brakeElevator
   local snapFlap
   for index, label in ipairs(mixes.labels) do
     if label == "Aileron Differential" then
       differential = mixes.numberControls[index]
     elseif label == "Flap Differential" then
       flapDifferential = mixes.numberControls[index]
+    elseif label == "Brake -> Elevator" then
+      brakeElevator = mixes.numberControls[index]
     elseif label == "Snap - flap" then
       snapFlap = mixes.numberControls[index]
     end
@@ -1020,6 +1023,14 @@ setup_quality_test("mixes page signed values can be edited negative", function()
   flapDifferential.value = 0
   assert_equal(flapDifferential.onChangeValue(-1, flapDifferential), -1, "flap differential decrement")
   assert_equal(mixes.gvs[12], -1, "flap differential GV write")
+
+  assert(brakeElevator, "missing brake elevator number control")
+  assert_equal(brakeElevator.min_val, 0, "brake elevator minimum")
+  assert_equal(brakeElevator.max_val, 100, "brake elevator maximum")
+
+  brakeElevator.value = 40
+  assert_equal(brakeElevator.onChangeValue(1, brakeElevator), 41, "brake elevator increment")
+  assert_equal(mixes.gvs[4], 41, "brake elevator GV write")
 
   assert(snapFlap, "missing snap flap number control")
   assert_equal(snapFlap.min_val, -50, "snap flap minimum")
