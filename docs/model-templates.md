@@ -86,11 +86,10 @@ setup pages and EdgeTX output checks.
 
 Primary stick inputs are shared by the committed template families. Motor and
 thermal camber source defaults are family-specific. TX16-family YAML templates
-use `S1`/`S2` so a stock TX16S Companion simulator profile can import them
-without extra radio hardware settings. The `setup/switches` widget page can
-reassign rows that use logical switches. Stick and trim names below are EdgeTX
-source names; the physical stick or trim location depends on the radio stick
-mode.
+use the T16-compatible raw sources `P2` and `T3` so Companion does not clear
+the input sources during import. The `setup/switches` widget page can reassign
+rows that use logical switches. Stick and trim names below are EdgeTX source
+names; the physical stick or trim location depends on the radio stick mode.
 
 ### Physical Sources
 
@@ -108,10 +107,10 @@ mode.
 | --- | --- | --- | --- |
 | `tx15-*` | `I4:Mot` | `P1` slider, inverted | Motor throttle source in the `Motor` flight mode. Outside `Motor`, the `Off` input line holds the motor at idle. |
 | `tx15-*` | `I6:CbP` | `T3` trim source | Thermal camber position between maximum reflex and the configured camber amount. |
-| `tx16s-*` | `I4:Mot` | `S1` left pot, inverted | TX16S/T16-class motor throttle source in the `Motor` flight mode. |
-| `tx16s-*` | `I6:CbP` | `S2` right pot | TX16S/T16-class thermal camber position source. |
-| `tx16s-mk3-*` | `I4:Mot` | `S1` left pot, inverted | TX16S MK3 motor throttle source in the `Motor` flight mode. |
-| `tx16s-mk3-*` | `I6:CbP` | `S2` right pot | TX16S MK3 thermal camber position source. |
+| `tx16s-*` | `I4:Mot` | `P2` pot, inverted | TX16S/T16-class motor throttle source in the `Motor` flight mode. |
+| `tx16s-*` | `I6:CbP` | `T3` trim source | TX16S/T16-class thermal camber position source. The physical trim depends on the radio stick mode. |
+| `tx16s-mk3-*` | `I4:Mot` | `P2` pot, inverted | TX16S MK3 motor throttle source in the `Motor` flight mode. |
+| `tx16s-mk3-*` | `I6:CbP` | `T3` trim source | TX16S MK3 thermal camber position source. The physical trim depends on the radio stick mode. |
 
 On TX16-class radios with side sliders enabled in radio hardware settings, you
 can remap `I4:Mot` to `LS` and `I6:CbP` to `RS` after importing the template.

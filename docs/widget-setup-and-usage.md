@@ -233,7 +233,7 @@ Select `NONE` when a function should be disabled or should not be assigned to
 any physical switch.
 
 The committed templates default motor arm to `SA down`. TX15 templates use
-`P1` for motor control; TX16-family templates use the `S1` left pot. `MTail`
+`P1` for motor control; TX16-family templates use the `P2` pot. `MTail`
 defaults the aileron to elevator mix enable switch to `SA up`. `VTail` and
 `XTail` default that switch to `NONE` and do not use the aileron-to-elevator
 mix.
@@ -247,15 +247,17 @@ moves the channel from minimum to maximum throttle in the wrong direction for
 your ESC setup, reverse that pot in the radio settings before connecting the
 motor.
 
-TX16-family templates use internal multimodule RF with 8 channels by default so
+`tx16s-*` templates use internal multimodule RF with 8 channels by default so
 they import cleanly in the TX16S simulator and work with a standard 8-channel
-receiver. Change the RF module setup on the model setup page after import if
-you use ELRS, Crossfire, or another external module.
+receiver. `tx16s-mk3-*` templates keep Crossfire RF with 16 channels. Change
+the RF module setup on the model setup page after import if your radio hardware
+or receiver setup is different.
 
-Pilots who prefer the TX16 side sliders can remap `I4:Mot` from `S1` to `LS`
-and `I6:CbP` from `S2` to `RS` after import. First check that `LS` and `RS` are
-enabled in the radio hardware settings; otherwise Companion may clear those
-input sources on reload.
+The distributed TX16-family YAML uses `P2` and `T3` because those raw sources
+survive Companion import. Pilots who prefer the TX16 side sliders can remap
+`I4:Mot` from `P2` to `LS` and `I6:CbP` from `T3` to `RS` after import. First
+check that `LS` and `RS` are enabled in the radio hardware settings; otherwise
+Companion may clear those input sources on reload.
 
 To use the throttle stick for motor control only during the launch phase,
 change the motor input source instead of changing the launch switch logic:
@@ -263,7 +265,7 @@ change the motor input source instead of changing the launch switch logic:
 1. Disconnect the motor or remove the propeller.
 2. Open the model's **Inputs** page.
 3. Edit `I4:Mot`, line `On`.
-4. Change the source from the family default (`P1` or `S1`) to `Thr`.
+4. Change the source from the family default (`P1` or `P2`) to `Thr`.
 5. Keep this `On` line enabled only in the `Motor` flight mode.
 6. Leave the `Off` line as `MAX -100`.
 7. Check the servo monitor before connecting the motor again.
@@ -332,13 +334,13 @@ thermal camber around the maximum reflex position.
 
 Use the vertical slider to set maximum reflex. In normal flying, the templates
 drive thermal camber through `I6:CbP`. TX15 templates default that input to
-`T3`; TX16-family templates default it to `S2`. On Mode 2 radios `T3` is
-commonly the throttle trim, but the physical trim depends on the radio's stick
-mode. Moving the configured camber source changes how much thermal camber is
-applied between maximum reflex and the configured camber amount. The page
-writes the related global variables and temporarily enables the model
-adjustment mode while editing. When the page exits, it restores the previous
-adjustment state.
+`T3`; TX16-family templates also default it to `T3` for Companion import
+compatibility. On Mode 2 radios `T3` is commonly the throttle trim, but the
+physical trim depends on the radio's stick mode. Moving the configured camber
+source changes how much thermal camber is applied between maximum reflex and
+the configured camber amount. The page writes the related global variables and
+temporarily enables the model adjustment mode while editing. When the page
+exits, it restores the previous adjustment state.
 
 13-GVAR full templates use the page's adjustment mode for these trim-button
 edits: aileron trim adjusts `Ail`, rudder trim adjusts `AiF`, elevator trim
@@ -349,10 +351,10 @@ GV10-GV13 are fixed in the template and show `N/A` in setup pages on radios
 that do not expose those extended values to Lua.
 
 To put thermal camber selection on a switch instead, edit the model in Companion
-and change the `CambPs` input source from the family default (`T3` or `S2`) to
-the desired physical or logical switch. Use weight/offset or a curve if the
-switch positions need specific camber percentages. This is a model-template
-change, not a Lua widget setting.
+and change the `CambPs` input source from `T3` to the desired physical or
+logical switch. Use weight/offset or a curve if the switch positions need
+specific camber percentages. This is a model-template change, not a Lua widget
+setting.
 
 ### `setup/mixes`
 
