@@ -91,6 +91,14 @@ local function new_gui_stub(env)
         if self.fullScreenRefresh then
           self.fullScreenRefresh()
         end
+        for _, number in ipairs(self.numberControls or {}) do
+          if number.update then
+            number.update(number)
+          end
+          if number.draw then
+            number.draw(false)
+          end
+        end
       end,
       showPrompt = function(prompt)
         env.prompts[#env.prompts + 1] = prompt
@@ -136,9 +144,18 @@ local function new_gui_stub(env)
         number.flags = flags
         number.min_val = min or 0
         number.max_val = max or 100
-        env.numberControls[#env.numberControls + 1] = number
-        return number
-      end
+        function number.draw()
+          if type(number.value) == "string" then
+            lcd.drawText(x + w, y + h / 2, number.value, flags)
+          else
+            lcd.drawNumber(x + w, y + h / 2, number.value, flags)
+          end
+        end
+        gui.numberControls = gui.numberControls or {}
+        gui.numberControls[#gui.numberControls + 1] = number
+	        env.numberControls[#env.numberControls + 1] = number
+	        return number
+	      end
     }
     return gui
   end
@@ -239,7 +256,10 @@ local function setup_env(options)
       recordDraw("drawText", x, y, text, flags)
       env.drawTexts[#env.drawTexts + 1] = tostring(text)
     end,
-    drawNumber = function(...) recordDraw("drawNumber", ...) end,
+    drawNumber = function(x, y, value, flags, inversColor)
+      assert(type(value) == "number", "bad argument #3 to drawNumber")
+      recordDraw("drawNumber", x, y, value, flags, inversColor)
+    end,
     drawTextLines = function(x, y, w, h, text, flags)
       recordDraw("drawTextLines", x, y, w, h, text, flags)
       env.drawTextLines[#env.drawTextLines + 1] = tostring(text)
@@ -264,7 +284,13 @@ local function setup_env(options)
       env.outputs[index] = output
     end,
     getGlobalVariable = function(index)
-      return env.gvs[index] or 0
+      if env.gvs[index] ~= nil then
+        return env.gvs[index]
+      end
+      if options.missingGvarReturnsNil then
+        return nil
+      end
+      return 0
     end,
     setGlobalVariable = function(index, phase, value)
       env.gvWrites[#env.gvWrites + 1] = { index = index, phase = phase, value = value }
@@ -987,6 +1013,39 @@ setup_quality_test("battery threshold values are clamped in setup pages", functi
   end
 end)
 
+setup_quality_test("setup pages tolerate radios without extended global variables", function()
+  local mixes = setup_env({
+    missingGvarReturnsNil = true,
+    gvs = {
+      [0] = 80,
+      [1] = 15,
+      [2] = 15,
+      [3] = -32,
+      [4] = 40,
+      [5] = -16,
+      [6] = 153,
+      [7] = 0,
+      [8] = 1
+    }
+  })
+  load_setup_page("src/SoarF5J/setup/mixes.lua", mixes)
+  mixes.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert(pcall(function() mixes.widget.refresh(EVT_VIRTUAL_ENTER, nil) end), "mixes page crashed without extended GVARs")
+
+  local aileron = setup_env({
+    missingGvarReturnsNil = true,
+    gvs = {
+      [0] = 57,
+      [1] = 24,
+      [3] = 0,
+      [6] = 153
+    }
+  })
+  load_setup_page("src/SoarF5J/setup/aileron_camber.lua", aileron)
+  aileron.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert(pcall(function() aileron.widget.refresh(EVT_VIRTUAL_ENTER, nil) end), "aileron camber page crashed without extended GVARs")
+end)
+
 setup_quality_test("mixes page exposes expected mix adjustment ranges", function()
   local mixes = setup_env({ gvs = { [3] = 0, [5] = -16, [12] = 0 } })
   load_setup_page("src/SoarF5J/setup/mixes.lua", mixes)
@@ -1034,11 +1093,15 @@ setup_quality_test("mixes page exposes expected mix adjustment ranges", function
 
   assert(snapFlap, "missing snap flap number control")
   assert_equal(snapFlap.min_val, -50, "snap flap minimum")
-  assert_equal(snapFlap.max_val, 50, "snap flap maximum")
+  assert_equal(snapFlap.max_val, 0, "snap flap maximum")
 
   snapFlap.value = -16
   assert_equal(snapFlap.onChangeValue(-1, snapFlap), -17, "snap flap decrement")
   assert_equal(mixes.gvs[5], -17, "snap flap GV write")
+
+  snapFlap.value = -1
+  assert_equal(snapFlap.onChangeValue(1, snapFlap), 0, "snap flap maximum clamp")
+  assert_equal(mixes.gvs[5], 0, "snap flap maximum GV write")
 end)
 
 setup_quality_test("mixes page enables and restores trim adjustment mode", function()

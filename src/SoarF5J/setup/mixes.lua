@@ -46,11 +46,19 @@ local mixes = {
   { "Aileron Differential", 3, -100, 100 },
   { "Flap Differential", 12, -100, 100 },
   { "Brake -> Elevator", 4, 0, 100 },
-  { "Snap - flap", 5, -50, 50 }
+  { "Snap - flap", 5, -50, 0 }
 }
 
 local GV_ADJUST_MODE = 7
 local ADJUST_MODE = 4
+
+local function getGV(gv, phase)
+  local value = model.getGlobalVariable(gv, phase)
+  if type(value) == "number" then
+    return value
+  end
+  return nil
+end
 
 local function batteryThresholdValue()
   local value = soarGlobals.getParameter(soarGlobals.batteryParameter)
@@ -145,7 +153,11 @@ local function init()
     gui.label(x, y, W1, HEIGHT, label)
 
     local function changeGV(delta, number)
-      local value = number.value + delta
+      local current = type(number.value) == "number" and number.value or getGV(gv, fm)
+      if current == nil then
+        return "N/A"
+      end
+      local value = current + delta
       value = math.max(value, min)
       value = math.min(value, max)
       model.setGlobalVariable(gv, fm, value)
@@ -155,7 +167,9 @@ local function init()
     local number = gui.number(x + W1, y, W2, HEIGHT, 0, changeGV, RIGHT + libGUI.flags, min, max)
 
     function number.update()
-      number.value = model.getGlobalVariable(gv, fm)
+      local value = getGV(gv, fm)
+      number.disabled = value == nil
+      number.value = value or "N/A"
     end
 
     move()

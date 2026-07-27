@@ -94,6 +94,14 @@ local GV_THERMAL_CAMBER = 9 -- Thermal camber amount
 local GV_ADJUST_MODE = 7
 local ADJUST_MODE = 3
 
+local function getGV(gv, phase)
+  local value = model.getGlobalVariable(gv, phase)
+  if type(value) == "number" then
+    return value
+  end
+  return nil
+end
+
 -- Logical switch to disable camber etc. to center
 local LS_CTR = 11
 
@@ -132,7 +140,7 @@ end
 -- Adjust global variables
 local function adjust(slider)
   -- Compensate for possible negative differential.
-  local dif = model.getGlobalVariable(GV_DIF, 0)
+  local dif = getGV(GV_DIF, 0) or 0
   local difComp = 100.0 / math.max(10.0, math.min(100.0, 100.0 + dif))
   local ail = math.min(2 * slider.value, 2 * (100 - slider.value) * difComp)
 
@@ -197,7 +205,12 @@ local function drawAdjustmentRows()
   for _, row in ipairs(rows) do
     lcd.drawText(x, y, row[1], SMLSIZE + colors.primary1)
     lcd.drawText(x + labelW, y, row[2], SMLSIZE + colors.primary1)
-    lcd.drawNumber(x + labelW + codeW + valueW, y, model.getGlobalVariable(row[3], 0), RIGHT + SMLSIZE + colors.primary1)
+    local value = getGV(row[3], 0)
+    if value == nil then
+      lcd.drawText(x + labelW + codeW + valueW, y, "N/A", RIGHT + SMLSIZE + colors.primary1)
+    else
+      lcd.drawNumber(x + labelW + codeW + valueW, y, value, RIGHT + SMLSIZE + colors.primary1)
+    end
     y = y + SML_H + 4
   end
 end
@@ -216,11 +229,11 @@ local function setup_gui()
     lcd.drawText(10, 2, title, bit32.bor(DBLSIZE, colors.primary2))
 
     -- Illustration of flap and aileron travel
-    local ail = model.getGlobalVariable(GV_AIL, 0)
+    local ail = getGV(GV_AIL, 0) or 0
     local ailDeg = 0.45 * ail
-    local brk = 2 * model.getGlobalVariable(GV_AIL_TO_FLAP, 0)
+    local brk = 2 * (getGV(GV_AIL_TO_FLAP, 0) or 0)
     local brkDeg = 0.45 * brk
-    local dif = 0.01 * model.getGlobalVariable(GV_DIF, 0)
+    local dif = 0.01 * (getGV(GV_DIF, 0) or 0)
 
     lcd.drawPie(CTR_X, CTR_Y, R2, 90 - ailDeg * math.min(1, 1 + dif), 91 + brkDeg, colors.primary2)
     lcd.drawAnnulus(CTR_X, CTR_Y, R1, R2, 90 + ailDeg * math.min(1, 1 - dif), 90 + brkDeg, COLOR_THEME_SECONDARY2)
@@ -296,7 +309,7 @@ function widget.refresh(event, touchState)
     setup_gui()
     return
   elseif editingEnabled then
-    slider.value = model.getGlobalVariable(GV_AIL_TO_FLAP, 0)
+    slider.value = getGV(GV_AIL_TO_FLAP, 0) or 0
   end
 
   gui.run(event, touchState)

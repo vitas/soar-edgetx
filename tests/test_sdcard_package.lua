@@ -185,6 +185,24 @@ local TX15_TEMPLATE_VARIANTS = {
   }
 }
 
+local MODEL_TEMPLATE_DOC = "docs/model-templates.md"
+local OLD_TX15_TEMPLATE_DOC = "docs/tx15-model-template.md"
+
+local TX16S_TEMPLATE_VARIANTS = {
+  {
+    id = "MTail",
+    exported = "dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-MTail.yml"
+  },
+  {
+    id = "VTail",
+    exported = "dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-VTail.yml"
+  },
+  {
+    id = "XTail",
+    exported = "dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-XTail.yml"
+  }
+}
+
 local TX15_CUSTOM_SOUND_TRACKS = {
   "crowof",
   "engoff",
@@ -214,6 +232,15 @@ local function tx15_variant(id)
   error("unknown TX15 variant: " .. tostring(id), 0)
 end
 
+local function tx16s_variant(id)
+  for _, variant in ipairs(TX16S_TEMPLATE_VARIANTS) do
+    if variant.id == id then
+      return variant
+    end
+  end
+  error("unknown TX16S variant: " .. tostring(id), 0)
+end
+
 local function tx15_variant_models(id)
   local variant = tx15_variant(id)
   return {
@@ -240,6 +267,27 @@ local function tx15_template_models()
   return models
 end
 
+local function tx16s_variant_models(id)
+  local variant = tx16s_variant(id)
+  return {
+    {
+      label = "exported TX16S " .. variant.id .. " template",
+      variant = variant.id,
+      content = read_file(variant.exported)
+    }
+  }
+end
+
+local function tx16s_template_models()
+  local models = {}
+  for _, variant in ipairs(TX16S_TEMPLATE_VARIANTS) do
+    for _, model in ipairs(tx16s_variant_models(variant.id)) do
+      models[#models + 1] = model
+    end
+  end
+  return models
+end
+
 local function tx15_output_models(id)
   local models = tx15_variant_models(id)
   for _, model in ipairs(models) do
@@ -260,6 +308,10 @@ test("static SD card content survives package rebuild", function()
     required_files[#required_files + 1] = variant.exported
   end
 
+  for _, variant in ipairs(TX16S_TEMPLATE_VARIANTS) do
+    required_files[#required_files + 1] = variant.exported
+  end
+
   for _, path in ipairs(required_files) do
     assert(file_exists(path), "missing static SD card file after package rebuild: " .. path)
   end
@@ -277,12 +329,48 @@ test("TX15 F5J template variant artifacts are committed", function()
     "legacy exported TX15 template should not be tracked")
 end)
 
+test("TX16S F5J template variant artifacts are committed", function()
+  for _, variant in ipairs(TX16S_TEMPLATE_VARIANTS) do
+    assert(file_exists(variant.exported), "missing TX16S " .. variant.id .. " exported template")
+  end
+end)
+
 test("TX15 ETX archives match exported template YAML", function()
   for _, variant in ipairs(TX15_TEMPLATE_VARIANTS) do
     local etx_model = normalize_model_content(command_output("unzip -p " .. variant.etx .. " MODELS/model1.yml"))
     local exported_model = normalize_model_content(read_file(variant.exported))
 
     assert_equal(etx_model, exported_model, variant.id .. " ETX model and exported template should match")
+  end
+end)
+
+test("TX16S templates avoid extended global variables", function()
+  local unsupported = {
+    "gv(9)",
+    "!gv(9)",
+    "gv(10)",
+    "!gv(10)",
+    "gv(11)",
+    "!gv(11)",
+    "gv(12)",
+    "!gv(12)",
+    "name: CbX",
+    "name: Elv",
+    "name: AiE",
+    "name: FlD",
+    "def: 9,Src,T3,1"
+  }
+
+  for _, model in ipairs(tx16s_template_models()) do
+    for _, needle in ipairs(unsupported) do
+      assert(not model.content:find(needle, 1, true), model.label .. " should not contain " .. needle)
+    end
+
+    local gvars = top_level_section(model.content, "gvars")
+    for index = 9, 12 do
+      assert(not gvars:find("\n  " .. tostring(index) .. ":", 1, true),
+        model.label .. " should not define GV" .. tostring(index + 1))
+    end
   end
 end)
 
@@ -304,8 +392,51 @@ test("TX15 templates keep Vitas TX15 shared base setup", function()
   end
 end)
 
+test("TX16S templates keep supported GV1 through GV9 definitions only", function()
+  for _, model in ipairs(tx16s_template_models()) do
+    for index = 0, 8 do
+      assert_contains(indexed_block(model.content, "gvars", index), "name:", model.label .. " GV" .. tostring(index + 1))
+    end
+  end
+end)
+
 test("TX15 templates start output endpoints and centers neutral", function()
   for _, model in ipairs(tx15_template_models()) do
+    model.content = normalize_model_content(model.content)
+    local section = top_level_section(model.content, "limitData")
+    local block = nil
+    local channel = nil
+    local count = 0
+
+    local function finish_block()
+      if not block then return end
+      local text = table.concat(block, "\n")
+      count = count + 1
+      assert_contains(text, "min: 0", model.label .. " CH" .. tostring(channel) .. " lower endpoint")
+      assert_contains(text, "max: 0", model.label .. " CH" .. tostring(channel) .. " upper endpoint")
+      assert_contains(text, "revert: 0", model.label .. " CH" .. tostring(channel) .. " direction")
+      assert_contains(text, "offset: 0", model.label .. " CH" .. tostring(channel) .. " center offset")
+      assert_contains(text, "ppmCenter: 0", model.label .. " CH" .. tostring(channel) .. " ppm center")
+    end
+
+    for _, line in ipairs(lines_from(section)) do
+      local index_text = line:match("^%s+(%d+):%s*$")
+      if index_text then
+        finish_block()
+        channel = tonumber(index_text) + 1
+        block = { line }
+      elseif block then
+        block[#block + 1] = line
+      end
+    end
+    finish_block()
+
+    assert(count > 0, model.label .. " output block count")
+  end
+end)
+
+test("TX16S templates start output endpoints and centers neutral", function()
+  for _, model in ipairs(tx16s_template_models()) do
     model.content = normalize_model_content(model.content)
     local section = top_level_section(model.content, "limitData")
     local block = nil
@@ -350,6 +481,17 @@ test("TX15 templates start setup-owned curve points neutral", function()
   end
 end)
 
+test("TX16S templates start setup-owned curve points neutral", function()
+  for _, model in ipairs(tx16s_template_models()) do
+    model.content = normalize_model_content(model.content)
+
+    for index = 0, 29 do
+      assert_contains(indexed_block(model.content, "points", index), "val: 0",
+        model.label .. " setup curve point " .. tostring(index))
+    end
+  end
+end)
+
 test("TX15 ETX radio config supports default P1 motor control", function()
   for _, variant in ipairs(TX15_TEMPLATE_VARIANTS) do
     local radio = command_output("unzip -p " .. variant.etx .. " RADIO/radio.yml")
@@ -363,17 +505,53 @@ test("TX15 ETX radio config supports default P1 motor control", function()
 end)
 
 test("TX15 template documentation lists current default control assignments", function()
-  local docs = read_file("docs/tx15-model-template.md")
+  local docs = read_file(MODEL_TEMPLATE_DOC)
   local expected = {
     "| `P1` | `mot` / `I4:Mot` | `P1` slider, inverted |",
     "| `T3` | `CambPs` / `I6:CbP` | Trim source `T3` |",
     "| `L5` | Launch mode (Motor Arm) and flight timer control | `SA down` / `SA2` |",
     "| `L8` | Report current altitude every 10 sec. | `SB up` / `SB0`, gated by `L1` |",
-    "| `L46` | Aileron -> Elevator | `tx15-MTail`: `SA up` / `SA0`; `tx15-VTail` and `tx15-XTail`: `NONE` |"
+    "| `L46` | Aileron -> Elevator | `MTail`: `SA up` / `SA0`; `VTail` and `XTail`: `NONE` |"
   }
 
   for _, needle in ipairs(expected) do
     assert_contains(docs, needle, "TX15 template control documentation")
+  end
+end)
+
+test("TX16S template documentation lists variants and extended GV limits", function()
+  local docs = read_file(MODEL_TEMPLATE_DOC)
+  local expected = {
+    "tx16s-MTail.yml",
+    "tx16s-VTail.yml",
+    "tx16s-XTail.yml",
+    "TX16S templates keep only GV1 through GV9",
+    "GV10-GV13 are replaced by fixed mixer values"
+  }
+
+  for _, needle in ipairs(expected) do
+    assert_contains(docs, needle, "TX16S template documentation")
+  end
+end)
+
+test("model template documentation uses generic public entry point", function()
+  local docs = {
+    "README.md",
+    "docs/emulator.md",
+    "docs/project-structure.md",
+    "docs/sdcard-structure.md",
+    MODEL_TEMPLATE_DOC,
+    "docs/widget-setup-and-usage.md"
+  }
+
+  assert(file_exists(MODEL_TEMPLATE_DOC), "missing generic model template documentation")
+  assert_equal(#command_lines("git ls-files " .. OLD_TX15_TEMPLATE_DOC), 0,
+    "old TX15-specific model template documentation should not be tracked")
+
+  for _, path in ipairs(docs) do
+    local content = read_file(path)
+    assert(not content:find(OLD_TX15_TEMPLATE_DOC, 1, true),
+      path .. " should link to generic model template documentation")
   end
 end)
 
@@ -383,7 +561,7 @@ test("user-facing documentation does not expose migration-only project reference
     "docs/emulator.md",
     "docs/project-structure.md",
     "docs/sdcard-structure.md",
-    "docs/tx15-model-template.md",
+    MODEL_TEMPLATE_DOC,
     "docs/widget-setup-and-usage.md",
     "models/tx15/README.md"
   }
@@ -420,7 +598,7 @@ test("README stays short and links to the setup documentation", function()
   local expected = {
     "## How It Works",
     "## What To Configure",
-    "[TX15 model templates](docs/tx15-model-template.md)",
+    "[model templates](docs/model-templates.md)",
     "[widget setup and usage](docs/widget-setup-and-usage.md)",
     "[SD-card structure](docs/sdcard-structure.md)",
     "[emulator workflow](docs/emulator.md)"
@@ -544,6 +722,25 @@ test("TX15 template variants keep common wing channels", function()
   end
 end)
 
+test("TX16S template variants keep common wing channels without extended GV", function()
+  for _, model in ipairs(tx16s_template_models()) do
+    model.content = normalize_model_content(model.content)
+    local ch4_mixes = mix_blocks_for(model.content, 3)
+    local ch5_mixes = mix_blocks_for(model.content, 4)
+
+    assert_equal(#ch4_mixes, 2, model.label .. " CH4 mix count")
+    assert_equal(#ch5_mixes, 2, model.label .. " CH5 mix count")
+    assert_mix_block(ch4_mixes[1], { "srcRaw: ch(31)", "weight: 100", "value: 0" }, model.label .. " CH4 left flap")
+    assert_mix_block(ch4_mixes[2], { "srcRaw: ch(30)", "weight: -100" }, model.label .. " CH4 left flap camber")
+    assert_mix_block(ch5_mixes[1], { "srcRaw: ch(31)", "weight: 100", "value: 0" }, model.label .. " CH5 right flap")
+    assert_mix_block(ch5_mixes[2], { "srcRaw: ch(30)", "weight: 100" }, model.label .. " CH5 right flap camber")
+    assert_contains(indexed_block(model.content, "limitData", 3), "name: Fl-L", model.label .. " CH4 output")
+    assert_contains(indexed_block(model.content, "limitData", 4), "name: Fl-R", model.label .. " CH5 output")
+    assert_contains(indexed_block(model.content, "failsafeChannels", 3), "val: 38", model.label .. " CH4 failsafe")
+    assert_contains(indexed_block(model.content, "failsafeChannels", 4), "val: 57", model.label .. " CH5 failsafe")
+  end
+end)
+
 test("TX15 MTail template maps CH6 rudder and CH7/CH8 elevator servos", function()
   for _, model in ipairs(tx15_output_models("MTail")) do
     local ch6_mixes = mix_blocks_for(model.content, 5)
@@ -578,6 +775,29 @@ test("TX15 MTail template maps CH6 rudder and CH7/CH8 elevator servos", function
   end
 end)
 
+test("TX16S MTail template maps CH6 rudder and fixed CH7/CH8 elevator servos", function()
+  for _, model in ipairs(tx16s_variant_models("MTail")) do
+    model.content = normalize_model_content(model.content)
+    local ch6_mixes = mix_blocks_for(model.content, 5)
+    local ch7_mixes = mix_blocks_for(model.content, 6)
+    local ch8_mixes = mix_blocks_for(model.content, 7)
+
+    assert_equal(#ch6_mixes, 2, model.label .. " CH6 mix count")
+    assert_equal(#ch7_mixes, 3, model.label .. " CH7 mix count")
+    assert_equal(#ch8_mixes, 3, model.label .. " CH8 mix count")
+    assert_mix_block(ch6_mixes[1], { "srcRaw: I0", "weight: 100" }, model.label .. " CH6 rudder")
+    assert_mix_block(ch6_mixes[2], { "srcRaw: I2", "weight: gv(2)", "name: AilRud" }, model.label .. " CH6 aileron-rudder")
+    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: ch(21)", "weight: 100" }), model.label .. " missing CH7 elevator mix")
+    assert(find_mix_block_matching(ch8_mixes, { "srcRaw: ch(21)", "weight: 100" }), model.label .. " missing CH8 elevator mix")
+    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I1", "weight: 85" }), model.label .. " missing CH7 fixed KAPOW elevator mix")
+    assert(find_mix_block_matching(ch8_mixes, { "srcRaw: I1", "weight: 85" }), model.label .. " missing CH8 fixed KAPOW elevator mix")
+    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I2", "weight: 20", "swtch: L46", "name: AilEle" }),
+      model.label .. " missing CH7 fixed AilEle mix")
+    assert(find_mix_block_matching(ch8_mixes, { "srcRaw: I2", "weight: -20", "swtch: L46", "name: AilEle" }),
+      model.label .. " missing CH8 fixed AilEle mix")
+  end
+end)
+
 test("TX15 VTail template maps V-tail servos to CH7/CH8 only", function()
   for _, model in ipairs(tx15_output_models("VTail")) do
     local ch6_mixes = mix_blocks_for(model.content, 5)
@@ -601,6 +821,30 @@ test("TX15 VTail template maps V-tail servos to CH7/CH8 only", function()
     assert_contains(indexed_block(model.content, "limitData", 5), "name: Unused", model.label .. " CH6 output")
     assert_contains(indexed_block(model.content, "limitData", 6), "name: LftV", model.label .. " CH7 output")
     assert_contains(indexed_block(model.content, "limitData", 7), "name: RgtV", model.label .. " CH8 output")
+  end
+end)
+
+test("TX16S VTail template maps V-tail servos to CH7/CH8 only with fixed KAPOW elevator", function()
+  for _, model in ipairs(tx16s_variant_models("VTail")) do
+    model.content = normalize_model_content(model.content)
+    local ch6_mixes = mix_blocks_for(model.content, 5)
+    local ch7_mixes = mix_blocks_for(model.content, 6)
+    local ch8_mixes = mix_blocks_for(model.content, 7)
+    local ch9_mixes = mix_blocks_for(model.content, 8)
+    local ch10_mixes = mix_blocks_for(model.content, 9)
+
+    assert_equal(#ch6_mixes, 0, model.label .. " CH6 should be unused")
+    assert_equal(#ch9_mixes, 0, model.label .. " CH9 should not be required")
+    assert_equal(#ch10_mixes, 0, model.label .. " CH10 should not be required")
+    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I0", "weight: 50", "name: Vt-l" }), model.label .. " missing CH7 V-tail rudder source")
+    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: ch(21)", "weight: -50" }), model.label .. " missing CH7 V-tail elevator source")
+    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I1", "weight: 85" }), model.label .. " missing CH7 fixed KAPOW elevator")
+    assert(find_mix_block_matching(ch8_mixes, { "srcRaw: I0", "weight: 50" }), model.label .. " missing CH8 V-tail rudder source")
+    assert(find_mix_block_matching(ch8_mixes, { "srcRaw: ch(21)", "weight: 50", "name: Vt-R" }), model.label .. " missing CH8 V-tail elevator source")
+    assert(find_mix_block_matching(ch8_mixes, { "srcRaw: I1", "weight: 85" }), model.label .. " missing CH8 fixed KAPOW elevator")
+    assert(not find_mix_block(ch7_mixes, "AilEle"), model.label .. " CH7 should not include AilEle")
+    assert(not find_mix_block(ch8_mixes, "AilEle"), model.label .. " CH8 should not include AilEle")
+    assert_contains(indexed_block(model.content, "logicalSw", 45), "def: NONE,NONE", model.label .. " L46 should be disabled")
   end
 end)
 
@@ -628,6 +872,28 @@ test("TX15 XTail template maps one elevator to CH7 without aileron-elevator mix"
   end
 end)
 
+test("TX16S XTail template maps one elevator to CH7 without aileron-elevator mix", function()
+  for _, model in ipairs(tx16s_variant_models("XTail")) do
+    model.content = normalize_model_content(model.content)
+    local ch6_mixes = mix_blocks_for(model.content, 5)
+    local ch7_mixes = mix_blocks_for(model.content, 6)
+    local ch8_mixes = mix_blocks_for(model.content, 7)
+    local ch9_mixes = mix_blocks_for(model.content, 8)
+    local ch10_mixes = mix_blocks_for(model.content, 9)
+
+    assert_equal(#ch6_mixes, 2, model.label .. " CH6 mix count")
+    assert_equal(#ch8_mixes, 0, model.label .. " CH8 should be unused")
+    assert_equal(#ch9_mixes, 0, model.label .. " CH9 should not be required")
+    assert_equal(#ch10_mixes, 0, model.label .. " CH10 should not be required")
+    assert_mix_block(ch6_mixes[1], { "srcRaw: I0", "weight: 100" }, model.label .. " CH6 rudder")
+    assert_mix_block(ch6_mixes[2], { "srcRaw: I2", "weight: gv(2)", "name: AilRud" }, model.label .. " CH6 aileron-rudder")
+    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: ch(21)", "weight: 100" }), model.label .. " missing CH7 elevator")
+    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I1", "weight: 85" }), model.label .. " missing CH7 fixed KAPOW elevator")
+    assert(not find_mix_block(ch7_mixes, "AilEle"), model.label .. " CH7 should not include AilEle")
+    assert_contains(indexed_block(model.content, "logicalSw", 45), "def: NONE,NONE", model.label .. " L46 should be disabled")
+  end
+end)
+
 test("TX15 MTail template adds switchable GV12 aileron to elevator mix", function()
   for _, model in ipairs(tx15_variant_models("MTail")) do
     model.content = normalize_model_content(model.content)
@@ -650,6 +916,22 @@ test("TX15 MTail template adds switchable GV12 aileron to elevator mix", functio
     assert_contains(indexed_block(model.content, "logicalSw", 4), "def: SA2,NONE", model.label .. " L5 motor arm switch")
     assert_contains(indexed_block(model.content, "logicalSw", 45), "def: SA0,NONE", model.label .. " L46 switch")
     assert_contains(indexed_block(model.content, "gvars", 11), "name: AiE", model.label .. " GV12 name")
+  end
+end)
+
+test("TX16S templates use fixed thermal camber amount", function()
+  for _, model in ipairs(tx16s_template_models()) do
+    model.content = normalize_model_content(model.content)
+    local camber_mixes = mix_blocks_for(model.content, 24)
+    local camber_x = find_mix_block(camber_mixes, "CambrX")
+
+    assert(camber_x, model.label .. " missing CambrX mix")
+    assert_mix_block(camber_x, {
+      "srcRaw: I4",
+      "weight: 33",
+      "offset: -33",
+      "name: CambrX"
+    }, model.label .. " fixed thermal camber amount")
   end
 end)
 

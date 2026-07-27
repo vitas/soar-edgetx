@@ -1,7 +1,7 @@
 # SoarF5J EdgeTX
 
-`SoarF5J` is an F5J contest widget and TX15 model-template package for EdgeTX
-landscape color radios.
+`SoarF5J` is an F5J contest widget and TX15/TX16S model-template package for
+EdgeTX landscape color radios.
 
 The widget runs from the radio SD card. The active model template supplies the
 flight modes, timers, logical switches, global variables, curves, mixes, and
@@ -11,8 +11,8 @@ named outputs that the widget reads or edits.
 
 - Copy `dist/SDCARD` to the radio SD card, or use it as the Companion SD
   Structure folder.
-- Use one TX15 template from `models/tx15/`: `tx15-MTail`, `tx15-VTail`, or
-  `tx15-XTail`.
+- Use one tail template: `tx15-*` for TX15, or `tx16s-*` from the SD-card
+  templates folder for TX16S/T16-class radios.
 - Add the `SoarF5J` widget to a model screen.
 - Set widget `Page = 1` for the contest page. Pages `2..7` are setup pages.
 - The contest page handles launch, motor, glide, finish, zero result, working
@@ -24,10 +24,10 @@ named outputs that the widget reads or edits.
 
 | Area | Configure | Details |
 | --- | --- | --- |
-| Template | Pick the correct tail template and wire outputs. | [TX15 model templates](docs/tx15-model-template.md) |
+| Template | Pick the correct tail template and wire outputs. | [model templates](docs/model-templates.md) |
 | SD card | Install the widget package and custom sound prompts. | [SD-card structure](docs/sdcard-structure.md) |
 | Widget | Add `SoarF5J`, choose `Page`, and use the competition flow. | [widget setup and usage](docs/widget-setup-and-usage.md) |
-| Switches | Confirm launch, motor, landing, voice, vario, and flight-mode switches. | [control assignments](docs/tx15-model-template.md#current-control-assignments) |
+| Switches | Confirm launch, motor, landing, voice, vario, and flight-mode switches. | [control assignments](docs/model-templates.md#current-control-assignments) |
 | Model setup | Tune outputs, wing alignment, brake curves, camber, mixes, and battery warning. | [setup pages](docs/widget-setup-and-usage.md#setup-pages) |
 | Simulator | Test layout and setup pages before using the radio. | [emulator workflow](docs/emulator.md) |
 

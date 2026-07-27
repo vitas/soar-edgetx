@@ -54,7 +54,8 @@ or old widget code being left behind.
 
 ## Model Requirements
 
-Use one of the committed TX15 templates when possible on TX15:
+Select a template that matches the radio family and tail type. TX15 users can
+use the committed `.etx` archives:
 
 ```text
 models/tx15/tx15-MTail.etx
@@ -70,10 +71,18 @@ tx15-VTail  CH7/CH8 left/right V-tail, CH6 unused
 tx15-XTail  CH6 rudder, CH7 elevator, CH8 unused
 ```
 
-All three variants keep `CH1/CH2` for ailerons, `CH3` for motor, and `CH4/CH5`
-for flaps. `tx15-VTail` uses `CH7/CH8` for the V-tail so an 8-channel receiver
-can be wired without receiver remapping. `tx15-XTail` has no aileron-to-elevator
-mix on the single elevator output.
+TX16S/T16-class users can use the matching SD-card YAML template:
+
+```text
+tx16s-MTail.yml
+tx16s-VTail.yml
+tx16s-XTail.yml
+```
+
+All variants keep `CH1/CH2` for ailerons, `CH3` for motor, and `CH4/CH5` for
+flaps. `VTail` uses `CH7/CH8` for the V-tail so an 8-channel receiver can be
+wired without receiver remapping. `XTail` has no aileron-to-elevator mix on the
+single elevator output.
 
 The templates start with neutral output endpoints, centers, reversals, and
 setup-owned curve points. Tune those values for the actual airframe during
@@ -210,19 +219,19 @@ The page currently covers:
 - Altitude reports every 10 seconds.
 
 Use the drop-down fields to select the desired physical switch position for
-each function. The current TX15 defaults are listed in
-`docs/tx15-model-template.md`. Select `NONE` when a function should be disabled
-or should not be assigned to any physical switch.
+each function. The current defaults are listed in `docs/model-templates.md`.
+Select `NONE` when a function should be disabled or should not be assigned to
+any physical switch.
 
-The TX15 templates default motor arm to `SA down` and motor input source to
-`P1`.
-The TX15 MTail template defaults the aileron to elevator mix enable switch to
-`SA up`. The VTail and XTail templates default that switch to `NONE` and do not
-use the aileron-to-elevator mix.
+The committed templates default motor arm to `SA down` and motor input source
+to `P1`. `MTail` defaults the aileron to elevator mix enable switch to `SA up`.
+`VTail` and `XTail` default that switch to `NONE` and do not use the
+aileron-to-elevator mix.
 
 If `P1`, `S1`, or `S2` is used for motor control, configure that pot as a
-slider in the radio settings first. The committed TX15 `.etx` archives set `P1`
-as an inverted slider named `mot`. Check the live motor channel with the motor
+slider in the radio settings first. The committed TX15 `.etx` archives already
+set `P1` as an inverted slider named `mot`; YAML-only template families do not
+change radio hardware settings. Check the live motor channel with the motor
 disconnected: if turning the pot clockwise moves the channel from minimum to
 maximum throttle in the wrong direction for your ESC setup, reverse that slider
 in the radio settings before connecting the motor.
@@ -243,10 +252,10 @@ launch/motor switch on, the throttle stick should drive the motor channel. When
 the model leaves the launch/motor flight mode, the motor input is disabled and
 the throttle stick remains available for landing/brake control.
 
-The TX15 templates default the altitude voice/vario gate `L1` to `SB down` and
-the 10-second altitude report `L8` to `SB up`, gated by `L1`. The competition
-widget reads `L8` during glide and calls the current `Alt` telemetry value
-every 10 seconds after the F5J height window has closed.
+The committed templates default the altitude voice/vario gate `L1` to `SB down`
+and the 10-second altitude report `L8` to `SB up`, gated by `L1`. The
+competition widget reads `L8` during glide and calls the current `Alt` telemetry
+value every 10 seconds after the F5J height window has closed.
 
 ### `setup/outputs`
 
@@ -300,22 +309,26 @@ curve shapes.
 Sets aileron travel, aileron-to-flap behavior, camber-to-aileron coupling, and
 thermal camber around the maximum reflex position.
 
-Use the vertical slider to set maximum reflex. In normal flying, the TX15
-template drives the thermal camber position from the EdgeTX trim source
-`T3`/`CambPs`; on Mode 2 radios this is commonly the throttle trim, but the
-physical trim depends on the radio's stick mode. Moving that trim source changes
-how much thermal camber is applied between maximum reflex and the configured
-camber amount. The page writes the related global variables and temporarily
-enables the model adjustment mode while editing. When the page exits, it
-restores the previous adjustment state.
+Use the vertical slider to set maximum reflex. In normal flying, the templates
+drive the thermal camber position from the EdgeTX trim source `T3`/`CambPs`; on
+Mode 2 radios this is commonly the throttle trim, but the physical trim depends
+on the radio's stick mode. Moving that trim source changes how much thermal
+camber is applied between maximum reflex and the configured camber amount. The
+page writes the related global variables and temporarily enables the model
+adjustment mode while editing. When the page exits, it restores the previous
+adjustment state.
 
-The TX15 template uses the page's adjustment mode for these trim-button edits:
+TX15 templates use the page's adjustment mode for these trim-button edits:
 aileron trim adjusts `Ail`, rudder trim adjusts `AiF`, elevator trim adjusts
 `CbA`, and `T3` adjusts the thermal camber amount `GV10` / `CbX`.
 
-To put thermal camber selection on a switch instead, edit the TX15 model in
-Companion and change the `CambPs` input source from `T3` to the desired physical
-or logical switch. Use weight/offset or a curve if the switch positions need
+The TX16S templates keep only GV1 through GV9. Controls backed by GV10-GV13 are
+fixed in the template and show `N/A` in setup pages on radios that do not expose
+those extended values to Lua.
+
+To put thermal camber selection on a switch instead, edit the model in Companion
+and change the `CambPs` input source from `T3` to the desired physical or
+logical switch. Use weight/offset or a curve if the switch positions need
 specific camber percentages. This is a model-template change, not a Lua widget
 setting.
 

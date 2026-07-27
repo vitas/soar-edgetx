@@ -9,7 +9,8 @@ committed EdgeTX landscape color-radio SD-card root.
 - `src/SoarF5J/`: maintainable EdgeTX widget source.
 - `dist/SDCARD/`: EdgeTX landscape color-radio SD-card root. Most files are static SD-card content; `WIDGETS/SoarF5J` is refreshed by `make package`.
 - `docs/`: design notes, implementation plans, install notes, and simulator documentation.
-- `models/tx15/`: TX15 model-template artifacts and notes.
+- `models/`: radio-family-specific model-template artifacts. TX15 `.etx`
+  archives currently live under `models/tx15/`.
 - `tests/`: local Lua tests for state logic, widget behavior, setup pages, and packaging checks.
 - `tools/`: local linting and packaging scripts.
 

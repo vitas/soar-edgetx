@@ -45,6 +45,6 @@ In EdgeTX, add a SoarF5J widget to a model screen and select the required page
 in the widget `Page` option. See `docs/widget-setup-and-usage.md` for full
 setup and usage instructions.
 
-Only the custom voice prompts referenced by the committed TX15 model templates
-are tracked under `dist/SDCARD/SOUNDS/en/`. The rest of the EdgeTX sound pack is
+Only the custom voice prompts referenced by the committed model templates are
+tracked under `dist/SDCARD/SOUNDS/en/`. The rest of the EdgeTX sound pack is
 large and remains local/untracked.
