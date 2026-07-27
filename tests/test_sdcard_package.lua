@@ -113,6 +113,43 @@ local function mix_blocks_for(content, dest_ch)
   return blocks
 end
 
+local function input_block_for(content, chn, name)
+  local section = top_level_section(content, "expoData")
+  local block = nil
+
+  local function matching_block()
+    if not block then return nil end
+    local text = table.concat(block, "\n")
+    local has_chn = false
+    local has_name = false
+    for _, line in ipairs(block) do
+      if line:match("chn:%s*" .. tostring(chn) .. "%s*$") then
+        has_chn = true
+      elseif line:match("name:%s*" .. name .. "%s*$") then
+        has_name = true
+      end
+    end
+    if has_chn and has_name then
+      return text
+    end
+    return nil
+  end
+
+  for _, line in ipairs(lines_from(section)) do
+    if line:match("^%s*%-") then
+      local found = matching_block()
+      if found then return found end
+      block = { line }
+    elseif block then
+      block[#block + 1] = line
+    end
+  end
+
+  local found = matching_block()
+  assert(found, "missing input block " .. name .. " on chn " .. tostring(chn))
+  return found
+end
+
 local function assert_contains(content, needle, label)
   assert(content:find(needle, 1, true), label .. " missing " .. needle)
 end
@@ -333,6 +370,14 @@ local function tx16s_mk3_template_models()
   return models
 end
 
+local function tx16_family_template_models()
+  local models = tx16s_template_models()
+  for _, model in ipairs(tx16s_mk3_template_models()) do
+    models[#models + 1] = model
+  end
+  return models
+end
+
 local function tx15_output_models(id)
   local models = tx15_variant_models(id)
   for _, model in ipairs(models) do
@@ -432,10 +477,13 @@ end)
 test("TX15 templates keep Vitas TX15 shared base setup", function()
   for _, model in ipairs(tx15_template_models()) do
     model.content = normalize_model_content(model.content)
+    local motor = input_block_for(model.content, 3, "On")
+    local camber = input_block_for(model.content, 5, "CambPs")
 
     assert_contains(model.content, "disableThrottleWarning: 1", model.label .. " throttle warning setting")
     assert(not model.content:find("srcRaw: P2", 1, true), model.label .. " should not use P2 for motor input")
-    assert_contains(model.content, "srcRaw: P1", model.label .. " motor input source")
+    assert_contains(motor, "srcRaw: P1", model.label .. " motor input source")
+    assert_contains(camber, "srcRaw: T3", model.label .. " camber input source")
     assert_contains(model.content, "rfAlarms:\n  warning: 90\n  critical: 80", model.label .. " RF alarms")
     assert_contains(model.content, "label: RQly", model.label .. " receiver link quality sensor")
     assert_contains(model.content, "label: Bat%", model.label .. " receiver battery percent sensor")
@@ -444,6 +492,19 @@ test("TX15 templates keep Vitas TX15 shared base setup", function()
       "min: 0",
       "max: 0"
     }, model.label .. " GV13 definition")
+  end
+end)
+
+test("TX16-family templates default motor and camber to side sliders", function()
+  for _, model in ipairs(tx16_family_template_models()) do
+    model.content = normalize_model_content(model.content)
+    local motor = input_block_for(model.content, 3, "On")
+    local camber = input_block_for(model.content, 5, "CambPs")
+
+    assert_contains(motor, "srcRaw: LS", model.label .. " motor input source")
+    assert_contains(camber, "srcRaw: RS", model.label .. " camber input source")
+    assert(not motor:find("srcRaw: P1", 1, true), model.label .. " motor input should not default to P1")
+    assert(not camber:find("srcRaw: T3", 1, true), model.label .. " camber input should not default to T3")
   end
 end)
 
@@ -467,8 +528,10 @@ test("TX16S MK3 templates reuse matching full TX15 model logic", function()
     local actual = normalize_model_content(read_file(variant.exported))
 
     expected = expected:gsub("name: tx15%-" .. variant.id, "name: tx16s-mk3-" .. variant.id, 1)
+    expected = expected:gsub("srcRaw: P1", "srcRaw: LS", 1)
+    expected = expected:gsub("srcRaw: T3", "srcRaw: RS", 1)
 
-    assert_equal(actual, expected, "TX16S MK3 " .. variant.id .. " should match full TX15 model logic")
+    assert_equal(actual, expected, "TX16S MK3 " .. variant.id .. " should match full TX15 model logic except TX16 slider sources")
   end
 end)
 
@@ -587,8 +650,12 @@ end)
 test("TX15 template documentation lists current default control assignments", function()
   local docs = read_file(MODEL_TEMPLATE_DOC)
   local expected = {
-    "| `P1` | `mot` / `I4:Mot` | `P1` slider, inverted |",
-    "| `T3` | `CambPs` / `I6:CbP` | Trim source `T3` |",
+    "| `tx15-*` | `I4:Mot` | `P1` slider, inverted |",
+    "| `tx15-*` | `I6:CbP` | `T3` trim source |",
+    "| `tx16s-*` | `I4:Mot` | `LS` left slider, inverted |",
+    "| `tx16s-*` | `I6:CbP` | `RS` right slider |",
+    "| `tx16s-mk3-*` | `I4:Mot` | `LS` left slider, inverted |",
+    "| `tx16s-mk3-*` | `I6:CbP` | `RS` right slider |",
     "| `L5` | Launch mode (Motor Arm) and flight timer control | `SA down` / `SA2` |",
     "| `L8` | Report current altitude every 10 sec. | `SB up` / `SB0`, gated by `L1` |",
     "| `L46` | Aileron -> Elevator | `MTail`: `SA up` / `SA0`; `VTail` and `XTail`: `NONE` |"

@@ -232,18 +232,20 @@ each function. The current defaults are listed in `docs/model-templates.md`.
 Select `NONE` when a function should be disabled or should not be assigned to
 any physical switch.
 
-The committed templates default motor arm to `SA down` and motor input source
-to `P1`. `MTail` defaults the aileron to elevator mix enable switch to `SA up`.
-`VTail` and `XTail` default that switch to `NONE` and do not use the
-aileron-to-elevator mix.
+The committed templates default motor arm to `SA down`. TX15 templates use
+`P1` for motor control; TX16-family templates use the `LS` left slider. `MTail`
+defaults the aileron to elevator mix enable switch to `SA up`. `VTail` and
+`XTail` default that switch to `NONE` and do not use the aileron-to-elevator
+mix.
 
 If `P1`, `S1`, or `S2` is used for motor control, configure that pot as a
 slider in the radio settings first. The committed TX15 `.etx` archives already
 set `P1` as an inverted slider named `mot`; YAML-only template families do not
-change radio hardware settings. Check the live motor channel with the motor
-disconnected: if turning the pot clockwise moves the channel from minimum to
-maximum throttle in the wrong direction for your ESC setup, reverse that slider
-in the radio settings before connecting the motor.
+change radio hardware settings. For TX16-family templates, check that the radio
+hardware settings expose `LS` and `RS` as sliders. Check the live motor channel
+with the motor disconnected: if turning the slider clockwise moves the channel
+from minimum to maximum throttle in the wrong direction for your ESC setup,
+reverse that slider in the radio settings before connecting the motor.
 
 To use the throttle stick for motor control only during the launch phase,
 change the motor input source instead of changing the launch switch logic:
@@ -251,7 +253,7 @@ change the motor input source instead of changing the launch switch logic:
 1. Disconnect the motor or remove the propeller.
 2. Open the model's **Inputs** page.
 3. Edit `I4:Mot`, line `On`.
-4. Change the source from `S1` / `P1` to `Thr`.
+4. Change the source from the family default (`P1` or `LS`) to `Thr`.
 5. Keep this `On` line enabled only in the `Motor` flight mode.
 6. Leave the `Off` line as `MAX -100`.
 7. Check the servo monitor before connecting the motor again.
@@ -319,11 +321,12 @@ Sets aileron travel, aileron-to-flap behavior, camber-to-aileron coupling, and
 thermal camber around the maximum reflex position.
 
 Use the vertical slider to set maximum reflex. In normal flying, the templates
-drive the thermal camber position from the EdgeTX trim source `T3`/`CambPs`; on
-Mode 2 radios this is commonly the throttle trim, but the physical trim depends
-on the radio's stick mode. Moving that trim source changes how much thermal
-camber is applied between maximum reflex and the configured camber amount. The
-page writes the related global variables and temporarily enables the model
+drive thermal camber through `I6:CbP`. TX15 templates default that input to
+`T3`; TX16-family templates default it to `RS`. On Mode 2 radios `T3` is
+commonly the throttle trim, but the physical trim depends on the radio's stick
+mode. Moving the configured camber source changes how much thermal camber is
+applied between maximum reflex and the configured camber amount. The page
+writes the related global variables and temporarily enables the model
 adjustment mode while editing. When the page exits, it restores the previous
 adjustment state.
 
@@ -336,10 +339,10 @@ GV10-GV13 are fixed in the template and show `N/A` in setup pages on radios
 that do not expose those extended values to Lua.
 
 To put thermal camber selection on a switch instead, edit the model in Companion
-and change the `CambPs` input source from `T3` to the desired physical or
-logical switch. Use weight/offset or a curve if the switch positions need
-specific camber percentages. This is a model-template change, not a Lua widget
-setting.
+and change the `CambPs` input source from the family default (`T3` or `RS`) to
+the desired physical or logical switch. Use weight/offset or a curve if the
+switch positions need specific camber percentages. This is a model-template
+change, not a Lua widget setting.
 
 ### `setup/mixes`
 

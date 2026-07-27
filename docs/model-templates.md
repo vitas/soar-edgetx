@@ -84,10 +84,11 @@ setup pages and EdgeTX output checks.
 
 ## Current Control Assignments
 
-These defaults are shared by the committed template families. The
-`setup/switches` widget page can reassign rows that use logical switches. Stick
-and trim names below are EdgeTX source names; the physical stick or trim
-location depends on the radio stick mode.
+Primary stick inputs are shared by the committed template families. Motor and
+thermal camber source defaults are family-specific so TX16-class radios use the
+side sliders by default. The `setup/switches` widget page can reassign rows
+that use logical switches. Stick and trim names below are EdgeTX source names;
+the physical stick or trim location depends on the radio stick mode.
 
 ### Physical Sources
 
@@ -96,10 +97,19 @@ location depends on the radio stick mode.
 | `Rud` | `Rudder` / `I1:Rud` | Stick source `Rud` | Rudder/yaw input. On `VTail` it feeds the V-tail yaw mix instead of a separate rudder channel. |
 | `Ele` | `Elev` / `I2:Ele` | Stick source `Ele` | Elevator/pitch input. |
 | `Ail` | `Ailero` / `I3:Ail` | Stick source `Ail` | Aileron input, plus source for aileron-to-rudder and optional aileron-to-elevator mixes. |
-| `P1` | `mot` / `I4:Mot` | `P1` slider, inverted | Motor throttle source in the `Motor` flight mode. Outside `Motor`, the `Off` input line holds the motor at idle. |
 | `Thr` | `Brake` / `I5:Brk` | Stick source `Thr` | Landing brake/crow control. |
-| `T3` | `CambPs` / `I6:CbP` | Trim source `T3` | Thermal camber position between maximum reflex and the configured camber amount. Change this input source in Companion if you want camber on a switch or slider. |
 | `Thr` | `Adjust` / `I8:Adj` | Stick source `Thr` | Setup-page adjustment source, used for live curve-point selection on wing and brake setup pages. |
+
+### Template-Family Source Defaults
+
+| Template family | Model input | Default assignment | What it does |
+| --- | --- | --- | --- |
+| `tx15-*` | `I4:Mot` | `P1` slider, inverted | Motor throttle source in the `Motor` flight mode. Outside `Motor`, the `Off` input line holds the motor at idle. |
+| `tx15-*` | `I6:CbP` | `T3` trim source | Thermal camber position between maximum reflex and the configured camber amount. |
+| `tx16s-*` | `I4:Mot` | `LS` left slider, inverted | TX16S/T16-class motor throttle source in the `Motor` flight mode. |
+| `tx16s-*` | `I6:CbP` | `RS` right slider | TX16S/T16-class thermal camber position source. |
+| `tx16s-mk3-*` | `I4:Mot` | `LS` left slider, inverted | TX16S MK3 motor throttle source in the `Motor` flight mode. |
+| `tx16s-mk3-*` | `I6:CbP` | `RS` right slider | TX16S MK3 thermal camber position source. |
 
 ### Switch Setup Defaults
 
@@ -130,7 +140,7 @@ the setup page unless you are intentionally editing the template logic.
 | --- | --- | --- |
 | `Cruise` | Default | Normal flight mode when no higher-priority mode is active. |
 | `Adjust` | `L17` | Setup/adjustment mode used by the widget pages while editing model values. |
-| `Motor` | `L26` | Launch/motor mode; enables the `P1` motor input line and Timer 2 motor timing. |
+| `Motor` | `L26` | Launch/motor mode; enables the family-specific motor input line and Timer 2 motor timing. |
 | `KAPOW` | `L32` | Launch/snap helper mode used by the template's internal launch logic. |
 | `Speed` | `L3` | Speed flight mode, defaulted to `SD up`. |
 | `Float` | `L4` | Float flight mode, defaulted to `SD down`. |
@@ -160,7 +170,7 @@ variables.
 
 | Extended value | 9-GVAR compatible family behavior |
 | --- | --- |
-| `GV10` / `CbX` thermal camber amount | Fixed at the current template amount. `T3` still drives the `CambPs` camber position input. |
+| `GV10` / `CbX` thermal camber amount | Fixed at the current template amount. The family-specific camber source still drives the `CambPs` input. |
 | `GV11` / `Elv` KAPOW elevator travel | Fixed at the current template amount. |
 | `GV12` / `AiE` aileron-to-elevator | Fixed on `MTail`; disabled on `VTail` and `XTail`. |
 | `GV13` / `FlD` flap differential | Fixed at neutral `0`. |

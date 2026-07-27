@@ -1606,7 +1606,7 @@ expoData:
       value: 20
     trimSource: 0
     name: Ailero
-  - srcRaw: P1
+  - srcRaw: LS
     scale: 0
     mode: 3
     chn: 3
@@ -1645,7 +1645,7 @@ expoData:
       value: 0
     trimSource: 1
     name: Brake
-  - srcRaw: T3
+  - srcRaw: RS
     scale: 0
     mode: 3
     chn: 5
