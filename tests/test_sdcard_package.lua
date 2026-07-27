@@ -203,6 +203,21 @@ local TX16S_TEMPLATE_VARIANTS = {
   }
 }
 
+local TX16S_MK3_TEMPLATE_VARIANTS = {
+  {
+    id = "MTail",
+    exported = "dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-mk3-MTail.yml"
+  },
+  {
+    id = "VTail",
+    exported = "dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-mk3-VTail.yml"
+  },
+  {
+    id = "XTail",
+    exported = "dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-mk3-XTail.yml"
+  }
+}
+
 local TX15_CUSTOM_SOUND_TRACKS = {
   "crowof",
   "engoff",
@@ -239,6 +254,15 @@ local function tx16s_variant(id)
     end
   end
   error("unknown TX16S variant: " .. tostring(id), 0)
+end
+
+local function tx16s_mk3_variant(id)
+  for _, variant in ipairs(TX16S_MK3_TEMPLATE_VARIANTS) do
+    if variant.id == id then
+      return variant
+    end
+  end
+  error("unknown TX16S MK3 variant: " .. tostring(id), 0)
 end
 
 local function tx15_variant_models(id)
@@ -288,6 +312,27 @@ local function tx16s_template_models()
   return models
 end
 
+local function tx16s_mk3_variant_models(id)
+  local variant = tx16s_mk3_variant(id)
+  return {
+    {
+      label = "exported TX16S MK3 " .. variant.id .. " template",
+      variant = variant.id,
+      content = read_file(variant.exported)
+    }
+  }
+end
+
+local function tx16s_mk3_template_models()
+  local models = {}
+  for _, variant in ipairs(TX16S_MK3_TEMPLATE_VARIANTS) do
+    for _, model in ipairs(tx16s_mk3_variant_models(variant.id)) do
+      models[#models + 1] = model
+    end
+  end
+  return models
+end
+
 local function tx15_output_models(id)
   local models = tx15_variant_models(id)
   for _, model in ipairs(models) do
@@ -312,6 +357,10 @@ test("static SD card content survives package rebuild", function()
     required_files[#required_files + 1] = variant.exported
   end
 
+  for _, variant in ipairs(TX16S_MK3_TEMPLATE_VARIANTS) do
+    required_files[#required_files + 1] = variant.exported
+  end
+
   for _, path in ipairs(required_files) do
     assert(file_exists(path), "missing static SD card file after package rebuild: " .. path)
   end
@@ -332,6 +381,12 @@ end)
 test("TX16S F5J template variant artifacts are committed", function()
   for _, variant in ipairs(TX16S_TEMPLATE_VARIANTS) do
     assert(file_exists(variant.exported), "missing TX16S " .. variant.id .. " exported template")
+  end
+end)
+
+test("TX16S MK3 F5J template variant artifacts are committed", function()
+  for _, variant in ipairs(TX16S_MK3_TEMPLATE_VARIANTS) do
+    assert(file_exists(variant.exported), "missing TX16S MK3 " .. variant.id .. " exported template")
   end
 end)
 
@@ -389,6 +444,31 @@ test("TX15 templates keep Vitas TX15 shared base setup", function()
       "min: 0",
       "max: 0"
     }, model.label .. " GV13 definition")
+  end
+end)
+
+test("TX16S MK3 templates keep full GV1 through GV13 definitions", function()
+  for _, model in ipairs(tx16s_mk3_template_models()) do
+    for index = 0, 12 do
+      assert_contains(indexed_block(model.content, "gvars", index), "name:",
+        model.label .. " GV" .. tostring(index + 1))
+    end
+
+    assert_contains(indexed_block(model.content, "gvars", 9), "name: CbX", model.label .. " GV10 name")
+    assert_contains(indexed_block(model.content, "gvars", 10), "name: Elv", model.label .. " GV11 name")
+    assert_contains(indexed_block(model.content, "gvars", 12), "name: FlD", model.label .. " GV13 name")
+  end
+end)
+
+test("TX16S MK3 templates reuse matching full TX15 model logic", function()
+  for _, variant in ipairs(TX16S_MK3_TEMPLATE_VARIANTS) do
+    local tx15 = tx15_variant(variant.id)
+    local expected = normalize_model_content(read_file(tx15.exported))
+    local actual = normalize_model_content(read_file(variant.exported))
+
+    expected = expected:gsub("name: tx15%-" .. variant.id, "name: tx16s-mk3-" .. variant.id, 1)
+
+    assert_equal(actual, expected, "TX16S MK3 " .. variant.id .. " should match full TX15 model logic")
   end
 end)
 
@@ -525,12 +605,27 @@ test("TX16S template documentation lists variants and extended GV limits", funct
     "tx16s-MTail.yml",
     "tx16s-VTail.yml",
     "tx16s-XTail.yml",
-    "TX16S templates keep only GV1 through GV9",
+    "9-GVAR compatible family",
     "GV10-GV13 are replaced by fixed mixer values"
   }
 
   for _, needle in ipairs(expected) do
     assert_contains(docs, needle, "TX16S template documentation")
+  end
+end)
+
+test("TX16S MK3 template documentation lists full 13-GVAR variants", function()
+  local docs = read_file(MODEL_TEMPLATE_DOC)
+  local expected = {
+    "tx16s-mk3-MTail.yml",
+    "tx16s-mk3-VTail.yml",
+    "tx16s-mk3-XTail.yml",
+    "13-GVAR full family",
+    "TX15 and TX16S MK3 templates use GV1 through GV13"
+  }
+
+  for _, needle in ipairs(expected) do
+    assert_contains(docs, needle, "TX16S MK3 template documentation")
   end
 end)
 

@@ -4,16 +4,17 @@ Model templates provide the EdgeTX model structure that the `SoarF5J` widget
 reads and edits: flight modes, timers, logical switches, global variables,
 curves, mixes, outputs, telemetry names, and widget screen assignments.
 
-Pick a template by radio family and tail type. The widget code is shared across
-supported radios; the template family handles radio-specific EdgeTX limits and
-artifact formats.
+Pick a template by GVAR capability, radio family, and tail type. The widget
+code is shared across supported radios; the template family handles radio-
+specific EdgeTX limits and artifact formats.
 
 ## Supported Template Families
 
 | Family | Use on | Artifacts |
 | --- | --- | --- |
-| `tx15-*` | RadioMaster TX15 | `.etx` archives under `models/tx15/` and matching SD-card YAML files. |
-| `tx16s-*` | TX16S/T16-class landscape color radios | SD-card YAML files under `dist/SDCARD/TEMPLATES/3.SoarEdgeTx/`. |
+| 9-GVAR compatible family: `tx16s-*` | TX16S, TX16S Mark II, T16/T18-class landscape color radios | SD-card YAML files under `dist/SDCARD/TEMPLATES/3.SoarEdgeTx/`. |
+| 13-GVAR full family: `tx15-*` | RadioMaster TX15 | `.etx` archives under `models/tx15/` and matching SD-card YAML files. |
+| 13-GVAR full family: `tx16s-mk3-*` | TX16S MK3 | SD-card YAML files under `dist/SDCARD/TEMPLATES/3.SoarEdgeTx/`. |
 
 TX15 artifacts:
 
@@ -32,12 +33,20 @@ MODELS/f5j.txt
 MODELS/labels.yml
 ```
 
-TX16S/T16-class artifacts:
+9-GVAR compatible TX16S/T16-class artifacts:
 
 ```text
 dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-MTail.yml
 dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-VTail.yml
 dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-XTail.yml
+```
+
+13-GVAR full TX16S MK3 artifacts:
+
+```text
+dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-mk3-MTail.yml
+dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-mk3-VTail.yml
+dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-mk3-XTail.yml
 ```
 
 ## Tail Variants
@@ -142,21 +151,22 @@ Every supported template family should define:
 Manual Companion editing is acceptable until a repeatable model export path
 exists.
 
-## Radio-Specific Limits
+## GVAR Capability Limits
 
-TX15 templates use GV1 through GV13. TX16S templates keep only GV1 through GV9.
-GV10-GV13 are replaced by fixed mixer values so the model can run on radios
-where Lua cannot read or write the extended global variables.
+TX15 and TX16S MK3 templates use GV1 through GV13. The 9-GVAR compatible
+family uses GV1 through GV9. GV10-GV13 are replaced by fixed mixer values so the
+model can run on radios where Lua cannot read or write the extended global
+variables.
 
-| Extended value | TX16S/T16-class behavior |
+| Extended value | 9-GVAR compatible family behavior |
 | --- | --- |
 | `GV10` / `CbX` thermal camber amount | Fixed at the current template amount. `T3` still drives the `CambPs` camber position input. |
 | `GV11` / `Elv` KAPOW elevator travel | Fixed at the current template amount. |
-| `GV12` / `AiE` aileron-to-elevator | Fixed on `tx16s-MTail`; disabled on `tx16s-VTail` and `tx16s-XTail`. |
+| `GV12` / `AiE` aileron-to-elevator | Fixed on `MTail`; disabled on `VTail` and `XTail`. |
 | `GV13` / `FlD` flap differential | Fixed at neutral `0`. |
 
 Setup page fields that belong to unsupported extended GV values show `N/A` on
-TX16S/T16-class radios instead of editing the model.
+9-GVAR compatible radios instead of editing the model.
 
 ## Artifact Policy
 
@@ -166,7 +176,7 @@ in EdgeTX Companion or on the target radio.
 For TX15, commit the `.etx` archives under `models/tx15/` and the matching
 exported YAML files under `dist/SDCARD/TEMPLATES/3.SoarEdgeTx/`.
 
-For TX16S/T16-class radios, commit the YAML files directly under
+For YAML-only radio families, commit the YAML files directly under
 `dist/SDCARD/TEMPLATES/3.SoarEdgeTx/`. Do not create `.etx` archives for a radio
 family until they can be exported from that radio or a matching Companion
 profile.

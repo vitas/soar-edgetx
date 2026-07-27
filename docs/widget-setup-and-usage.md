@@ -54,8 +54,8 @@ or old widget code being left behind.
 
 ## Model Requirements
 
-Select a template that matches the radio family and tail type. TX15 users can
-use the committed `.etx` archives:
+Select a template that matches the radio's GVAR capability, radio family, and
+tail type. TX15 users can use the committed `.etx` archives:
 
 ```text
 models/tx15/tx15-MTail.etx
@@ -71,12 +71,21 @@ tx15-VTail  CH7/CH8 left/right V-tail, CH6 unused
 tx15-XTail  CH6 rudder, CH7 elevator, CH8 unused
 ```
 
-TX16S/T16-class users can use the matching SD-card YAML template:
+9-GVAR compatible TX16S/T16-class users can use the matching SD-card YAML
+template:
 
 ```text
 tx16s-MTail.yml
 tx16s-VTail.yml
 tx16s-XTail.yml
+```
+
+13-GVAR full TX16S MK3 users can use the matching SD-card YAML template:
+
+```text
+tx16s-mk3-MTail.yml
+tx16s-mk3-VTail.yml
+tx16s-mk3-XTail.yml
 ```
 
 All variants keep `CH1/CH2` for ailerons, `CH3` for motor, and `CH4/CH5` for
@@ -318,13 +327,13 @@ page writes the related global variables and temporarily enables the model
 adjustment mode while editing. When the page exits, it restores the previous
 adjustment state.
 
-TX15 templates use the page's adjustment mode for these trim-button edits:
-aileron trim adjusts `Ail`, rudder trim adjusts `AiF`, elevator trim adjusts
-`CbA`, and `T3` adjusts the thermal camber amount `GV10` / `CbX`.
+13-GVAR full templates use the page's adjustment mode for these trim-button
+edits: aileron trim adjusts `Ail`, rudder trim adjusts `AiF`, elevator trim
+adjusts `CbA`, and `T3` adjusts the thermal camber amount `GV10` / `CbX`.
 
-The TX16S templates keep only GV1 through GV9. Controls backed by GV10-GV13 are
-fixed in the template and show `N/A` in setup pages on radios that do not expose
-those extended values to Lua.
+9-GVAR compatible templates keep only GV1 through GV9. Controls backed by
+GV10-GV13 are fixed in the template and show `N/A` in setup pages on radios
+that do not expose those extended values to Lua.
 
 To put thermal camber selection on a switch instead, edit the model in Companion
 and change the `CambPs` input source from `T3` to the desired physical or
