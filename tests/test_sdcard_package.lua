@@ -495,16 +495,29 @@ test("TX15 templates keep Vitas TX15 shared base setup", function()
   end
 end)
 
-test("TX16-family templates default motor and camber to side sliders", function()
+test("TX16-family templates default motor and camber to simulator-safe pots", function()
   for _, model in ipairs(tx16_family_template_models()) do
     model.content = normalize_model_content(model.content)
     local motor = input_block_for(model.content, 3, "On")
     local camber = input_block_for(model.content, 5, "CambPs")
 
-    assert_contains(motor, "srcRaw: LS", model.label .. " motor input source")
-    assert_contains(camber, "srcRaw: RS", model.label .. " camber input source")
-    assert(not motor:find("srcRaw: P1", 1, true), model.label .. " motor input should not default to P1")
-    assert(not camber:find("srcRaw: T3", 1, true), model.label .. " camber input should not default to T3")
+    assert_contains(motor, "srcRaw: S1", model.label .. " motor input source")
+    assert_contains(camber, "srcRaw: S2", model.label .. " camber input source")
+    assert(not motor:find("srcRaw: LS", 1, true), model.label .. " motor input should not require LS hardware config")
+    assert(not camber:find("srcRaw: RS", 1, true), model.label .. " camber input should not require RS hardware config")
+  end
+end)
+
+test("TX16-family templates default to internal multimodule RF", function()
+  for _, model in ipairs(tx16_family_template_models()) do
+    model.content = normalize_model_content(model.content)
+
+    assert_contains(model.content, "moduleData:\n  0:\n    type: TYPE_MULTIMODULE",
+      model.label .. " internal RF module type")
+    assert_contains(model.content, "channelsCount: 8", model.label .. " default receiver channel count")
+    assert_contains(model.content, "mod:\n      multi:", model.label .. " multimodule settings")
+    assert(not model.content:find("type: TYPE_CROSSFIRE", 1, true),
+      model.label .. " should not require Crossfire in TX16 simulator")
   end
 end)
 
@@ -528,10 +541,34 @@ test("TX16S MK3 templates reuse matching full TX15 model logic", function()
     local actual = normalize_model_content(read_file(variant.exported))
 
     expected = expected:gsub("name: tx15%-" .. variant.id, "name: tx16s-mk3-" .. variant.id, 1)
-    expected = expected:gsub("srcRaw: P1", "srcRaw: LS", 1)
-    expected = expected:gsub("srcRaw: T3", "srcRaw: RS", 1)
+    expected = expected:gsub("srcRaw: P1", "srcRaw: S1", 1)
+    expected = expected:gsub("srcRaw: T3", "srcRaw: S2", 1)
+    expected = expected:gsub([[
+    type: TYPE_CROSSFIRE
+    channelsStart: 0
+    channelsCount: 16
+    failsafeMode: NOT_SET
+    mod:
+      crsf:
+        telemetryBaudrate: 0
+        crsfArmingMode: 1
+        crsfArmingTrigger: NONE]], [[
+    type: TYPE_MULTIMODULE
+    subType: 64,0
+    channelsStart: 0
+    channelsCount: 8
+    failsafeMode: CUSTOM
+    mod:
+      multi:
+        disableTelemetry: 0
+        disableMapping: 0
+        autoBindMode: 0
+        lowPowerMode: 0
+        receiverTelemetryOff: 0
+        receiverHigherChannels: 0
+        optionValue: 0]], 1)
 
-    assert_equal(actual, expected, "TX16S MK3 " .. variant.id .. " should match full TX15 model logic except TX16 slider sources")
+    assert_equal(actual, expected, "TX16S MK3 " .. variant.id .. " should match full TX15 model logic except TX16 simulator-safe controls")
   end
 end)
 
@@ -652,10 +689,10 @@ test("TX15 template documentation lists current default control assignments", fu
   local expected = {
     "| `tx15-*` | `I4:Mot` | `P1` slider, inverted |",
     "| `tx15-*` | `I6:CbP` | `T3` trim source |",
-    "| `tx16s-*` | `I4:Mot` | `LS` left slider, inverted |",
-    "| `tx16s-*` | `I6:CbP` | `RS` right slider |",
-    "| `tx16s-mk3-*` | `I4:Mot` | `LS` left slider, inverted |",
-    "| `tx16s-mk3-*` | `I6:CbP` | `RS` right slider |",
+    "| `tx16s-*` | `I4:Mot` | `S1` left pot, inverted |",
+    "| `tx16s-*` | `I6:CbP` | `S2` right pot |",
+    "| `tx16s-mk3-*` | `I4:Mot` | `S1` left pot, inverted |",
+    "| `tx16s-mk3-*` | `I6:CbP` | `S2` right pot |",
     "| `L5` | Launch mode (Motor Arm) and flight timer control | `SA down` / `SA2` |",
     "| `L8` | Report current altitude every 10 sec. | `SB up` / `SB0`, gated by `L1` |",
     "| `L46` | Aileron -> Elevator | `MTail`: `SA up` / `SA0`; `VTail` and `XTail`: `NONE` |"

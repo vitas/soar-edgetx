@@ -1471,7 +1471,7 @@ expoData:
       value: 20
     trimSource: 0
     name: Ailero
-  - srcRaw: LS
+  - srcRaw: S1
     scale: 0
     mode: 3
     chn: 3
@@ -1510,7 +1510,7 @@ expoData:
       value: 0
     trimSource: 1
     name: Brake
-  - srcRaw: RS
+  - srcRaw: S2
     scale: 0
     mode: 3
     chn: 5
@@ -2301,15 +2301,20 @@ rfAlarms:
 disableTelemetryWarning: 0
 moduleData:
   0:
-    type: TYPE_CROSSFIRE
+    type: TYPE_MULTIMODULE
+    subType: 64,0
     channelsStart: 0
-    channelsCount: 16
-    failsafeMode: NOT_SET
+    channelsCount: 8
+    failsafeMode: CUSTOM
     mod:
-      crsf:
-        telemetryBaudrate: 0
-        crsfArmingMode: 1
-        crsfArmingTrigger: NONE
+      multi:
+        disableTelemetry: 0
+        disableMapping: 0
+        autoBindMode: 0
+        lowPowerMode: 0
+        receiverTelemetryOff: 0
+        receiverHigherChannels: 0
+        optionValue: 0
 failsafeChannels:
   0:
     val: 112
