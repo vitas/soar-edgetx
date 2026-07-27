@@ -510,6 +510,30 @@ test("TX16-family templates default motor and camber to T16-compatible raw sourc
   end
 end)
 
+test("F5J templates gate motor start edge with visible motor arm switch", function()
+  local models = tx15_template_models()
+  for _, model in ipairs(tx16_family_template_models()) do
+    models[#models + 1] = model
+  end
+
+  for _, model in ipairs(models) do
+    model.content = normalize_model_content(model.content)
+    local arm = indexed_block(model.content, "logicalSw", 4)
+    local trigger = indexed_block(model.content, "logicalSw", 8)
+    local start_edge = indexed_block(model.content, "logicalSw", 23)
+    local motor_latch = indexed_block(model.content, "logicalSw", 25)
+
+    assert_contains(arm, "def: SA2,NONE", model.label .. " L5 motor arm switch")
+    assert_contains(trigger, "def: SE2,L11", model.label .. " L9 motor trigger switch")
+    assert_contains(start_edge, "func: FUNC_EDGE", model.label .. " L24 motor start edge")
+    assert_contains(start_edge, "def: L9,0,-", model.label .. " L24 motor start edge source")
+    assert_contains(start_edge, "andsw: L5", model.label .. " L24 should be gated by visible motor arm")
+    assert(not start_edge:find("andsw: L23", 1, true),
+      model.label .. " L24 should not depend on hidden prep latch L23")
+    assert_contains(motor_latch, "def: L25,L30", model.label .. " L26 motor latch")
+  end
+end)
+
 test("TX16S 9-GVAR templates default to internal multimodule RF", function()
   for _, model in ipairs(tx16s_template_models()) do
     model.content = normalize_model_content(model.content)
@@ -684,6 +708,10 @@ test("TX15 template documentation lists current default control assignments", fu
     "| `tx16s-mk3-*` | `I4:Mot` | `P2` pot, inverted |",
     "| `tx16s-mk3-*` | `I6:CbP` | `T3` trim source |",
     "| `L5` | Launch mode (Motor Arm) and flight timer control | `SA down` / `SA2` |",
+    "Default launch sequence: arm with `SA down`, flick `SE down` and back",
+    "so do not leave it down after starting. The default `SE` assignment is a manual",
+    "stand-in for the original momentary trigger behavior",
+    "spring-loaded momentary switch, assign `L9` to that switch for a better launch",
     "| `L8` | Report current altitude every 10 sec. | `SB up` / `SB0`, gated by `L1` |",
     "| `L46` | Aileron -> Elevator | `MTail`: `SA up` / `SA0`; `VTail` and `XTail`: `NONE` |"
   }

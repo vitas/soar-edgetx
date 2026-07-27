@@ -2095,7 +2095,7 @@ logicalSw:
     def: L9,0,-
     delay: 0
     duration: 1
-    andsw: L23
+    andsw: L5
     lsPersist: 0
     lsState: 0
   24:

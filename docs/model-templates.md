@@ -125,7 +125,7 @@ uses normal position names and also shows the raw template value.
 | Logical switch | Switches page name | Default assignment | What it does |
 | --- | --- | --- | --- |
 | `L5` | Launch mode (Motor Arm) and flight timer control | `SA down` / `SA2` | Arms the launch/motor logic and is part of the flight-timer reset/control path. |
-| `L9` | Start/Stop timer and Motor | `SE down` / `SE2` | Starts the motor/timer trigger path; internal logic keeps the motor sequence latched as needed. |
+| `L9` | Start/Stop timer and Motor | `SE down` / `SE2` | Start/stop trigger for the motor/timer path. Use a brief down-up switch action; a spring-loaded momentary switch is optional. |
 | `L1` | Allow vario and voice reporting of altitude | `SB down` / `SB2`, gated by flight timer `L19` | Enables the altitude voice/vario gate while the flight timer is active. |
 | `L2` | Variometer sound | Not assigned (`NONE`), blocked while `SA down` | Drives the EdgeTX `VARIO` special function when assigned. |
 | `L3` | Speed flight mode | `SD up` / `SD0` | Selects the `Speed` flight mode. |
@@ -139,6 +139,14 @@ uses normal position names and also shows the raw template value.
 Internal logical switches such as `L23`, `L24`, `L26`, `L35`, `L36`, `L37`,
 and `L44` are model-state and audio helpers. Do not assign them directly from
 the setup page unless you are intentionally editing the template logic.
+
+Default launch sequence: arm with `SA down`, flick `SE down` and back, then
+control motor power with the family motor source (`P1` on TX15, `P2` on
+TX16-family YAML templates). Holding `SE down` is also part of the stop path,
+so do not leave it down after starting. The default `SE` assignment is a manual
+stand-in for the original momentary trigger behavior; if the radio has a
+spring-loaded momentary switch, assign `L9` to that switch for a better launch
+workflow.
 
 ### Flight Modes
 

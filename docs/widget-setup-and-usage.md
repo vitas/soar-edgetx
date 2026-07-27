@@ -259,6 +259,14 @@ survive Companion import. Pilots who prefer the TX16 side sliders can remap
 check that `LS` and `RS` are enabled in the radio hardware settings; otherwise
 Companion may clear those input sources on reload.
 
+Default launch/motor operation is `SA down` to arm, then a brief down-up action
+on `SE` to start or stop the motor/timer latch. A spring-loaded momentary
+switch is optional; when using a normal switch, return it after the trigger.
+`SE` is the default manual stand-in for the original momentary trigger behavior;
+if the radio has a spring-loaded momentary switch, assign `L9` to that switch
+for a better launch workflow. Motor power then comes from the family motor
+source (`P1` on TX15, `P2` on TX16-family YAML templates).
+
 To use the throttle stick for motor control only during the launch phase,
 change the motor input source instead of changing the launch switch logic:
 
