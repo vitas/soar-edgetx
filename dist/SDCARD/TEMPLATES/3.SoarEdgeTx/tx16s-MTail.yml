@@ -1656,7 +1656,7 @@ expoData:
     chn: 7
     swtch: NONE
     flightModes: 000000000
-    weight: 100
+    weight: -100
     offset: 0
     curve:
       type: 3

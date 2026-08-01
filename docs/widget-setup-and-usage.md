@@ -332,6 +332,11 @@ curve. The flap and aileron sliders on the screen still work. While editing is
 enabled, the page turns on the model step switch so the surfaces move live with
 the selected curve point.
 
+`I5:Brk` and `I8:Adj` must use the same input direction. The templates invert
+both throttle-stick inputs so the point selected during setup is the point used
+at that stick position in flight. On an existing model, set the `Adjust` input
+weight to `-100` if it is still `100`.
+
 Use `Reset` only when you intentionally want to restore the default airbrake
 curve shapes.
 

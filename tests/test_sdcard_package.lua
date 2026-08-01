@@ -510,6 +510,24 @@ test("TX16-family templates default motor and camber to T16-compatible raw sourc
   end
 end)
 
+test("F5J brake curve selector follows the reversed brake input", function()
+  local models = tx15_template_models()
+  for _, model in ipairs(tx16_family_template_models()) do
+    models[#models + 1] = model
+  end
+
+  for _, model in ipairs(models) do
+    model.content = normalize_model_content(model.content)
+    local brake = input_block_for(model.content, 4, "Brake")
+    local adjust = input_block_for(model.content, 7, "Adjust")
+
+    assert_contains(brake, "srcRaw: Thr", model.label .. " brake input source")
+    assert_contains(brake, "weight: -100", model.label .. " brake input direction")
+    assert_contains(adjust, "srcRaw: Thr", model.label .. " curve selector source")
+    assert_contains(adjust, "weight: -100", model.label .. " curve selector direction")
+  end
+end)
+
 test("F5J templates gate motor start edge with visible motor arm switch", function()
   local models = tx15_template_models()
   for _, model in ipairs(tx16_family_template_models()) do
@@ -701,6 +719,8 @@ end)
 test("TX15 template documentation lists current default control assignments", function()
   local docs = read_file(MODEL_TEMPLATE_DOC)
   local expected = {
+    "| `Thr` | `Brake` / `I5:Brk` | Stick source `Thr`, inverted |",
+    "| `Thr` | `Adjust` / `I8:Adj` | Stick source `Thr`, inverted |",
     "| `tx15-*` | `I4:Mot` | `P1` slider, inverted |",
     "| `tx15-*` | `I6:CbP` | `T3` trim source |",
     "| `tx16s-*` | `I4:Mot` | `P2` pot, inverted |",
