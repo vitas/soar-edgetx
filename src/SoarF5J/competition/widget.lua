@@ -30,6 +30,8 @@ local DEFAULT_TARGET_TIME = 600
 local TARGET_TIME_STEP = 60
 local ALTITUDE_CALL_INTERVAL = 10
 local MOTOR_CALL_INTERVAL = 10
+local MOTOR_TIME_LIMIT = 30
+local MOTOR_COUNTDOWN_START = MOTOR_TIME_LIMIT - 10
 local HEIGHT_CAPTURE_WINDOW = 10
 local FLIGHT_TIMER_COLOR = lcd.RGB(0, 70, 20)
 local MOTOR_TIMER_COLOR = lcd.RGB(110, 0, 0)
@@ -328,13 +330,19 @@ local function report_motor_time()
     return
   end
 
-  local announced = math.floor(elapsed / MOTOR_CALL_INTERVAL) * MOTOR_CALL_INTERVAL
-  if announced < nextMotorCall then
-    announced = nextMotorCall
+  if elapsed < MOTOR_COUNTDOWN_START then
+    local announced = math.floor(elapsed / MOTOR_CALL_INTERVAL) * MOTOR_CALL_INTERVAL
+    if announced < nextMotorCall then
+      announced = nextMotorCall
+    end
+
+    announce_seconds(announced)
+    nextMotorCall = announced + MOTOR_CALL_INTERVAL
+    return
   end
 
-  announce_seconds(announced)
-  nextMotorCall = announced + MOTOR_CALL_INTERVAL
+  announce_number(MOTOR_TIME_LIMIT - elapsed)
+  nextMotorCall = elapsed + 1
 end
 
 local function report_height_window()

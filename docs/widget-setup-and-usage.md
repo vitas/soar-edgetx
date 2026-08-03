@@ -432,6 +432,10 @@ to 1 minute, 5-second boundaries from 1 minute to 10 seconds, then every second
 from 10 to 1. Values above 10 seconds use the normal duration voice; the final
 10..1 countdown uses plain number voice calls.
 
+During the 30-second motor run, the widget announces elapsed time at 10 seconds.
+From 20 seconds elapsed, it counts down the remaining motor time every second
+from 10 to 1 using plain number voice calls.
+
 Basic flow:
 
 1. Arm or reset the flight using the model's configured arm control.

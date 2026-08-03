@@ -495,7 +495,7 @@ widget_test("GV8 writes only on flight timer transitions", function()
   assert_equal(gv_values(env, 8), "0,1,1,0,0", "finished reset GV8 values")
 end)
 
-widget_test("motor voice reports elapsed motor time every 10 seconds", function()
+widget_test("motor voice counts down every second during the final ten seconds", function()
   local env = new_widget_env()
 
   env.flightMode = 2
@@ -509,10 +509,26 @@ widget_test("motor voice reports elapsed motor time every 10 seconds", function(
   env.widget.background()
   env.widget.background()
   assert_equal(duration_values(env), "10", "first motor voice")
+  assert_equal(number_values(env), "", "first motor voice uses duration")
 
   env.timers[1].value = 20
   env.widget.background()
-  assert_equal(duration_values(env), "10,20", "second motor voice")
+  env.widget.background()
+  assert_equal(duration_values(env), "10", "countdown does not announce elapsed time")
+  assert_equal(number_values(env), "10", "motor countdown starts at ten")
+
+  env.timers[1].value = 21
+  env.widget.background()
+  env.widget.background()
+  assert_equal(number_values(env), "10,9", "motor countdown avoids duplicate nine")
+
+  env.timers[1].value = 29
+  env.widget.background()
+  assert_equal(number_values(env), "10,9,1", "motor countdown reaches one after a timer jump")
+
+  env.timers[1].value = 30
+  env.widget.background()
+  assert_equal(number_values(env), "10,9,1", "motor countdown does not announce zero")
 end)
 
 widget_test("flight window voice follows legacy countdown schedule", function()
