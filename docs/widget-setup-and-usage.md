@@ -232,20 +232,16 @@ each function. The current defaults are listed in `docs/model-templates.md`.
 Select `NONE` when a function should be disabled or should not be assigned to
 any physical switch.
 
-The committed templates default motor arm to `SA down`. TX15 templates use
-`P1` for motor control; TX16-family templates use the `P2` pot. `MTail`
-defaults the aileron to elevator mix enable switch to `SA up`. `VTail` and
-`XTail` default that switch to `NONE` and do not use the aileron-to-elevator
-mix.
+The committed templates default motor arm to `SA down` and use the throttle
+stick for motor control. `MTail` defaults the aileron to elevator mix enable
+switch to `SA up`. `VTail` and `XTail` default that switch to `NONE` and do not
+use the aileron-to-elevator mix.
 
-If `P1`, `S1`, or `S2` is used for motor control, configure that pot as a
-slider in the radio settings first when the radio supports that hardware option.
-The committed TX15 `.etx` archives already set `P1` as an inverted slider named
-`mot`; YAML-only template families do not change radio hardware settings. Check
-the live motor channel with the motor disconnected: if turning the pot clockwise
-moves the channel from minimum to maximum throttle in the wrong direction for
-your ESC setup, reverse that pot in the radio settings before connecting the
-motor.
+If the motor is remapped to `P1`, `S1`, `S2`, or a side slider, configure that
+control in the radio hardware settings first. The committed TX15 `.etx`
+archives retain `P1` as an inverted slider named `mot`; YAML-only template
+families do not change radio hardware settings. Always check the live motor
+channel with the motor disconnected before connecting the motor.
 
 `tx16s-*` templates use internal multimodule RF with 8 channels by default so
 they import cleanly in the TX16S simulator and work with a standard 8-channel
@@ -253,27 +249,25 @@ receiver. `tx16s-mk3-*` templates keep Crossfire RF with 16 channels. Change
 the RF module setup on the model setup page after import if your radio hardware
 or receiver setup is different.
 
-The distributed TX16-family YAML uses `P2` and `T3` because those raw sources
-survive Companion import. Pilots who prefer the TX16 side sliders can remap
-`I4:Mot` from `P2` to `LS` and `I6:CbP` from `T3` to `RS` after import. First
-check that `LS` and `RS` are enabled in the radio hardware settings; otherwise
-Companion may clear those input sources on reload.
+The distributed TX16-family YAML uses `Thr` for motor and `T3` for camber.
+Pilots who prefer the TX16 side sliders can remap `I4:Mot` to `LS` and
+`I6:CbP` to `RS` after import. First check that `LS` and `RS` are enabled in
+the radio hardware settings; otherwise Companion may clear those input sources
+on reload.
 
 Default launch/motor operation is `SA down` to arm, then a brief down-up action
 on `SE` to start or stop the motor/timer latch. A spring-loaded momentary
 switch is optional; when using a normal switch, return it after the trigger.
 `SE` is the default manual stand-in for the original momentary trigger behavior;
 if the radio has a spring-loaded momentary switch, assign `L9` to that switch
-for a better launch workflow. Motor power then comes from the family motor
-source (`P1` on TX15, `P2` on TX16-family YAML templates).
+for a better launch workflow. Motor power then comes from the throttle stick.
 
-To use the throttle stick for motor control only during the launch phase,
-change the motor input source instead of changing the launch switch logic:
+To verify throttle-stick motor control after importing a template:
 
 1. Disconnect the motor or remove the propeller.
 2. Open the model's **Inputs** page.
 3. Edit `I4:Mot`, line `On`.
-4. Change the source from the family default (`P1` or `P2`) to `Thr`.
+4. Confirm that the source is `Thr` and the weight is `-100`.
 5. Keep this `On` line enabled only in the `Motor` flight mode.
 6. Leave the `Off` line as `MAX -100`.
 7. Check the servo monitor before connecting the motor again.

@@ -84,12 +84,11 @@ the actual model through the setup pages and EdgeTX output checks.
 
 ## Current Control Assignments
 
-Primary stick inputs are shared by the committed template families. Motor and
-thermal camber source defaults are family-specific. TX16-family YAML templates
-use the T16-compatible raw sources `P2` and `T3` so Companion does not clear
-the input sources during import. The `setup/switches` widget page can reassign
-rows that use logical switches. Stick and trim names below are EdgeTX source
-names; the physical stick or trim location depends on the radio stick mode.
+Primary stick inputs are shared by the committed template families. Motor uses
+the throttle stick on every family; thermal camber source defaults remain
+family-specific. The `setup/switches` widget page can reassign rows that use
+logical switches. Stick and trim names below are EdgeTX source names; the
+physical stick or trim location depends on the radio stick mode.
 
 ### Physical Sources
 
@@ -105,17 +104,16 @@ names; the physical stick or trim location depends on the radio stick mode.
 
 | Template family | Model input | Default assignment | What it does |
 | --- | --- | --- | --- |
-| `tx15-*` | `I4:Mot` | `P1` slider, inverted | Motor throttle source in the `Motor` flight mode. Outside `Motor`, the `Off` input line holds the motor at idle. |
+| `tx15-*` | `I4:Mot` | `Thr` stick, inverted | Motor throttle source in the `Motor` flight mode. Outside `Motor`, the `Off` input line holds the motor at idle. |
 | `tx15-*` | `I6:CbP` | `T3` trim source | Thermal camber position between maximum reflex and the configured camber amount. |
-| `tx16s-*` | `I4:Mot` | `P2` pot, inverted | TX16S/T16-class motor throttle source in the `Motor` flight mode. |
+| `tx16s-*` | `I4:Mot` | `Thr` stick, inverted | TX16S/T16-class motor throttle source in the `Motor` flight mode. |
 | `tx16s-*` | `I6:CbP` | `T3` trim source | TX16S/T16-class thermal camber position source. The physical trim depends on the radio stick mode. |
-| `tx16s-mk3-*` | `I4:Mot` | `P2` pot, inverted | TX16S MK3 motor throttle source in the `Motor` flight mode. |
+| `tx16s-mk3-*` | `I4:Mot` | `Thr` stick, inverted | TX16S MK3 motor throttle source in the `Motor` flight mode. |
 | `tx16s-mk3-*` | `I6:CbP` | `T3` trim source | TX16S MK3 thermal camber position source. The physical trim depends on the radio stick mode. |
 
-On TX16-class radios with side sliders enabled in radio hardware settings, you
-can remap `I4:Mot` to `LS` and `I6:CbP` to `RS` after importing the template.
-Do that on the model input page, then check the servo monitor with the motor
-disconnected.
+Pilots who prefer a pot or side slider can remap `I4:Mot` after importing the
+template. Enable the control in radio hardware settings first, then check the
+servo monitor with the motor disconnected.
 
 ### Switch Setup Defaults
 
@@ -141,12 +139,11 @@ and `L44` are model-state and audio helpers. Do not assign them directly from
 the setup page unless you are intentionally editing the template logic.
 
 Default launch sequence: arm with `SA down`, flick `SE down` and back, then
-control motor power with the family motor source (`P1` on TX15, `P2` on
-TX16-family YAML templates). Holding `SE down` is also part of the stop path,
-so do not leave it down after starting. The default `SE` assignment is a manual
-stand-in for the original momentary trigger behavior; if the radio has a
-spring-loaded momentary switch, assign `L9` to that switch for a better launch
-workflow.
+control motor power with the throttle stick. Holding `SE down` is also part of
+the stop path, so do not leave it down after starting. The default `SE`
+assignment is a manual stand-in for the original momentary trigger behavior; if
+the radio has a spring-loaded momentary switch, assign `L9` to that switch for a
+better launch workflow.
 
 ### Flight Modes
 

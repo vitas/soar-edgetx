@@ -1585,7 +1585,7 @@ expoData:
       value: 20
     trimSource: 0
     name: Ailero
-  - srcRaw: P2
+  - srcRaw: Thr
     scale: 0
     mode: 3
     chn: 3

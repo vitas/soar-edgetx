@@ -481,8 +481,9 @@ test("TX15 templates keep Vitas TX15 shared base setup", function()
     local camber = input_block_for(model.content, 5, "CambPs")
 
     assert_contains(model.content, "disableThrottleWarning: 1", model.label .. " throttle warning setting")
-    assert(not model.content:find("srcRaw: P2", 1, true), model.label .. " should not use P2 for motor input")
-    assert_contains(motor, "srcRaw: P1", model.label .. " motor input source")
+    assert_contains(motor, "srcRaw: Thr", model.label .. " motor input source")
+    assert_contains(motor, "weight: -100", model.label .. " motor input direction")
+    assert_contains(motor, "flightModes: 110111111", model.label .. " motor input flight mode")
     assert_contains(camber, "srcRaw: T3", model.label .. " camber input source")
     assert_contains(model.content, "rfAlarms:\n  warning: 90\n  critical: 80", model.label .. " RF alarms")
     assert_contains(model.content, "label: RQly", model.label .. " receiver link quality sensor")
@@ -495,13 +496,15 @@ test("TX15 templates keep Vitas TX15 shared base setup", function()
   end
 end)
 
-test("TX16-family templates default motor and camber to T16-compatible raw sources", function()
+test("TX16-family templates default motor to throttle and camber to a T16-compatible source", function()
   for _, model in ipairs(tx16_family_template_models()) do
     model.content = normalize_model_content(model.content)
     local motor = input_block_for(model.content, 3, "On")
     local camber = input_block_for(model.content, 5, "CambPs")
 
-    assert_contains(motor, "srcRaw: P2", model.label .. " motor input source")
+    assert_contains(motor, "srcRaw: Thr", model.label .. " motor input source")
+    assert_contains(motor, "weight: -100", model.label .. " motor input direction")
+    assert_contains(motor, "flightModes: 110111111", model.label .. " motor input flight mode")
     assert_contains(camber, "srcRaw: T3", model.label .. " camber input source")
     assert(not motor:find("srcRaw: S1", 1, true), model.label .. " motor input should not use UI-only S1 source")
     assert(not camber:find("srcRaw: S2", 1, true), model.label .. " camber input should not use UI-only S2 source")
@@ -598,9 +601,7 @@ test("TX16S MK3 templates reuse matching full TX15 model logic", function()
     local actual = normalize_model_content(read_file(variant.exported))
 
     expected = expected:gsub("name: tx15%-" .. variant.id, "name: tx16s-mk3-" .. variant.id, 1)
-    expected = expected:gsub("srcRaw: P1", "srcRaw: P2", 1)
-
-    assert_equal(actual, expected, "TX16S MK3 " .. variant.id .. " should match full TX15 model logic except T16 motor source")
+    assert_equal(actual, expected, "TX16S MK3 " .. variant.id .. " should match full TX15 model logic")
   end
 end)
 
@@ -708,7 +709,7 @@ test("TX16S templates start CV1 through CV6 linear", function()
   end
 end)
 
-test("TX15 ETX radio config supports default P1 motor control", function()
+test("TX15 ETX radio config preserves the configured P1 slider", function()
   for _, variant in ipairs(TX15_TEMPLATE_VARIANTS) do
     local radio = command_output("unzip -p " .. variant.etx .. " RADIO/radio.yml")
 
@@ -725,17 +726,17 @@ test("TX15 template documentation lists current default control assignments", fu
   local expected = {
     "| `Thr` | `Brake` / `I5:Brk` | Stick source `Thr`, inverted |",
     "| `Thr` | `Adjust` / `I8:Adj` | Stick source `Thr`, inverted |",
-    "| `tx15-*` | `I4:Mot` | `P1` slider, inverted |",
+    "| `tx15-*` | `I4:Mot` | `Thr` stick, inverted |",
     "| `tx15-*` | `I6:CbP` | `T3` trim source |",
-    "| `tx16s-*` | `I4:Mot` | `P2` pot, inverted |",
+    "| `tx16s-*` | `I4:Mot` | `Thr` stick, inverted |",
     "| `tx16s-*` | `I6:CbP` | `T3` trim source |",
-    "| `tx16s-mk3-*` | `I4:Mot` | `P2` pot, inverted |",
+    "| `tx16s-mk3-*` | `I4:Mot` | `Thr` stick, inverted |",
     "| `tx16s-mk3-*` | `I6:CbP` | `T3` trim source |",
     "| `L5` | Launch mode (Motor Arm) and flight timer control | `SA down` / `SA2` |",
     "Default launch sequence: arm with `SA down`, flick `SE down` and back",
-    "so do not leave it down after starting. The default `SE` assignment is a manual",
-    "stand-in for the original momentary trigger behavior",
-    "spring-loaded momentary switch, assign `L9` to that switch for a better launch",
+    "so do not leave it down after starting. The default `SE`",
+    "assignment is a manual stand-in for the original momentary trigger behavior",
+    "the radio has a spring-loaded momentary switch, assign `L9` to that switch for a",
     "| `L8` | Report current altitude every 10 sec. | `SB up` / `SB0`, gated by `L1` |",
     "| `L46` | Aileron -> Elevator | `MTail`: `SA up` / `SA0`; `VTail` and `XTail`: `NONE` |"
   }
