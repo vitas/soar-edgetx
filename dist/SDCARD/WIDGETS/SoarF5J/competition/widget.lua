@@ -29,7 +29,8 @@ local FM_LAUNCH = 2
 local DEFAULT_TARGET_TIME = 600
 local TARGET_TIME_STEP = 60
 local ALTITUDE_CALL_INTERVAL = 10
-local MOTOR_CALL_INTERVAL = 10
+local MOTOR_FIRST_CALL = 10
+local MOTOR_MIDPOINT_CALL = 15
 local MOTOR_TIME_LIMIT = 30
 local MOTOR_COUNTDOWN_START = MOTOR_TIME_LIMIT - 10
 local HEIGHT_CAPTURE_WINDOW = 10
@@ -43,7 +44,7 @@ local lastMotorOn
 local heightRemaining = 0
 local flightTimerRunning
 local nextAltitudeCall = 0
-local nextMotorCall = MOTOR_CALL_INTERVAL
+local nextMotorCall = MOTOR_FIRST_CALL
 local lastHeightCall
 local previousFlightCallValue
 local observedTimerStart
@@ -155,7 +156,7 @@ local function announce_number(seconds)
 end
 
 local function reset_voice_calls()
-  nextMotorCall = MOTOR_CALL_INTERVAL
+  nextMotorCall = MOTOR_FIRST_CALL
   lastHeightCall = nil
   previousFlightCallValue = nil
 end
@@ -331,13 +332,17 @@ local function report_motor_time()
   end
 
   if elapsed < MOTOR_COUNTDOWN_START then
-    local announced = math.floor(elapsed / MOTOR_CALL_INTERVAL) * MOTOR_CALL_INTERVAL
-    if announced < nextMotorCall then
-      announced = nextMotorCall
+    local announced = MOTOR_FIRST_CALL
+    if elapsed >= MOTOR_MIDPOINT_CALL then
+      announced = MOTOR_MIDPOINT_CALL
     end
 
     announce_seconds(announced)
-    nextMotorCall = announced + MOTOR_CALL_INTERVAL
+    if announced == MOTOR_FIRST_CALL then
+      nextMotorCall = MOTOR_MIDPOINT_CALL
+    else
+      nextMotorCall = MOTOR_COUNTDOWN_START
+    end
     return
   end
 
