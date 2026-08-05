@@ -682,24 +682,28 @@ test("TX16S templates start output endpoints and centers neutral", function()
   end
 end)
 
-test("TX15 templates start setup-owned curve points neutral", function()
+test("TX15 templates start CV1 through CV6 linear", function()
+  local linear = { -100, -50, 0, 50, 100 }
   for _, model in ipairs(tx15_template_models()) do
     model.content = normalize_model_content(model.content)
 
     for index = 0, 29 do
-      assert_contains(indexed_block(model.content, "points", index), "val: 0",
-        model.label .. " setup curve point " .. tostring(index))
+      local expected = linear[index % #linear + 1]
+      assert_contains(indexed_block(model.content, "points", index), "val: " .. tostring(expected),
+        model.label .. " CV" .. tostring(math.floor(index / #linear) + 1) .. " point " .. tostring(index % #linear + 1))
     end
   end
 end)
 
-test("TX16S templates start setup-owned curve points neutral", function()
+test("TX16S templates start CV1 through CV6 linear", function()
+  local linear = { -100, -50, 0, 50, 100 }
   for _, model in ipairs(tx16s_template_models()) do
     model.content = normalize_model_content(model.content)
 
     for index = 0, 29 do
-      assert_contains(indexed_block(model.content, "points", index), "val: 0",
-        model.label .. " setup curve point " .. tostring(index))
+      local expected = linear[index % #linear + 1]
+      assert_contains(indexed_block(model.content, "points", index), "val: " .. tostring(expected),
+        model.label .. " CV" .. tostring(math.floor(index / #linear) + 1) .. " point " .. tostring(index % #linear + 1))
     end
   end
 end)

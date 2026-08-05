@@ -1753,65 +1753,65 @@ curves:
     name: ""
 points:
   0:
-    val: 0
+    val: -100
   1:
-    val: 0
+    val: -50
   2:
     val: 0
   3:
-    val: 0
+    val: 50
   4:
-    val: 0
+    val: 100
   5:
-    val: 0
+    val: -100
   6:
-    val: 0
+    val: -50
   7:
     val: 0
   8:
-    val: 0
+    val: 50
   9:
-    val: 0
+    val: 100
   10:
-    val: 0
+    val: -100
   11:
-    val: 0
+    val: -50
   12:
     val: 0
   13:
-    val: 0
+    val: 50
   14:
-    val: 0
+    val: 100
   15:
-    val: 0
+    val: -100
   16:
-    val: 0
+    val: -50
   17:
     val: 0
   18:
-    val: 0
+    val: 50
   19:
-    val: 0
+    val: 100
   20:
-    val: 0
+    val: -100
   21:
-    val: 0
+    val: -50
   22:
     val: 0
   23:
-    val: 0
+    val: 50
   24:
-    val: 0
+    val: 100
   25:
-    val: 0
+    val: -100
   26:
-    val: 0
+    val: -50
   27:
     val: 0
   28:
-    val: 0
+    val: 50
   29:
-    val: 0
+    val: 100
   30:
     val: -100
   31:

@@ -93,9 +93,9 @@ flaps. `VTail` uses `CH7/CH8` for the V-tail so an 8-channel receiver can be
 wired without receiver remapping. `XTail` has no aileron-to-elevator mix on the
 single elevator output.
 
-The templates start with neutral output endpoints, centers, reversals, and
-setup-owned curve points. Tune those values for the actual airframe during
-output, wing alignment, and brake curve setup.
+The templates start with neutral output endpoints, centers, and reversals.
+CV1 through CV6 start linear at `-100, -50, 0, 50, 100`; tune those curves for
+the actual airframe during wing alignment and brake curve setup.
 
 The widget expects the model to provide the template structure:
 

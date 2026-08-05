@@ -78,9 +78,9 @@ CH4/CH5  Flaps
 ```
 
 Template artifacts must stay airframe-neutral: no copied output endpoints,
-centers, reversals, or setup-owned curve point values from a flown aircraft.
-Those values should start at zero and be tuned on the actual model through the
-setup pages and EdgeTX output checks.
+centers, reversals, or curve-point tuning from a flown aircraft. CV1 through
+CV6 start with the safe linear sequence `-100, -50, 0, 50, 100`; tune them for
+the actual model through the setup pages and EdgeTX output checks.
 
 ## Current Control Assignments
 
