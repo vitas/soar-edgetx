@@ -845,12 +845,16 @@ test("user-facing documentation does not expose migration-only project reference
   end
 end)
 
-test("README stays short and links to the setup documentation", function()
+test("README stays short and presents the competition widget and setup UI", function()
   local readme = read_file("README.md")
   local lines = lines_from(readme)
   local expected = {
-    "## How It Works",
+    "## Pages",
     "## What To Configure",
+    "**Competition**",
+    "**Model setup**",
+    "in-radio setup UI",
+    "docs/widget-setup-and-usage.md#setup-pages",
     "[model templates](docs/model-templates.md)",
     "[widget setup and usage](docs/widget-setup-and-usage.md)",
     "[SD-card structure](docs/sdcard-structure.md)",

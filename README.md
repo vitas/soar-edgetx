@@ -1,24 +1,38 @@
 # SoarF5J EdgeTX
 
-`SoarF5J` is an F5J contest widget and TX15/TX16S model-template package for
-EdgeTX landscape color radios.
+`SoarF5J` is an F5J package for EdgeTX landscape color radios. A single widget
+covers the whole workflow:
+
+- **Competition** - the F5J contest flow, from launch and motor run through
+  glide timing, finish, and zero result.
+- **Model setup** - a full in-radio setup UI for switches, outputs, wing
+  alignment, brake curves, camber, and mixes, so a model can be configured from
+  the radio screen without a PC or Companion.
 
 The widget runs from the radio SD card. The active model template supplies the
 flight modes, timers, logical switches, global variables, curves, mixes, and
 named outputs that the widget reads or edits.
 
-## How It Works
+## Pages
 
-- Copy `dist/SDCARD` to the radio SD card, or use it as the Companion SD
-  Structure folder.
-- Use one tail template: `tx15-*` for TX15, or `tx16s-*` from the SD-card
-  templates folder for TX16S/T16-class radios.
-- Add the `SoarF5J` widget to a model screen.
-- Set widget `Page = 1` for the contest page. Pages `2..7` are setup pages.
-- The contest page handles launch, motor, glide, finish, zero result, working
-  window voice, motor timer, and F5J start-height capture from `Alt+`.
-- Setup pages write model changes immediately, so disconnect the motor before
-  output, wing, brake, or camber setup.
+`Page` is the only widget option; it selects the competition page or one of the
+six setup pages.
+
+| Page | Purpose |
+| --- | --- |
+| `1` | Competition: launch, motor, glide, finish, zero result, working-window voice, motor timer, and F5J start-height capture from `Alt+`. |
+| `2` | Switches: assign physical switch positions to the model's logical switches. |
+| `3` | Mixes: edit the mix global variables for the selected flight mode. |
+| `4` | Outputs: reorder named outputs, reverse direction, and set offset, range, center, and endpoints. |
+| `5` | Wing alignment: align the four flaperon outputs with the trims and on-screen sliders. |
+| `6` | Brake curves: edit the airbrake flap and aileron curves. |
+| `7` | Aileron/camber: aileron travel, aileron-to-flap, camber-to-aileron, and thermal camber around maximum reflex. |
+
+Pages `2..7` are the setup UI. They write model changes immediately, so
+disconnect the motor before output, wing, brake, or camber setup. Open a page
+with `Enter` or a tap; the normal EdgeTX keys, trims, and touch gestures drive
+the controls, and there is no separate save button. See [widget setup and
+usage](docs/widget-setup-and-usage.md#setup-pages) for the full workflow.
 
 ## What To Configure
 
@@ -26,12 +40,14 @@ named outputs that the widget reads or edits.
 | --- | --- | --- |
 | Template | Pick the correct tail template and wire outputs. | [model templates](docs/model-templates.md) |
 | SD card | Install the widget package and custom sound prompts. | [SD-card structure](docs/sdcard-structure.md) |
-| Widget | Add `SoarF5J`, choose `Page`, and use the competition flow. | [widget setup and usage](docs/widget-setup-and-usage.md) |
-| Switches | Confirm launch, motor, landing, voice, vario, and flight-mode switches. | [control assignments](docs/model-templates.md#current-control-assignments) |
-| Model setup | Tune outputs, wing alignment, brake curves, camber, mixes, and battery warning. | [setup pages](docs/widget-setup-and-usage.md#setup-pages) |
+| Widget | Add `SoarF5J` and choose `Page`. | [widget setup and usage](docs/widget-setup-and-usage.md) |
+| Switches | Assign launch, motor, landing, voice, vario, and flight-mode switches on `Page = 2`. | [control assignments](docs/model-templates.md#current-control-assignments) |
+| Model setup | Tune outputs, wing alignment, brake curves, camber, mixes, and battery warning on `Page = 3..7`. | [setup pages](docs/widget-setup-and-usage.md#setup-pages) |
 | Simulator | Test layout and setup pages before using the radio. | [emulator workflow](docs/emulator.md) |
 
 ## Build And Verify
+
+From the repo root:
 
 ```sh
 make package
@@ -43,6 +59,9 @@ Install to a mounted SD card:
 ```sh
 make install-widget SDCARD=/Volumes/TX15
 ```
+
+Copy `dist/SDCARD` to the radio SD card, or point the Companion SD Structure
+path at it, then add the `SoarF5J` widget and pick a `Page`.
 
 ## More Docs
 
