@@ -80,7 +80,7 @@ tx16s-VTail.yml
 tx16s-XTail.yml
 ```
 
-13-GVAR full TX16S MK3 users can use the matching SD-card YAML template:
+14-GVAR full TX16S MK3 users can use the matching SD-card YAML template:
 
 ```text
 tx16s-mk3-MTail.yml
@@ -90,8 +90,8 @@ tx16s-mk3-XTail.yml
 
 All variants keep `CH1/CH2` for ailerons, `CH3` for motor, and `CH4/CH5` for
 flaps. `VTail` uses `CH7/CH8` for the V-tail so an 8-channel receiver can be
-wired without receiver remapping. `XTail` has no aileron-to-elevator mix on the
-single elevator output.
+wired without receiver remapping. `XTail` has no aileron-to-elevator or
+rudder-to-elevator mix on the single elevator output.
 
 The templates start with neutral output endpoints, centers, and reversals.
 CV1 through CV6 start linear at `-100, -50, 0, 50, 100`; tune those curves for
@@ -224,6 +224,7 @@ The page currently covers:
 - Landing.
 - Landing off / crow off.
 - Aileron to elevator mix enable, for templates that use that mix.
+- Rudder to elevator mix enable, for templates that use that mix.
 - Optional model Timer 1 reports every 10 seconds.
 - Altitude reports every 10 seconds.
 
@@ -236,6 +237,10 @@ The committed templates default motor arm to `SA down` and use the throttle
 stick for motor control. `MTail` defaults the aileron to elevator mix enable
 switch to `SA up`. `VTail` and `XTail` default that switch to `NONE` and do not
 use the aileron-to-elevator mix.
+
+The optional rudder to elevator mix has its own `L48` enable switch. It defaults
+to `NONE` on every variant, so assign a physical switch on this page before
+using it. The mix is only present on `MTail`.
 
 If the motor is remapped to `P1`, `S1`, `S2`, or a side slider, configure that
 control in the radio hardware settings first. The committed TX15 `.etx`
@@ -349,12 +354,12 @@ the configured camber amount. The page writes the related global variables and
 temporarily enables the model adjustment mode while editing. When the page
 exits, it restores the previous adjustment state.
 
-13-GVAR full templates use the page's adjustment mode for these trim-button
+14-GVAR full templates use the page's adjustment mode for these trim-button
 edits: aileron trim adjusts `Ail`, rudder trim adjusts `AiF`, elevator trim
 adjusts `CbA`, and `T3` adjusts the thermal camber amount `GV10` / `CbX`.
 
 9-GVAR compatible templates keep only GV1 through GV9. Controls backed by
-GV10-GV13 are fixed in the template and show `N/A` in setup pages on radios
+GV10-GV14 are fixed in the template and show `N/A` in setup pages on radios
 that do not expose those extended values to Lua.
 
 To put thermal camber selection on a switch instead, edit the model in Companion

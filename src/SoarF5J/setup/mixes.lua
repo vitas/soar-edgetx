@@ -43,6 +43,7 @@ local mixes = {
   { "Elevator Travel", 10, -100, 100 },
   { "Aileron -> Flap", 1, -100, 100 },
   { "Aileron -> Elevator", 11, -100, 100 },
+  { "Rudder -> Elevator", 13, -100, 100 },
   { "Aileron Differential", 3, -100, 100 },
   { "Flap Differential", 12, -100, 100 },
   { "Brake -> Elevator", 4, 0, 100 },

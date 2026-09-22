@@ -446,6 +446,25 @@ mixData:
     offset: 0
     name: AilEle
   - destCh: 6
+    srcRaw: I0
+    weight: 20
+    swtch: L48
+    curve:
+      type: 0
+      value: 0
+    delayPrec: 0
+    delayUp: 0
+    delayDown: 0
+    speedPrec: 0
+    speedUp: 0
+    speedDown: 0
+    carryTrim: 0
+    mltpx: ADD
+    mixWarn: 0
+    flightModes: 011100111
+    offset: 0
+    name: RudEle
+  - destCh: 6
     srcRaw: I1
     weight: 85
     swtch: NONE
@@ -502,6 +521,25 @@ mixData:
     flightModes: 011100111
     offset: 0
     name: AilEle
+  - destCh: 7
+    srcRaw: I0
+    weight: -20
+    swtch: L48
+    curve:
+      type: 0
+      value: 0
+    delayPrec: 0
+    delayUp: 0
+    delayDown: 0
+    speedPrec: 0
+    speedUp: 0
+    speedDown: 0
+    carryTrim: 0
+    mltpx: ADD
+    mixWarn: 0
+    flightModes: 011100111
+    offset: 0
+    name: RudEle
   - destCh: 7
     srcRaw: I1
     weight: 85
@@ -2200,6 +2238,14 @@ logicalSw:
   45:
     func: FUNC_AND
     def: SA0,NONE
+    delay: 0
+    duration: 0
+    andsw: NONE
+    lsPersist: 0
+    lsState: 0
+  47:
+    func: FUNC_AND
+    def: NONE,NONE
     delay: 0
     duration: 0
     andsw: NONE

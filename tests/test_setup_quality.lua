@@ -670,6 +670,7 @@ setup_quality_test("switches page exposes landing and landing-off switches", fun
   local sawLandingLabel = false
   local sawLandingOffLabel = false
   local sawAileronElevatorLabel = false
+  local sawRudderElevatorLabel = false
   for _, label in ipairs(switchesPage.labels) do
     if label == "Landing" then
       sawLandingLabel = true
@@ -677,15 +678,19 @@ setup_quality_test("switches page exposes landing and landing-off switches", fun
       sawLandingOffLabel = true
     elseif label == "Aileron -> Elevator" then
       sawAileronElevatorLabel = true
+    elseif label == "Rudder -> Elevator" then
+      sawRudderElevatorLabel = true
     end
   end
   assert(sawLandingLabel, "switches page missing Landing label")
   assert(sawLandingOffLabel, "switches page missing Landing off label")
   assert(sawAileronElevatorLabel, "switches page missing Aileron -> Elevator label")
+  assert(sawRudderElevatorLabel, "switches page missing Rudder -> Elevator label")
 
   local sawLandingSwitch = false
   local sawLandingOffSwitch = false
   local sawAileronElevatorSwitch = false
+  local sawRudderElevatorSwitch = false
   for _, dropDown in ipairs(switchesPage.dropDowns) do
     if dropDown.ls == 5 then
       sawLandingSwitch = true
@@ -693,11 +698,14 @@ setup_quality_test("switches page exposes landing and landing-off switches", fun
       sawLandingOffSwitch = true
     elseif dropDown.ls == 45 then
       sawAileronElevatorSwitch = true
+    elseif dropDown.ls == 47 then
+      sawRudderElevatorSwitch = true
     end
   end
   assert(sawLandingSwitch, "switches page missing L06 dropdown")
   assert(sawLandingOffSwitch, "switches page missing L45 dropdown")
   assert(sawAileronElevatorSwitch, "switches page missing L46 dropdown")
+  assert(sawRudderElevatorSwitch, "switches page missing L48 dropdown")
 
   for _, dropDown in ipairs(switchesPage.dropDowns) do
     assert_equal(dropDown.items[1], "NONE", "switch dropdown first item")

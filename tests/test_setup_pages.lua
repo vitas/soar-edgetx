@@ -135,13 +135,15 @@ test("mixes page leaves thermal camber to aileron camber setup", function()
   assert(not content:find('{ "Camber -> Aileron", 6, 0, 400 }', 1, true), "GV7 CbA should not be on mixes page")
 end)
 
-test("setup pages expose aileron to elevator mix controls", function()
+test("setup pages expose aileron and rudder to elevator mix controls", function()
   local mixes = read_file("src/SoarF5J/setup/mixes.lua")
   local switches = read_file("src/SoarF5J/setup/switches.lua")
 
   assert(mixes:find('{ "Aileron -> Elevator", 11, -100, 100 }', 1, true), "mixes page missing GV12 aileron-elevator control")
+  assert(mixes:find('{ "Rudder -> Elevator", 13, -100, 100 }', 1, true), "mixes page missing GV14 rudder-elevator control")
   assert(mixes:find('{ "Flap Differential", 12, -100, 100 }', 1, true), "mixes page missing GV13 flap-differential control")
   assert(switches:find('{ "Aileron -> Elevator", 45 }', 1, true), "switches page missing L46 aileron-elevator switch")
+  assert(switches:find('{ "Rudder -> Elevator", 47 }', 1, true), "switches page missing L48 rudder-elevator switch")
 end)
 
 test("mixes page exposes elevator travel control", function()

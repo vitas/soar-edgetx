@@ -13,8 +13,8 @@ specific EdgeTX limits and artifact formats.
 | Family | Use on | Artifacts |
 | --- | --- | --- |
 | 9-GVAR compatible family: `tx16s-*` | TX16S, TX16S Mark II, T16/T18-class landscape color radios | SD-card YAML files under `dist/SDCARD/TEMPLATES/3.SoarEdgeTx/`. |
-| 13-GVAR full family: `tx15-*` | RadioMaster TX15 | `.etx` archives under `models/tx15/` and matching SD-card YAML files. |
-| 13-GVAR full family: `tx16s-mk3-*` | TX16S MK3 | SD-card YAML files under `dist/SDCARD/TEMPLATES/3.SoarEdgeTx/`. |
+| 14-GVAR full family: `tx15-*` | RadioMaster TX15 | `.etx` archives under `models/tx15/` and matching SD-card YAML files. |
+| 14-GVAR full family: `tx16s-mk3-*` | TX16S MK3 | SD-card YAML files under `dist/SDCARD/TEMPLATES/3.SoarEdgeTx/`. |
 
 TX15 artifacts:
 
@@ -41,7 +41,7 @@ dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-VTail.yml
 dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-XTail.yml
 ```
 
-13-GVAR full TX16S MK3 artifacts:
+14-GVAR full TX16S MK3 artifacts:
 
 ```text
 dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-mk3-MTail.yml
@@ -94,7 +94,7 @@ physical stick or trim location depends on the radio stick mode.
 
 | Control | Model name/source | Default assignment | What it does |
 | --- | --- | --- | --- |
-| `Rud` | `Rudder` / `I1:Rud` | Stick source `Rud` | Rudder/yaw input. On `VTail` it feeds the V-tail yaw mix instead of a separate rudder channel. |
+| `Rud` | `Rudder` / `I1:Rud` | Stick source `Rud` | Rudder/yaw input. On `VTail` it feeds the V-tail yaw mix instead of a separate rudder channel. On `MTail` it also feeds the optional rudder-to-elevator mix. |
 | `Ele` | `Elev` / `I2:Ele` | Stick source `Ele` | Elevator/pitch input. |
 | `Ail` | `Ailero` / `I3:Ail` | Stick source `Ail` | Aileron input, plus source for aileron-to-rudder and optional aileron-to-elevator mixes. |
 | `Thr` | `Brake` / `I5:Brk` | Stick source `Thr`, inverted | Landing brake/crow control. |
@@ -131,6 +131,7 @@ uses normal position names and also shows the raw template value.
 | `L6` | Landing | `SF down` / `SF2`, blocked in `Motor` | Enables landing/crow mode and plays the landing voice prompt. |
 | `L45` | Landing off / crow off | `SF up` / `SF0`, blocked in `Motor` | Leaves landing/crow mode and plays the crow-off voice prompt. The setup page also mirrors this assignment to the linked crow-off audio helper. |
 | `L46` | Aileron -> Elevator | `MTail`: `SA up` / `SA0`; `VTail` and `XTail`: `NONE` | Enables the optional `AilEle` mix only on `MTail`. It is disabled in the V-tail and single-elevator templates. |
+| `L48` | Rudder -> Elevator | Not assigned (`NONE`) | Enables the optional `RudEle` mix only on `MTail`. Assign a physical switch on the Switches page to use it. |
 | `L7` | Model Timer 1 report every 10 sec. | `SC down` / `SC2` | Speaks Timer 1 every 10 seconds. |
 | `L8` | Report current altitude every 10 sec. | `SB up` / `SB0`, gated by `L1` | Speaks current altitude every 10 seconds after the F5J height window has closed. |
 
@@ -156,6 +157,22 @@ better launch workflow.
 | `Speed` | `L3` | Speed flight mode, defaulted to `SD up`. |
 | `Float` | `L4` | Float flight mode, defaulted to `SD down`. |
 
+### M-tail Elevator Mixes
+
+`MTail` drives the two elevator servos from `CH7` and `CH8`. Two optional
+differential mixes are available on those channels and are active in `Cruise`,
+`Speed`, and `Float`:
+
+| Mix | Amount | Enable switch | Default assignment |
+| --- | --- | --- | --- |
+| `AilEle` aileron to elevator | `GV12` / `AiE`, default `20` | `L46` | `MTail`: `SA up` / `SA0`; `VTail` and `XTail`: `NONE` |
+| `RudEle` rudder to elevator | `GV14` / `RuE`, default `20` | `L48` | Not assigned (`NONE`) |
+
+`CH8` uses the negated amount (`!gv(12)` / `!gv(14)`) so the two mirrored
+elevator servos move together. The 9-GVAR compatible family replaces both
+amounts with the fixed values `20` and `-20`. `VTail` and `XTail` do not use
+either mix.
+
 ## Template Contract
 
 Every supported template family should define:
@@ -174,8 +191,8 @@ exists.
 
 ## GVAR Capability Limits
 
-TX15 and TX16S MK3 templates use GV1 through GV13. The 9-GVAR compatible
-family uses GV1 through GV9. GV10-GV13 are replaced by fixed mixer values so the
+TX15 and TX16S MK3 templates use GV1 through GV14. The 9-GVAR compatible
+family uses GV1 through GV9. GV10-GV14 are replaced by fixed mixer values so the
 model can run on radios where Lua cannot read or write the extended global
 variables.
 
@@ -185,6 +202,7 @@ variables.
 | `GV11` / `Elv` KAPOW elevator travel | Fixed at the current template amount. |
 | `GV12` / `AiE` aileron-to-elevator | Fixed on `MTail`; disabled on `VTail` and `XTail`. |
 | `GV13` / `FlD` flap differential | Fixed at neutral `0`. |
+| `GV14` / `RuE` rudder-to-elevator | Fixed on `MTail`; disabled on `VTail` and `XTail`. |
 
 Setup page fields that belong to unsupported extended GV values show `N/A` on
 9-GVAR compatible radios instead of editing the model.

@@ -80,6 +80,8 @@ flightModeData:
         val: 20
       12:
         val: -10
+      13:
+        val: 20
   1:
     trim:
       0:
@@ -119,6 +121,8 @@ flightModeData:
         val: 0
       12:
         val: -11
+      13:
+        val: 0
   2:
     trim:
       2:
@@ -179,6 +183,8 @@ flightModeData:
       9:
         val: 0
       11:
+        val: 0
+      13:
         val: 0
 mixData:
   - destCh: 0
@@ -2074,6 +2080,14 @@ logicalSw:
     andsw: NONE
     lsPersist: 0
     lsState: 0
+  47:
+    func: FUNC_AND
+    def: NONE,NONE
+    delay: 0
+    duration: 0
+    andsw: NONE
+    lsPersist: 0
+    lsState: 0
 customFn:
   1:
     swtch: ONE
@@ -2298,6 +2312,13 @@ gvars:
     name: FlD
     min: 0
     max: 0
+    popup: 0
+    prec: 0
+    unit: 0
+  13:
+    name: RuE
+    min: 924
+    max: 924
     popup: 0
     prec: 0
     unit: 0
