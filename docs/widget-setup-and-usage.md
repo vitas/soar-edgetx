@@ -126,7 +126,13 @@ or curves.
 
 ## Add The Widget
 
-On the radio or in the EdgeTX simulator:
+Models created from the bundled templates already have the widget on two
+screens. Screen 1 runs the competition page (`Page = 1`). Screen 2 holds the six
+setup pages in a `2 x 3` layout: Switches, Mixes, and Outputs down the left
+column; Wing alignment, Brake curves, and Aileron/camber down the right one.
+Both layouts exist in EdgeTX 2.9 and later.
+
+To add the widget to another screen, on the radio or in the EdgeTX simulator:
 
 1. Open the F5J model.
 2. Open screen/widget setup for the model.
@@ -169,15 +175,21 @@ different `Page`.
 
 ## Opening A Setup Page
 
-Most setup pages first draw a title tile in the widget zone. Press `Enter` or
-tap the widget to open the full setup UI.
+Outside full screen, a setup page only draws its title tile, and EdgeTX passes
+no taps or keys to it. Open the page full screen:
+
+- Touch: long-press the tile and choose `Full screen`. A long press next to the
+  tiles frames the widgets instead; tap the tile then to get the menu.
+- Keys: long-press `Enter` on the main view to frame the widgets, move to the
+  tile with `Next` / `Prev`, press `Enter`, and choose `Full screen`.
 
 Pages that can move controls or rewrite curves show a motor-disabled warning
 prompt before editing starts. Close the prompt only after the motor is
 physically safe.
 
-Use the `X` button in the page header to exit full screen. Leaving a setup page
-also clears temporary adjustment modes used by that page.
+Use the `X` button in the page header, or long-press `Exit` (`RTN`), to leave
+full screen. Leaving a setup page also clears temporary adjustment modes used
+by that page.
 
 ## Navigation
 
@@ -186,7 +198,7 @@ to widgets only in full-screen mode, so open the widget full-screen before using
 the keys below:
 
 - `Next` / `Prev`: move focus between controls.
-- `Enter`: open a page, activate a button, start editing a number, or confirm.
+- `Enter`: activate a button, start editing a number, or confirm.
 - `Inc` / `Dec`: change the focused value while editing.
 - `Exit`: leave the current edit control or nested prompt.
 - Touch tap: select or activate the touched control.
@@ -422,8 +434,9 @@ those key events to the normal main-view widget after radio startup.
 
 To reset the working-window timer back to the target time, use the model's arm
 or reset control while the widget is on the competition page. After a flight,
-press the trigger or `Enter` once to finish timing, then press it again from the
-`Finished` or `Zero result` state to reset for the next flight.
+press the trigger (or `Enter` with the widget full screen) once to finish
+timing, then press it again from the `Finished` or `Zero result` state to reset
+for the next flight.
 
 During glide, the widget announces the remaining working-window time using this
 schedule: minute boundaries above 2 minutes, 15-second boundaries from 2 minutes
@@ -444,9 +457,10 @@ Basic flow:
 4. When the motor stops, the widget moves to glide timing.
 5. The widget tracks maximum altitude from `Alt+` during motor run and for 10
    seconds after motor-off.
-6. Press the configured trigger, `Enter`, or tap the widget to finish timing.
-7. Press the trigger or `Enter` again from the finished state to reset for the
-   next flight.
+6. Press the configured trigger to finish timing. With the widget open full
+   screen, `Enter` or a tap on the widget works too.
+7. Press the trigger again (or `Enter` in full screen) from the finished state
+   to reset for the next flight.
 
 Restarting the motor after glide has started produces a zero result. The widget
 does not save flight logs.
@@ -486,9 +500,20 @@ A setup page reports missing `input8`, a curve, or an output:
 - The active model does not match the setup page assumptions.
 - Re-open a compatible F5J template or add the missing model item in Companion.
 
-A setup page only shows its title tile:
+A setup page only shows its title tile, and a tap or `Enter` does nothing:
 
-- This is normal. Press `Enter` or tap the widget to open the full setup page.
+- This is normal outside full screen. Open the page full screen as described in
+  [Opening A Setup Page](#opening-a-setup-page).
+
+The model has no screen with the six setup tiles:
+
+- Create the model from a bundled template; a blank model has no widget
+  screens.
+- Older copies of the templates used the `1 x 6` layout for screen 2. EdgeTX
+  loads that layout only from 2.12 and stops loading screens at the first
+  layout it does not know, so older firmware shows only the competition screen.
+  Create the model again from the current template, update EdgeTX, or add a
+  screen with `SoarF5J` widgets set to `Page = 2..7`.
 
 Edits seem to affect the wrong flight mode:
 

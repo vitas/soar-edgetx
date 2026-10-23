@@ -29,9 +29,10 @@ six setup pages.
 | `7` | Aileron/camber: aileron travel, aileron-to-flap, camber-to-aileron, and thermal camber around maximum reflex. |
 
 Pages `2..7` are the setup UI. They write model changes immediately, so
-disconnect the motor before output, wing, brake, or camber setup. Open a page
-with `Enter` or a tap; the normal EdgeTX keys, trims, and touch gestures drive
-the controls, and there is no separate save button. See [widget setup and
+disconnect the motor before output, wing, brake, or camber setup. A setup page
+takes keys and taps only in full screen: long-press its tile and choose
+`Full screen`. The normal EdgeTX keys, trims, and touch gestures then drive the
+controls, and there is no separate save button. See [widget setup and
 usage](docs/widget-setup-and-usage.md#setup-pages) for the full workflow.
 
 ## What To Configure
