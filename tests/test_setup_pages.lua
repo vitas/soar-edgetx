@@ -106,7 +106,7 @@ end)
 test("aileron camber page includes SoarOTX adjustment behavior", function()
   local content = read_file("src/SoarF5J/setup/aileron_camber.lua")
 
-  assert(content:find("Aileron and camber", 1, true), "missing aileron/camber title")
+  assert(content:find("local title =   \"Aileron/camber\"", 1, true), "missing aileron/camber title")
   assert(content:find("Aileron trim", 1, true), "missing aileron trim label")
   assert(content:find("Rudder trim", 1, true), "missing rudder trim label")
   assert(content:find("Elevator trim", 1, true), "missing elevator trim label")

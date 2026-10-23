@@ -25,7 +25,7 @@ local widget, soarGlobals =  ...
 local libGUI =  soarGlobals.libGUI
 local gui
 local colors =  libGUI.colors
-local title =   "Aileron and camber"
+local title =   "Aileron/camber"
 local safety =  loadScript(soarGlobals.path .. "lib/safety.lua")()
 local warningPrompt = libGUI.newGUI()
 local slider

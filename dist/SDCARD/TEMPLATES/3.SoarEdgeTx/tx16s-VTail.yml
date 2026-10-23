@@ -2702,7 +2702,7 @@ screenData:
           value:
             boolValue: 0
   1:
-    LayoutId: Layout1x6
+    LayoutId: Layout2x3
     layoutData:
       zones:
         0:
@@ -2748,7 +2748,7 @@ screenData:
               0:
                 type: Signed
                 value:
-                  signedValue: 5
+                  signedValue: 6
               1:
                 type: String
                 value:
@@ -2760,7 +2760,7 @@ screenData:
               0:
                 type: Signed
                 value:
-                  signedValue: 6
+                  signedValue: 7
               1:
                 type: String
                 value:
@@ -2772,7 +2772,7 @@ screenData:
               0:
                 type: Signed
                 value:
-                  signedValue: 7
+                  signedValue: 5
               1:
                 type: String
                 value:

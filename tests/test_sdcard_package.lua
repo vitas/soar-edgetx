@@ -938,23 +938,24 @@ test("TX15 template assigns SoarF5J widget", function()
   end
 end)
 
-test("exported TX15 templates assign SoarF5J pages 1 through 7", function()
-  for _, variant in ipairs(TX15_TEMPLATE_VARIANTS) do
-    local model = read_file(variant.exported)
-    local pages = {}
+test("exported templates assign SoarF5J pages 1 through 7 on layouts EdgeTX 2.9 loads", function()
+  for _, variants in ipairs({ TX15_TEMPLATE_VARIANTS, TX16S_TEMPLATE_VARIANTS, TX16S_MK3_TEMPLATE_VARIANTS }) do
+    for _, variant in ipairs(variants) do
+      local model = read_file(variant.exported)
+      local layouts = {}
+      local pages = {}
 
-    assert(model:find("LayoutId: Layout1x1", 1, true), variant.id .. " missing competition 1x1 screen")
-    assert(model:find("LayoutId: Layout1x6", 1, true), variant.id .. " missing setup 1x6 screen")
-
-    for block in model:gmatch("widgetName: SoarF5J(.-)stringValue:%s*competition/widget") do
-      local page = block:match("signedValue:%s*(%d+)")
-      if page then
-        pages[tonumber(page)] = true
+      for layout in model:gmatch("LayoutId:%s*(%S+)") do
+        layouts[#layouts + 1] = layout
       end
-    end
+      for block in model:gmatch("widgetName: SoarF5J(.-)stringValue:%s*competition/widget") do
+        pages[#pages + 1] = block:match("signedValue:%s*(%d+)") or "?"
+      end
 
-    for page = 1, 7 do
-      assert(pages[page], variant.id .. " missing SoarF5J page " .. page .. " widget")
+      assert_equal(table.concat(layouts, " "), "Layout1x1 Layout2x3",
+        variant.exported .. " screen layouts (EdgeTX before 2.12 stops at Layout1x6)")
+      assert_equal(table.concat(pages, " "), "1 2 3 4 6 7 5",
+        variant.exported .. " SoarF5J pages by zone (Layout2x3 zones 0-2 left, 5/3/4 right top-down)")
     end
   end
 end)
