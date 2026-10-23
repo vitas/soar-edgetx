@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<title>SoarF5J: инсталиране и настройка на модел с M-tail</title>
+<link rel="stylesheet" href="guide.css">
+<style>
+@page {
+  size: A4;
+  margin: 14mm 16mm 16mm;
+  @bottom-left {
+    content: "SoarF5J · модел с M-tail · EdgeTX 2.12";
+    font-family: "PT Sans", sans-serif;
+    font-size: 8pt;
+    color: #7a8692;
+  }
+  @bottom-right {
+    content: "стр. " counter(page) " от " counter(pages);
+    font-family: "PT Sans", sans-serif;
+    font-size: 8pt;
+    color: #7a8692;
+  }
+}
+</style>
+</head>
+<body>
+
+<header class="cover">
+  <div class="kicker">SoarF5J за EdgeTX · ръководство</div>
+  <h1>Инсталиране и настройка на модел <span class="nb">с M-tail</span></h1>
+  <p class="lead">Стъпка по стъпка: от копирането на файловете на SD картата до проверката на кормилата и първия полет по правилата на F5J. Пример е шаблонът <b>MTail</b>: кормило за посока на CH6 и кормило за височина от две половини, всяка със своя сервомашинка (CH7 и CH8).</p>
+  <div class="meta"><span>EdgeTX 2.12</span><span>TX15</span><span>TX16S MK3</span><span>TX16S · T16 · T18</span><span>октомври 2026</span></div>
+</header>
+
+<p class="intro">SoarF5J е един уиджет за цветните предаватели с EdgeTX, който има две роли. Екранът за <b>състезание</b> води полета по F5J: мотор, планиране, финиш, стартова височина и гласово отброяване на работното време. Страниците за <b>настройка</b> позволяват да настроите модела направо от предавателя, без компютър и Companion. Шаблонът на модела задава полетните режими, таймерите, логическите превключватели, глобалните променливи, кривите, миксовете и каналите, а уиджетът ги чете и променя.</p>
+
+<div class="grid2">
+  <div class="box">
+    <h4>Какво ви трябва</h4>
+    <ul class="dash">
+      <li>Предавател с EdgeTX 2.12 и цветен хоризонтален екран 480×272, 480×320 или 800×480. Проверено на TX15 и на предаватели от класа на TX16S.</li>
+      <li>Приемник с поне 8 канала.</li>
+      <li>Компютър и USB кабел или четец за карти.</li>
+      <li>Датчик за височина с телеметрия (сензор <code>Alt</code>) — за стартовата височина.</li>
+      <li>Телеметрия за напрежението на приемника (<code>RxBt</code>, <code>Cels</code>, <code>A1</code> или <code>A2</code>) — за предупреждение при слаба батерия.</li>
+      <li>По желание — EdgeTX Companion, за да проверите всичко първо в симулатора.</li>
+    </ul>
+  </div>
+  <div class="box warn">
+    <h4>Безопасност</h4>
+    <ul class="dash">
+      <li>Страниците за настройка записват промените в модела <b>веднага</b> и движат кормилата.</li>
+      <li>Преди настройката <b>свалете витлото или разкачете мотора</b>. Не разчитайте само на положението на превключвател.</li>
+      <li>Първо настройвайте копие на модела или работете в симулатора, а после — на предавателя, с добре закрепен модел.</li>
+      <li>След настройката проверете реда на каналите, посоките, крайните точки и failsafe.</li>
+    </ul>
+  </div>
+</div>
+
+<nav class="toc">
+  <div class="toc-title">Съдържание</div>
+  <ol>
+    <li><a href="#s1">Изтеглете пакета</a></li>
+    <li><a href="#s2">Копирайте файловете на SD картата</a></li>
+    <li><a href="#s3">Създайте модел от шаблон</a></li>
+    <li><a href="#s4">Свържете сервомашинките</a></li>
+    <li><a href="#s5">Екрани и управление на уиджета</a></li>
+    <li><a href="#s6">Настройка на модела стъпка по стъпка</a></li>
+    <li><a href="#s7">Полет по F5J с уиджета</a></li>
+    <li><a href="#s8">Ако нещо не е наред</a></li>
+    <li><a href="#s9">Проверка преди първия полет</a></li>
+  </ol>
+</nav>
+
+<section id="s1">
+  <h2><span class="n">1</span>Изтеглете пакета</h2>
+  <ol class="steps">
+    <li>Отворете страницата на проекта <a href="https://github.com/vitas/soar-edgetx">github.com/vitas/soar-edgetx</a> и натиснете <span class="ui">Code</span> → <span class="ui">Download ZIP</span>.</li>
+    <li>Разархивирайте файла. Всичко, което е нужно на предавателя, е в папката <code>dist/SDCARD</code> — това е готовата структура на SD картата.</li>
+  </ol>
+</section>
+
+<section id="s2">
+  <h2><span class="n">2</span>Копирайте файловете на SD картата</h2>
+  <ol class="steps">
+    <li>Свържете предавателя с компютъра с USB кабел и изберете режим <span class="ui">USB Storage (SD)</span> — картата ще се появи като диск. Можете и да извадите картата от предавателя и да я поставите в четец за карти.</li>
+    <li>Направете резервно копие на картата, поне на папките <code>MODELS</code> и <code>RADIO</code>.</li>
+    <li>Копирайте от <code>dist/SDCARD</code> в основната директория на картата три неща:
+      <table>
+        <thead><tr><th>Какво (от dist/SDCARD)</th><th>Къде на картата</th><th>За какво</th></tr></thead>
+        <tbody>
+          <tr><td class="nowrap"><code>WIDGETS/SoarF5J</code></td><td class="nowrap"><code>/WIDGETS/SoarF5J</code></td><td>уиджетът: състезание и страници за настройка</td></tr>
+          <tr><td class="nowrap"><code>TEMPLATES/3.SoarEdgeTx</code></td><td class="nowrap"><code>/TEMPLATES/3.SoarEdgeTx</code></td><td>шаблони на модели MTail, VTail и XTail</td></tr>
+          <tr><td class="nowrap"><code>SOUNDS/en/*.wav</code></td><td class="nowrap"><code>/SOUNDS/en</code></td><td>гласовите съобщения на шаблона: старт, кацане, изключен мотор и други</td></tr>
+        </tbody>
+      </table>
+    </li>
+    <li>Извадете безопасно диска, изключете кабела и рестартирайте предавателя.</li>
+  </ol>
+  <div class="callout note"><span class="t">Обновяване на уиджета</span>Преди да копирате нова версия, изтрийте цялата стара папка <code>/WIDGETS/SoarF5J</code>. Иначе на картата може да останат стари компилирани файлове <code>.luac</code>.</div>
+  <div class="callout tip"><span class="t">Предавателят не говори на английски?</span>Съобщенията на шаблона са записани на английски и са в <code>/SOUNDS/en</code>. Копирайте същите файлове <code>.wav</code> и в папката на езика на гласа (например <code>/SOUNDS/ru</code> за руски), иначе може да не прозвучат.</div>
+</section>
+
+<section id="s3">
+  <h2><span class="n">3</span>Създайте модел от шаблон</h2>
+  <ol class="steps">
+    <li>Отворете списъка с модели на предавателя и изберете <span class="ui">New model</span> (нов модел).</li>
+    <li>Отворете папката с шаблони <span class="ui">3.SoarEdgeTx</span> и изберете шаблона за вашия предавател:
+      <table>
+        <thead><tr><th>Предавател</th><th>Шаблон</th><th>Какво съдържа</th></tr></thead>
+        <tbody>
+          <tr><td>RadioMaster TX15</td><td class="nowrap"><code>tx15-MTail</code></td><td>пълен набор, 14 глобални променливи; модул CRSF (ExpressLRS/Crossfire), 16 канала</td></tr>
+          <tr><td>RadioMaster TX16S MK3</td><td class="nowrap"><code>tx16s-mk3-MTail</code></td><td>пълен набор, 14 променливи; CRSF, 16 канала</td></tr>
+          <tr><td>TX16S, TX16S MkII, T16, T18 и подобни</td><td class="nowrap"><code>tx16s-MTail</code></td><td>съвместим набор, 9 променливи; вграден мултипротоколен модул, 8 канала</td></tr>
+        </tbody>
+      </table>
+    </li>
+    <li>Ако желаете, преименувайте модела в настройките му.</li>
+    <li>Проверете радиомодула. Ако използвате друга радиосистема, сменете типа на модула в настройките на модела. Сдвоете приемника с предавателя (bind).</li>
+    <li>Настройте failsafe така, че при загуба на сигнал моторът да спира (CH3 — минимум).</li>
+  </ol>
+  <div class="callout note"><span class="t">Шаблонът tx16s-MTail (9 променливи)</span>Част от параметрите в него са фиксирани и на страниците за настройка се показват като <b>N/A</b>: <span class="ui">Elevator Travel</span>, <span class="ui">Aileron -&gt; Elevator</span>, <span class="ui">Rudder -&gt; Elevator</span>, <span class="ui">Flap Differential</span> и големината на термичния камбер. Миксовете на кормилото за височина от елероните и от кормилото за посока работят с фиксирана стойност 20.</div>
+</section>
+
+<section id="s4">
+  <h2><span class="n">4</span>Свържете сервомашинките</h2>
+  <figure class="wiring">
+    <svg viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg" font-family="PT Sans, sans-serif" role="img" aria-label="Схема на свързване на каналите за шаблона MTail">
+      <text x="20" y="30" font-size="13" fill="#5d6a77">↑ посока на полета</text>
+      <rect x="40" y="112" width="620" height="33" rx="12" fill="#eef2f6" stroke="#8a96a3" stroke-width="1.5"/>
+      <rect x="52" y="145" width="138" height="15" rx="2" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+      <rect x="196" y="145" width="134" height="15" rx="2" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5"/>
+      <rect x="370" y="145" width="134" height="15" rx="2" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5"/>
+      <rect x="510" y="145" width="138" height="15" rx="2" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+      <rect x="262" y="288" width="176" height="17" rx="6" fill="#eef2f6" stroke="#8a96a3" stroke-width="1.5"/>
+      <rect x="266" y="305" width="74" height="13" rx="2" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+      <rect x="360" y="305" width="74" height="13" rx="2" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+      <path d="M350 34 C362 34 367 52 367 74 L362 250 L356 352 L344 352 L338 250 L333 74 C333 52 338 34 350 34 Z" fill="#e3e9ef" stroke="#8a96a3" stroke-width="1.5"/>
+      <rect x="318" y="27" width="64" height="5" rx="2.5" fill="#64748b"/>
+      <circle cx="350" cy="30" r="5" fill="#475569"/>
+      <rect x="347" y="282" width="6" height="64" rx="2" fill="#cfd6de" stroke="#8a96a3" stroke-width="1"/>
+      <rect x="347" y="346" width="6" height="30" rx="2" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+
+      <line x1="386" y1="30" x2="402" y2="30" stroke="#64748b" stroke-width="1.2"/>
+      <text x="408" y="34" font-size="14" font-weight="700" fill="#334155">CH3 · Moto</text>
+      <text x="408" y="51" font-size="13" fill="#334155">регулатор на мотора (ESC)</text>
+
+      <line x1="121" y1="161" x2="121" y2="178" stroke="#2563eb" stroke-width="1.2"/>
+      <text x="121" y="195" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">CH1 · Ai-L</text>
+      <text x="121" y="212" text-anchor="middle" font-size="13" fill="#334155">ляв елерон</text>
+
+      <line x1="263" y1="161" x2="263" y2="178" stroke="#0d9488" stroke-width="1.2"/>
+      <text x="263" y="195" text-anchor="middle" font-size="14" font-weight="700" fill="#0f766e">CH4 · Fl-L</text>
+      <text x="263" y="212" text-anchor="middle" font-size="13" fill="#334155">лява задкрилка</text>
+
+      <line x1="437" y1="161" x2="437" y2="178" stroke="#0d9488" stroke-width="1.2"/>
+      <text x="437" y="195" text-anchor="middle" font-size="14" font-weight="700" fill="#0f766e">CH5 · Fl-R</text>
+      <text x="437" y="212" text-anchor="middle" font-size="13" fill="#334155">дясна задкрилка</text>
+
+      <line x1="579" y1="161" x2="579" y2="178" stroke="#2563eb" stroke-width="1.2"/>
+      <text x="579" y="195" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">CH2 · Ai-R</text>
+      <text x="579" y="212" text-anchor="middle" font-size="13" fill="#334155">десен елерон</text>
+
+      <line x1="264" y1="311" x2="250" y2="311" stroke="#ea580c" stroke-width="1.2"/>
+      <text x="244" y="307" text-anchor="end" font-size="14" font-weight="700" fill="#c2410c">CH7 · ElevL</text>
+      <text x="244" y="324" text-anchor="end" font-size="13" fill="#334155">лява половина на</text>
+      <text x="244" y="341" text-anchor="end" font-size="13" fill="#334155">кормилото за височина</text>
+
+      <line x1="436" y1="311" x2="450" y2="311" stroke="#ea580c" stroke-width="1.2"/>
+      <text x="456" y="307" font-size="14" font-weight="700" fill="#c2410c">CH8 · ElevR</text>
+      <text x="456" y="324" font-size="13" fill="#334155">дясна половина на</text>
+      <text x="456" y="341" font-size="13" fill="#334155">кормилото за височина</text>
+
+      <line x1="355" y1="364" x2="370" y2="364" stroke="#7c3aed" stroke-width="1.2"/>
+      <text x="376" y="368" font-size="14" font-weight="700" fill="#6d28d9">CH6 · Rudd</text>
+      <text x="376" y="385" font-size="13" fill="#334155">кормило за посока</text>
+    </svg>
+    <figcaption>Фиг. 1. Свързване при шаблона MTail, изглед отгоре. До номера на канала е името на изхода в модела.</figcaption>
+  </figure>
+
+  <table>
+    <thead><tr><th>Канал</th><th>Име в модела</th><th>Какво се свързва</th></tr></thead>
+    <tbody>
+      <tr><td>CH1</td><td><code>Ai-L</code></td><td>ляв елерон</td></tr>
+      <tr><td>CH2</td><td><code>Ai-R</code></td><td>десен елерон</td></tr>
+      <tr><td>CH3</td><td><code>Moto</code></td><td>регулатор на мотора (ESC)</td></tr>
+      <tr><td>CH4</td><td><code>Fl-L</code></td><td>лява задкрилка</td></tr>
+      <tr><td>CH5</td><td><code>Fl-R</code></td><td>дясна задкрилка</td></tr>
+      <tr class="hl"><td>CH6</td><td><code>Rudd</code></td><td>кормило за посока</td></tr>
+      <tr class="hl"><td>CH7</td><td><code>ElevL</code></td><td>лява половина на кормилото за височина</td></tr>
+      <tr class="hl"><td>CH8</td><td><code>ElevR</code></td><td>дясна половина на кормилото за височина</td></tr>
+    </tbody>
+  </table>
+  <p>Крилото и моторът се свързват еднакво във всички варианти на шаблона (MTail, VTail, XTail), разликата е само в опашката. Шаблонът е неутрален: центровете, ходовете, реверсите и кривите не са настроени за конкретен планер — това става в раздел 6. Кривите CV1–CV6 в началото са линейни: −100, −50, 0, 50, 100.</p>
+</section>
+
+<section id="s5" class="page-break">
+  <h2><span class="n">5</span>Екрани и управление на уиджета</h2>
+  <p>В шаблона вече има два екрана с уиджета SoarF5J. <b>Екран 1</b> — състезание (Page = 1). <b>Екран 2</b> — шест плочки за настройка (Page = 2…7) в две колони: вляво <span class="ui">Switches</span>, <span class="ui">Mixes &amp; Battery</span>, <span class="ui">Outputs</span>, вдясно <span class="ui">Wing alignment</span>, <span class="ui">Airbrake curves</span>, <span class="ui">Aileron/camber</span>. Екраните се сменят с бутона <kbd>PAGE</kbd> или с плъзгане.</p>
+  <table>
+    <thead><tr><th>Page</th><th>Заглавие на екрана</th><th>Какво настройва</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><span class="ui">Ready</span>, <span class="ui">Motor ON</span>, <span class="ui">Glide</span>…</td><td>състезание по F5J: мотор, планиране, финиш, стартова височина, гласово отброяване</td></tr>
+      <tr><td>2</td><td><span class="ui">Switches</span></td><td>кой превключвател за какво отговаря</td></tr>
+      <tr><td>3</td><td><span class="ui">Mixes &amp; Battery</span></td><td>стойности на миксовете за полетния режим, праг на батерията на приемника</td></tr>
+      <tr><td>4</td><td><span class="ui">Outputs</span></td><td>ред на каналите, реверс, център и крайни точки</td></tr>
+      <tr><td>5</td><td><span class="ui">Wing alignment</span></td><td>подравняване на елероните и задкрилките</td></tr>
+      <tr><td>6</td><td><span class="ui">Airbrake curves</span></td><td>криви на спирачките (crow) за задкрилките и елероните</td></tr>
+      <tr><td>7</td><td><span class="ui">Aileron/camber</span></td><td>ход на елероните, връзка със задкрилките, камбер и максимален рефлекс</td></tr>
+    </tbody>
+  </table>
+  <h3>Как се отваря страница</h3>
+  <ol class="steps">
+    <li>Задръжте пръст върху плочката, докато се появи меню, и изберете <span class="ui">Full screen</span>. Ако плочките само се оградят с рамка, докоснете нужната плочка още веднъж — тогава се появява менюто. С бутоните: задръжте <kbd>Enter</kbd>, изберете плочката с колелото, натиснете <kbd>Enter</kbd> и изберете <span class="ui">Full screen</span>. Обикновено докосване или <kbd>Enter</kbd> не отваря страницата: EdgeTX предава бутоните и докосванията на уиджета само на цял екран.</li>
+    <li>Страниците, които движат кормилата, първо показват предупреждение <span class="ui">W A R N I N G</span>: „Please disable the motor!“. Натиснете <kbd>Enter</kbd> едва след като моторът е изключен.</li>
+    <li>Изход — бутонът <span class="ui">X</span> горе вдясно или продължително натискане на <kbd>RTN</kbd>. При изход временните режими за настройка се изключват.</li>
+  </ol>
+  <table>
+    <thead><tr><th>Бутон или жест</th><th>Действие</th></tr></thead>
+    <tbody>
+      <tr><td><kbd>Next</kbd> / <kbd>Prev</kbd> (колелото или бутоните)</td><td>преминаване между полетата</td></tr>
+      <tr><td><kbd>Enter</kbd></td><td>натискане на бутон, начало или край на въвеждането</td></tr>
+      <tr><td><kbd>Inc</kbd> / <kbd>Dec</kbd> (колелото при въвеждане)</td><td>промяна на стойността</td></tr>
+      <tr><td><kbd>Exit</kbd> (<kbd>RTN</kbd>)</td><td>изход от полето или от подсказката</td></tr>
+      <tr><td>Докосване и плъзгане</td><td>избор, плъзгачи, превъртане на списъка</td></tr>
+    </tbody>
+  </table>
+  <div class="callout note"><span class="t">Не е нужно запазване</span>Промените се записват в модела веднага, бутон „Запази“ няма.</div>
+  <div class="callout tip"><span class="t">Няма уиджет на екрана?</span>Например в модел, създаден по-рано. Отворете настройките на екраните на модела, добавете уиджета <span class="ui">SoarF5J</span> и изберете в настройките му нужния <span class="ui">Page</span>.</div>
+</section>
+
+<section id="s6" class="page-break">
+  <h2><span class="n">6</span>Настройка на модела стъпка по стъпка</h2>
+  <p>Изпълнявайте стъпките по ред. Моторът е разкачен, моделът е добре закрепен.</p>
+
+  <h3>6.1. Превключватели <span class="tag">Page 2 · Switches</span></h3>
+  <p>Във всеки ред има падащ списък с положение на превключвател. Проверете зададените положения и при нужда ги сменете.</p>
+  <table>
+    <thead><tr><th>Ред на екрана</th><th class="nowrap">По подразбиране</th><th>Какво прави</th></tr></thead>
+    <tbody>
+      <tr><td><span class="ui">Launch mode (Motor Arm) and flight timer control</span></td><td><span class="sw">SA↓</span></td><td>активиране на мотора (arm), нулиране на полета и управление на таймера</td></tr>
+      <tr><td><span class="ui">Start/Stop timer and Motor</span></td><td><span class="sw">SE↓</span></td><td>щракване надолу-нагоре: старт и стоп на мотора и таймера</td></tr>
+      <tr><td><span class="ui">Allow vario and voice reporting of altitude</span></td><td><span class="sw">SB↓</span></td><td>разрешава гласовото съобщаване на височината (заедно с последния ред)</td></tr>
+      <tr><td><span class="ui">Variometer sound</span></td><td><span class="sw">NONE</span></td><td>звук на вариометъра (източника изберете в настройките за телеметрия на модела); при NONE — винаги, освен при SA↓</td></tr>
+      <tr><td><span class="ui">Speed flight mode</span></td><td><span class="sw">SD↑</span></td><td>полетен режим Speed</td></tr>
+      <tr><td><span class="ui">Float flight mode</span></td><td><span class="sw">SD↓</span></td><td>полетен режим Float</td></tr>
+      <tr><td><span class="ui">Landing</span></td><td><span class="sw">SF↓</span></td><td>режим за кацане: спирачки (crow) със стика за газ</td></tr>
+      <tr><td><span class="ui">Landing off / crow off</span></td><td><span class="sw">SF↑</span></td><td>изход от режима за кацане</td></tr>
+      <tr class="hl"><td><span class="ui">Aileron -&gt; Elevator</span></td><td><span class="sw">SA↑</span></td><td>микс: елерони → половините на кормилото за височина</td></tr>
+      <tr class="hl"><td><span class="ui">Rudder -&gt; Elevator</span></td><td><span class="sw">NONE</span></td><td>микс: кормило за посока → половините на кормилото за височина; при NONE работи винаги</td></tr>
+      <tr><td><span class="ui">Model Timer 1 report every 10 sec.</span></td><td><span class="sw">SC↓</span></td><td>съобщава таймер 1 на всеки 10 секунди</td></tr>
+      <tr><td><span class="ui">Report current altitude every 10 sec.</span></td><td><span class="sw">SB↑</span></td><td>съобщава височината на всеки 10 секунди (само заедно с третия ред)</td></tr>
+    </tbody>
+  </table>
+  <div class="callout warn"><span class="t">NONE не означава „изключено“</span>В EdgeTX празното условие се смята за изпълнено, затова ред с NONE обикновено означава „работи винаги“. Не задавайте NONE на функции, които трябва да са изключени, например <span class="ui">Landing</span> или <span class="ui">Speed flight mode</span>. Миксът се изключва със стойност 0 на страницата <span class="ui">Mixes &amp; Battery</span> (стъпка 6.6).</div>
+  <ul class="plain">
+    <li><span class="sw">SA</span> има две роли: надолу — активиране на мотора, нагоре — миксът <span class="ui">Aileron -&gt; Elevator</span>, в средата — нито едното, нито другото.</li>
+    <li>Ако искате да включвате <span class="ui">Rudder -&gt; Elevator</span> ръчно, задайте му свободен превключвател.</li>
+    <li>За <span class="ui">Start/Stop timer and Motor</span> най-удобен е бутон с пружина. С обикновен превключвател връщайте <span class="sw">SE</span> нагоре веднага след щракването: <span class="sw">SE↓</span> по време на работа на мотора го изключва.</li>
+    <li>Гласовото съобщаване на височината работи само когато са включени и двата реда — третият и последният. По подразбиране това са <span class="sw">SB↓</span> и <span class="sw">SB↑</span>, които не могат да са включени едновременно. За да чувате височината при <span class="sw">SB↓</span>, задайте на реда <span class="ui">Report current altitude every 10 sec.</span> стойност NONE.</li>
+  </ul>
+
+  <h3>6.2. Канали и посоки <span class="tag">Page 4 · Outputs</span></h3>
+  <p>Страницата показва именуваните канали. Във всеки ред има номер на канала, име, стрелка за посоката и лента с три точки — долен край, център, горен край — с показалец на текущото положение.</p>
+  <ul class="plain">
+    <li><b>Посока:</b> изберете стрелката и натиснете <kbd>Enter</kbd> или я докоснете — посоката на канала се обръща (реверс).</li>
+    <li><b>Център и крайни точки:</b> изберете лентата и натиснете <kbd>Enter</kbd>, след това изберете какво да променяте: <span class="ui">Offset</span> — трите точки заедно, <span class="ui">Range</span> — ходът симетрично, <span class="ui">Lower</span> — долният край, <span class="ui">Center</span> — центърът, <span class="ui">Upper</span> — горният край. Променяйте с <kbd>Inc</kbd>/<kbd>Dec</kbd> или като плъзгате точката и завършете с <kbd>Enter</kbd> или <kbd>Exit</kbd>.</li>
+    <li><b>Номер на канала:</b> <kbd>Enter</kbd> върху номера и <kbd>Inc</kbd>/<kbd>Dec</kbd> преместват канала заедно с миксовете му на друг изход. Това е нужно само ако сервомашинките не са свързани по таблицата от раздел 4.</li>
+  </ul>
+  <table>
+    <thead><tr><th>Действие</th><th>Правилна реакция</th></tr></thead>
+    <tbody>
+      <tr><td>Стик за височина към себе си</td><td>двете половини на кормилото за височина нагоре</td></tr>
+      <tr><td>Стик за посока надясно</td><td>кормилото за посока надясно</td></tr>
+      <tr><td>Стик за елерони надясно</td><td>десният елерон нагоре, левият надолу</td></tr>
+    </tbody>
+  </table>
+  <p><b>При <span class="nb">M-tail</span></b> първо направете така, че двете половини на кормилото за височина да се движат заедно: при нужда обърнете посоката на <code>ElevL</code> или <code>ElevR</code>. След това настройте <span class="ui">Center</span>, <span class="ui">Lower</span> и <span class="ui">Upper</span>: в неутрално положение половините трябва да стоят равно, а ходът нагоре и надолу да е еднакъв. Ако миксовете <span class="ui">Aileron -&gt; Elevator</span> и <span class="ui">Rudder -&gt; Elevator</span> са включени, при движение на стиковете за елерони и за посока половините на кормилото за височина се движат в различни посоки — това е нормално (стъпка 6.6).</p>
+
+  <h3>6.3. Подравняване на крилото <span class="tag">Page 5 · Wing alignment</span></h3>
+  <p>Подравнява четирите повърхности на крилото: <span class="ui">Lft ail</span>, <span class="ui">Lft flp</span>, <span class="ui">Rgt flp</span>, <span class="ui">Rgt ail</span>. Промените се записват в кривите и в центъра и крайните точки на каналите.</p>
+  <ul class="plain">
+    <li>Стикът за газ избира една от петте точки на кривата.</li>
+    <li>Тримерът за газ движи двете задкрилки, тримерът за височина — двата елерона.</li>
+    <li>Тримерът за посока подравнява лявата задкрилка спрямо дясната, а тримерът за елерони — левия елерон спрямо десния.</li>
+    <li>Плъзгачите на екрана движат отделните повърхности.</li>
+    <li>Ред: първо крайните точки, после центъра, накрая ±50 %.</li>
+    <li><span class="ui">Reset</span> връща подравняването в началното състояние — натискайте го само ако искате да започнете отначало.</li>
+  </ul>
+
+  <h3>6.4. Спирачки <span class="tag">Page 6 · Airbrake curves</span></h3>
+  <ul class="plain">
+    <li>Стикът за газ избира точка от кривата, а повърхностите се движат на живо.</li>
+    <li>Тримерът за газ променя кривата на задкрилките, тримерът за височина — кривата на елероните. Плъзгачите <span class="ui">Flaps</span> и <span class="ui">Aileron</span> на екрана също работят.</li>
+    <li>Обикновено при напълно включени спирачки задкрилките са спуснати, а елероните — вдигнати.</li>
+    <li><span class="ui">Reset</span> връща началната форма на кривите.</li>
+  </ul>
+
+  <h3>6.5. Елерони и камбер <span class="tag">Page 7 · Aileron/camber</span></h3>
+  <ul class="plain">
+    <li>Вертикалният плъзгач задава максималния рефлекс; камберът се отчита надолу от това положение.</li>
+    <li>Докато страницата е отворена, тримерите променят параметри: тримерът за елерони — хода на елероните (<code>Ail</code>), тримерът за посока — елерони → задкрилки (<code>AiF</code>), тримерът за височина — камбер → елерони (<code>CbA</code>), тримерът за газ — големината на термичния камбер (<code>CbX</code>; в tx16s — N/A).</li>
+    <li>В полет положението на камбера се задава от входа <code>CbP</code> — по подразбиране тример T3 (при Mode 2 това обикновено е тримерът за газ). След изход от страницата тримерите отново работят нормално.</li>
+  </ul>
+
+  <h3>6.6. Миксове за <span class="nb">M-tail</span> и батерия <span class="tag">Page 3 · Mixes &amp; Battery</span></h3>
+  <p>Стойностите се пазят отделно за всеки полетен режим. Първо включете режима с превключвателя — Cruise (по подразбиране), Speed (<span class="sw">SD↑</span>) или Float (<span class="sw">SD↓</span>) — и едва след това променяйте стойностите. Текущият режим се вижда горе вдясно, например <span class="ui">FM0:Cruise</span>. Докато страницата е отворена, тримерите също променят стойностите на миксовете.</p>
+  <table>
+    <thead><tr><th>Поле</th><th class="nowrap">В шаблона</th><th>Кога работи</th></tr></thead>
+    <tbody>
+      <tr><td><span class="ui">Aileron -&gt; Elevator</span></td><td>20 (Cruise)</td><td>в Cruise, Speed и Float, когато превключвателят на микса е включен (по подразбиране <span class="sw">SA↑</span>)</td></tr>
+      <tr><td><span class="ui">Rudder -&gt; Elevator</span></td><td>20 (Cruise)</td><td>в Cruise, Speed и Float, когато превключвателят на микса е включен; при NONE — винаги</td></tr>
+    </tbody>
+  </table>
+  <p>Двата микса движат половините на кормилото за височина в различни посоки и така кормилото за височина помага за крена. Знакът на стойността задава посоката, а 0 изключва микса. Проверете стойностите във всеки режим: Cruise, Speed и Float.</p>
+
+  <figure>
+    <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" font-family="PT Sans, sans-serif" role="img" aria-label="Изглед отзад: десният елерон и дясната половина на кормилото за височина нагоре, левите надолу">
+      <defs>
+        <marker id="ah-bg-b" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#2563eb"/></marker>
+        <marker id="ah-bg-o" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#ea580c"/></marker>
+      </defs>
+      <rect x="70" y="58" width="560" height="9" rx="4.5" fill="#eef2f6" stroke="#8a96a3" stroke-width="1.5"/>
+      <rect x="70" y="58" width="120" height="9" rx="4.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+      <rect x="510" y="58" width="120" height="9" rx="4.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+      <circle cx="350" cy="64" r="17" fill="#e3e9ef" stroke="#8a96a3" stroke-width="1.5"/>
+      <line x1="130" y1="74" x2="130" y2="100" stroke="#2563eb" stroke-width="3" marker-end="url(#ah-bg-b)"/>
+      <line x1="570" y1="50" x2="570" y2="24" stroke="#2563eb" stroke-width="3" marker-end="url(#ah-bg-b)"/>
+      <text x="150" y="98" font-size="13" fill="#1d4ed8">ляв елерон надолу</text>
+      <text x="550" y="30" text-anchor="end" font-size="13" fill="#1d4ed8">десен елерон нагоре</text>
+
+      <rect x="346" y="104" width="8" height="40" rx="2" fill="#cfd6de" stroke="#8a96a3" stroke-width="1"/>
+      <rect x="250" y="142" width="200" height="9" rx="4.5" fill="#eef2f6" stroke="#8a96a3" stroke-width="1.5"/>
+      <rect x="250" y="142" width="92" height="9" rx="4.5" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+      <rect x="358" y="142" width="92" height="9" rx="4.5" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+      <line x1="296" y1="158" x2="296" y2="184" stroke="#ea580c" stroke-width="3" marker-end="url(#ah-bg-o)"/>
+      <line x1="404" y1="135" x2="404" y2="109" stroke="#ea580c" stroke-width="3" marker-end="url(#ah-bg-o)"/>
+      <text x="284" y="182" text-anchor="end" font-size="13" fill="#c2410c">лява половина надолу</text>
+      <text x="416" y="116" font-size="13" fill="#c2410c">дясна половина нагоре</text>
+      <text x="20" y="190" font-size="12" fill="#5d6a77">изглед отзад</text>
+    </svg>
+    <figcaption>Фиг. 2. Стикът за елерони надясно, миксът <span class="ui">Aileron -&gt; Elevator</span> е включен: половините на кормилото за височина работят като елероните от своята страна.</figcaption>
+  </figure>
+
+  <h3>Проверка на посоката</h3>
+  <ol class="steps">
+    <li>Включете микса с превключвателя (за <span class="ui">Aileron -&gt; Elevator</span> по подразбиране <span class="sw">SA↑</span>).</li>
+    <li>Стик за елерони надясно: дясната половина на кормилото за височина трябва да се вдигне, а лявата — да се спусне, както елероните (фиг. 2).</li>
+    <li>Ако е обратно, сменете знака: 20 → −20.</li>
+    <li><span class="ui">Rudder -&gt; Elevator</span> със същия знак при стик за посока надясно движи половините така, както стикът за елерони надясно. Ако сте сменили знака на <span class="ui">Aileron -&gt; Elevator</span>, сменете го и тук.</li>
+    <li>Започнете с малки стойности и ги проверете в полет на безопасна височина.</li>
+  </ol>
+  <div class="callout warn"><span class="t">Rudder -&gt; Elevator работи веднага</span>В текущата версия на шаблона този микс няма превключвател (NONE), а EdgeTX смята празното условие за изпълнено. Затова миксът е включен постоянно със стойност 20. Ако не ви трябва, задайте 0 в Cruise, Speed и Float. Ако го искате с превключвател, задайте превключвател на страницата <span class="ui">Switches</span> (стъпка 6.1).</div>
+  <div class="callout note"><span class="t">Шаблонът tx16s-MTail</span>Тук двете полета показват N/A: стойността е зададена направо в миксовете на CH7 и CH8, това са редовете <code>AilEle</code> и <code>RudEle</code> с тегло +20 на CH7 и −20 на CH8. За да смените посоката, сменете знаците в тези редове в менюто с миксове на модела. За да изключите микса, задайте тегло 0.</div>
+  <p><span class="ui">Battery warning level (V)</span> — праг на напрежението на батерията на приемника. Под прага предавателят вибрира и казва напрежението, не по-често от веднъж на 20 секунди.</p>
+
+  <h3>6.7. Проверка на мотора <span class="tag">витлото е свалено!</span></h3>
+  <ol class="steps">
+    <li>Отворете монитора на каналите на предавателя.</li>
+    <li>Без активиране (SA не е долу) CH3 стои на −100 при всяко положение на стика за газ.</li>
+    <li>Активиране — <span class="sw">SA↓</span>. Старт — <span class="sw">SE↓</span> и веднага обратно: моторът тръгва, когато превключвателят се върне. Включва се полетният режим Motor и CH3 следва стика за газ.</li>
+    <li>Намерете положението на стика, при което CH3 = +100 (пълна газ). Входът на мотора в шаблона е обърнат (<code>I4:Mot</code>: източник <code>Thr</code>, тегло −100). В момента на старта моторът веднага получава газта, която отговаря на положението на стика.</li>
+    <li>Изключване: отново <span class="sw">SE↓</span>, преместване на SA от долното положение или автоматично след 30 секунди работа на мотора.</li>
+    <li>Едва след тази проверка свържете мотора и поставете витлото.</li>
+  </ol>
+</section>
+
+<section id="s7">
+  <h2><span class="n">7</span>Полет по F5J с уиджета</h2>
+  <p>Екран 1 (Page = 1) показва състоянието на полета, работното време, времето на мотора и стартовата височина.</p>
+  <div class="flow">
+    <span class="st">Ready</span><span class="arr">→</span>
+    <span class="st">Motor ON</span><span class="arr">→</span>
+    <span class="st">Glide</span><span class="arr">→</span>
+    <span class="st">Finished</span>
+    <span class="note">или</span>
+    <span class="st zero">Zero result</span>
+  </div>
+  <ol class="steps">
+    <li><span class="ui">Ready</span> — на екрана е работното време от таймер 1, по подразбиране 10:00. За да го смените, отворете уиджета на цял екран и натискайте <kbd>Inc</kbd>/<kbd>Dec</kbd> (стъпка 1 минута) или сменете <span class="ui">Start</span> на таймер 1 в настройките на модела.</li>
+    <li><span class="sw">SA↓</span> — активиране: полетът, таймерите и височината се нулират.</li>
+    <li><span class="sw">SE↓</span> и обратно — старт на мотора, състояние <span class="ui">Motor ON</span>. Гласът казва 10 и 15 секунди работа на мотора, а от 20-ата секунда отброява 10…1 до 30 секунди.</li>
+    <li>Моторът спира (<span class="sw">SE↓</span>, SA извън долното положение или автоматично на 30-ата секунда) — състояние <span class="ui">Glide</span>. Стартовата височина (сензор <code>Alt+</code>) се записва, докато моторът работи, и още 10 секунди след спирането му.</li>
+    <li>Веднага преместете SA нагоре (<span class="sw">SA↑</span>): това деактивира мотора и включва микса <span class="ui">Aileron -&gt; Elevator</span>. Докато SA е долу, следващото щракване на SE ще пусне мотора отново.</li>
+    <li>При планиране гласът казва оставащото работно време: всяка минута, докато остават повече от 2 минути; на всеки 15 секунди от 2 до 1 минута; на всеки 5 секунди от 1 минута до 10 секунди; след това всяка секунда 10…1.</li>
+    <li>Кацане: <span class="sw">SF↓</span> — режим за кацане, стикът за газ управлява спирачките; <span class="sw">SF↑</span> — изход от него.</li>
+    <li>Финиш: щракване на <span class="sw">SE</span> (SA не е долу) — състояние <span class="ui">Finished</span>, времето е записано. Ако уиджетът е отворен на цял екран, работят и <kbd>Enter</kbd> или докосване. Следващото натискане нулира към <span class="ui">Ready</span> за нов полет.</li>
+  </ol>
+  <div class="callout warn"><span class="t">Нулев резултат</span>Повторното пускане на мотора по време на планиране дава <span class="ui">Zero result</span>, както в правилата на F5J. Не премествайте SA надолу по време на полет: това е ново активиране и нулира полета.</div>
+  <p>Уиджетът не записва дневник на полетите.</p>
+
+  <h2 id="s8"><span class="n">8</span>Ако нещо не е наред</h2>
+  <table>
+    <thead><tr><th>Какво виждате</th><th>Какво да направите</th></tr></thead>
+    <tbody>
+      <tr><td>SoarF5J липсва в списъка с уиджети</td><td>Проверете дали на картата има <code>/WIDGETS/SoarF5J/main.lua</code> и рестартирайте предавателя.</td></tr>
+      <tr><td>Съобщение „Curve #32 is missing“</td><td>Моделът не е създаден от шаблон. Създайте го от шаблон в папката <span class="ui">3.SoarEdgeTx</span>.</td></tr>
+      <tr><td>Страницата съобщава, че липсва <code>input8</code>, крива или канал</td><td>Моделът не отговаря на шаблона — започнете от шаблон.</td></tr>
+      <tr><td>Плочката не се отваря, на нея има само заглавие</td><td>Така трябва: страницата работи само на цял екран. Задръжте пръст върху плочката и изберете <span class="ui">Full screen</span> (раздел 5).</td></tr>
+      <tr><td>Няма екран с плочките за настройка</td><td>Създайте модела от шаблон. Ако EdgeTX е по-стар от 2.12, обновете го или вземете новия пакет: в старите шаблони екран 2 беше с оформление 1×6, което EdgeTX преди 2.12 не зарежда.</td></tr>
+      <tr><td>В полетата пише N/A</td><td>Шаблон tx16s: тези стойности са фиксирани в шаблона (раздел 3).</td></tr>
+      <tr><td>Стойностите се промениха в друг режим</td><td>Първо включете нужния полетен режим, после променяйте стойностите.</td></tr>
+      <tr><td>След обновяване всичко работи както преди</td><td>Изтрийте <code>/WIDGETS/SoarF5J</code>, копирайте новата папка и рестартирайте предавателя. Ако не помогне, махнете уиджета от екрана и го добавете отново.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="s9"><span class="n">9</span>Проверка преди първия полет</h2>
+  <ul class="check">
+    <li>Всички кормила се отклоняват в правилната посока в режимите Cruise, Speed и Float.</li>
+    <li>Половините на кормилото за височина стоят равно в неутрално положение и имат еднакъв ход.</li>
+    <li>Миксовете <span class="ui">Aileron -&gt; Elevator</span> и <span class="ui">Rudder -&gt; Elevator</span> помагат за крена в правилната посока, стойностите са малки; <span class="ui">Rudder -&gt; Elevator</span> е включен съзнателно или е на 0.</li>
+    <li>Без активиране CH3 е на минимум; failsafe спира мотора.</li>
+    <li>Моторът спира с щракване на SE и автоматично след 30 секунди.</li>
+    <li>Режим за кацане (<span class="sw">SF↓</span>): задкрилките надолу, елероните нагоре, стикът за газ управлява плавно спирачките.</li>
+    <li>Телеметрията за височината и за напрежението на приемника се вижда, гласовите съобщения се чуват.</li>
+    <li>Проверката на обхвата е направена.</li>
+  </ul>
+
+  <p class="endnote">Подробна документация на английски — папката <code>docs</code> в хранилището <a href="https://github.com/vitas/soar-edgetx">github.com/vitas/soar-edgetx</a>. Ръководството описва шаблоните и уиджета към октомври 2026 г.</p>
+</section>
+
+</body>
+</html>
