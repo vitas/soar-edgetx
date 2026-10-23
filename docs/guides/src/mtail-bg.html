@@ -60,7 +60,7 @@
 <nav class="toc">
   <div class="toc-title">Съдържание</div>
   <ol>
-    <li><a href="#s1">Изтеглете пакета</a></li>
+    <li><a href="#s1">Обновете EdgeTX и изтеглете файловете</a></li>
     <li><a href="#s2">Копирайте файловете на SD картата</a></li>
     <li><a href="#s3">Създайте модел от шаблон</a></li>
     <li><a href="#s4">Свържете сервомашинките</a></li>
@@ -72,11 +72,22 @@
   </ol>
 </nav>
 
-<section id="s1">
-  <h2><span class="n">1</span>Изтеглете пакета</h2>
+<section id="s1" class="page-break">
+  <h2><span class="n">1</span>Обновете EdgeTX и изтеглете файловете</h2>
   <ol class="steps">
-    <li>Отворете страницата на проекта <a href="https://github.com/vitas/soar-edgetx">github.com/vitas/soar-edgetx</a> и натиснете <span class="ui">Code</span> → <span class="ui">Download ZIP</span>.</li>
-    <li>Разархивирайте файла. Всичко, което е нужно на предавателя, е в папката <code>dist/SDCARD</code> — това е готовата структура на SD картата.</li>
+    <li>Проверете версията на EdgeTX: <span class="ui">SYS</span> → последният раздел с иконката <span class="ui">i</span>, редът <span class="ui">VERS</span>. Нужна е EdgeTX 2.12 (последната е 2.12.5). Ако версията е по-стара, обновете фърмуера по ръководството на EdgeTX (<a href="https://manual.edgetx.org">manual.edgetx.org</a>), например с <a href="https://buddy.edgetx.org">EdgeTX Buddy</a>.</li>
+    <li>Изтеглете официалното съдържание на SD картата за EdgeTX 2.12. В последното издание 2.12 на <a href="https://github.com/EdgeTX/edgetx-sdcard/releases">github.com/EdgeTX/edgetx-sdcard/releases</a> (сега v2.12.3) вземете архива за екрана на вашия предавател:
+      <table>
+        <thead><tr><th>Предавател</th><th>Екран</th><th>Архив</th></tr></thead>
+        <tbody>
+          <tr><td>TX16S, TX16S MK2, T16, T18</td><td class="nowrap">480×272</td><td class="nowrap"><code>c480x272.zip</code></td></tr>
+          <tr><td>TX15</td><td class="nowrap">480×320</td><td class="nowrap"><code>c480x320.zip</code></td></tr>
+          <tr><td>TX16S MK3</td><td class="nowrap">800×480</td><td class="nowrap"><code>c800x480.zip</code></td></tr>
+        </tbody>
+      </table>
+    </li>
+    <li>Изтеглете гласов пакет със същата версия от <a href="https://github.com/EdgeTX/edgetx-sdcard-sounds/releases">github.com/EdgeTX/edgetx-sdcard-sounds/releases</a>, например <code>edgetx-sdcard-sounds-en-2.12.3.zip</code> за английски. Без него предавателят не казва числата: времето, височината и напрежението. Пакет на български няма, има на руски (<code>ru</code>).</li>
+    <li>Отворете страницата на проекта <a href="https://github.com/vitas/soar-edgetx">github.com/vitas/soar-edgetx</a>, натиснете <span class="ui">Code</span> → <span class="ui">Download ZIP</span> и разархивирайте файла. Папката <code>dist/SDCARD</code> не е пълна SD карта — от нея са нужни само три неща.</li>
   </ol>
 </section>
 
@@ -85,7 +96,8 @@
   <ol class="steps">
     <li>Свържете предавателя с компютъра с USB кабел и изберете режим <span class="ui">USB Storage (SD)</span> — картата ще се появи като диск. Можете и да извадите картата от предавателя и да я поставите в четец за карти.</li>
     <li>Направете резервно копие на картата, поне на папките <code>MODELS</code> и <code>RADIO</code>.</li>
-    <li>Копирайте от <code>dist/SDCARD</code> в основната директория на картата три неща:
+    <li>Първо официалното съдържание: разархивирайте архива на SD картата и гласовия пакет в основната директория на картата и потвърдете замяната на файловете. Моделите и вашите файлове остават.</li>
+    <li>След това копирайте от <code>dist/SDCARD</code> в основната директория на картата само три неща:
       <table>
         <thead><tr><th>Какво (от dist/SDCARD)</th><th>Къде на картата</th><th>За какво</th></tr></thead>
         <tbody>
@@ -122,7 +134,7 @@
   <div class="callout note"><span class="t">Шаблонът tx16s-MTail (9 променливи)</span>Част от параметрите в него са фиксирани и на страниците за настройка се показват като <b>N/A</b>: <span class="ui">Elevator Travel</span>, <span class="ui">Aileron -&gt; Elevator</span>, <span class="ui">Rudder -&gt; Elevator</span>, <span class="ui">Flap Differential</span> и големината на термичния камбер. Миксовете на кормилото за височина от елероните и от кормилото за посока работят с фиксирана стойност 20.</div>
 </section>
 
-<section id="s4">
+<section id="s4" class="page-break">
   <h2><span class="n">4</span>Свържете сервомашинките</h2>
   <figure class="wiring">
     <svg viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg" font-family="PT Sans, sans-serif" role="img" aria-label="Схема на свързване на каналите за шаблона MTail">

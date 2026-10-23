@@ -45,8 +45,13 @@ The widget files are installed under:
 dist/SDCARD/WIDGETS/SoarF5J/
 ```
 
-Copy the contents of `dist/SDCARD` to the radio SD-card root, or point the
-EdgeTX Companion simulator SD Structure path at `dist/SDCARD`.
+`dist/SDCARD` is not a complete SD card: it has no EdgeTX voice pack. On a
+radio, install the official EdgeTX 2.12 SD-card content and a voice pack first,
+then copy only `WIDGETS/SoarF5J`, `TEMPLATES/3.SoarEdgeTx`, and the `.wav`
+files in `SOUNDS/en` from `dist/SDCARD`. See
+[SD-card structure](sdcard-structure.md) for the archive that fits each radio.
+The EdgeTX Companion simulator SD Structure path can point at `dist/SDCARD`
+itself.
 
 When updating an existing radio SD card, delete the old `WIDGETS/SoarF5J`
 folder first, then copy the new one. This avoids stale compiled `.luac` files

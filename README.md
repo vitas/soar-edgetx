@@ -40,7 +40,7 @@ usage](docs/widget-setup-and-usage.md#setup-pages) for the full workflow.
 | Area | Configure | Details |
 | --- | --- | --- |
 | Template | Pick the correct tail template and wire outputs. | [model templates](docs/model-templates.md) |
-| SD card | Install the widget package and custom sound prompts. | [SD-card structure](docs/sdcard-structure.md) |
+| SD card | Install the official EdgeTX 2.12 SD card, then add the widget, templates, and sound prompts. | [SD-card structure](docs/sdcard-structure.md) |
 | Widget | Add `SoarF5J` and choose `Page`. | [widget setup and usage](docs/widget-setup-and-usage.md) |
 | Switches | Assign launch, motor, landing, voice, vario, and flight-mode switches on `Page = 2`. | [control assignments](docs/model-templates.md#current-control-assignments) |
 | Model setup | Tune outputs, wing alignment, brake curves, camber, mixes, and battery warning on `Page = 3..7`. | [setup pages](docs/widget-setup-and-usage.md#setup-pages) |
@@ -55,14 +55,17 @@ make package
 make verify
 ```
 
-Install to a mounted SD card:
+`dist/SDCARD` is not a complete SD card and has no EdgeTX voice pack. On a
+radio, install the official EdgeTX 2.12 SD-card content and a voice pack first,
+then copy only `WIDGETS/SoarF5J`, `TEMPLATES/3.SoarEdgeTx`, and the `.wav`
+files in `SOUNDS/en`; see [SD-card structure](docs/sdcard-structure.md). Later
+widget-only updates can use:
 
 ```sh
 make install-widget SDCARD=/Volumes/TX15
 ```
 
-Copy `dist/SDCARD` to the radio SD card, or point the Companion SD Structure
-path at it, then add the `SoarF5J` widget and pick a `Page`.
+The Companion simulator can use `dist/SDCARD` itself as its SD Structure path.
 
 ## More Docs
 

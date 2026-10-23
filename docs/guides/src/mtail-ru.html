@@ -60,7 +60,7 @@
 <nav class="toc">
   <div class="toc-title">Содержание</div>
   <ol>
-    <li><a href="#s1">Скачайте пакет</a></li>
+    <li><a href="#s1">Обновите EdgeTX и скачайте файлы</a></li>
     <li><a href="#s2">Скопируйте файлы на SD-карту</a></li>
     <li><a href="#s3">Создайте модель из шаблона</a></li>
     <li><a href="#s4">Подключите сервоприводы</a></li>
@@ -72,11 +72,22 @@
   </ol>
 </nav>
 
-<section id="s1">
-  <h2><span class="n">1</span>Скачайте пакет</h2>
+<section id="s1" class="page-break">
+  <h2><span class="n">1</span>Обновите EdgeTX и скачайте файлы</h2>
   <ol class="steps">
-    <li>Откройте страницу проекта <a href="https://github.com/vitas/soar-edgetx">github.com/vitas/soar-edgetx</a> и нажмите <span class="ui">Code</span> → <span class="ui">Download ZIP</span>.</li>
-    <li>Распакуйте архив. Всё, что нужно пульту, лежит в папке <code>dist/SDCARD</code> — это готовая структура SD-карты.</li>
+    <li>Проверьте версию EdgeTX: <span class="ui">SYS</span> → последняя вкладка со значком <span class="ui">i</span>, строка <span class="ui">VERS</span>. Нужна EdgeTX 2.12 (последняя — 2.12.5). Если версия ниже, обновите прошивку по руководству EdgeTX (<a href="https://manual.edgetx.org">manual.edgetx.org</a>), например через <a href="https://buddy.edgetx.org">EdgeTX Buddy</a>.</li>
+    <li>Скачайте официальное содержимое SD-карты для EdgeTX 2.12. В последнем выпуске 2.12 на <a href="https://github.com/EdgeTX/edgetx-sdcard/releases">github.com/EdgeTX/edgetx-sdcard/releases</a> (сейчас v2.12.3) возьмите архив под экран своего пульта:
+      <table>
+        <thead><tr><th>Пульт</th><th>Экран</th><th>Архив</th></tr></thead>
+        <tbody>
+          <tr><td>TX16S, TX16S MK2, T16, T18</td><td class="nowrap">480×272</td><td class="nowrap"><code>c480x272.zip</code></td></tr>
+          <tr><td>TX15</td><td class="nowrap">480×320</td><td class="nowrap"><code>c480x320.zip</code></td></tr>
+          <tr><td>TX16S MK3</td><td class="nowrap">800×480</td><td class="nowrap"><code>c800x480.zip</code></td></tr>
+        </tbody>
+      </table>
+    </li>
+    <li>Скачайте голосовой пакет той же версии с <a href="https://github.com/EdgeTX/edgetx-sdcard-sounds/releases">github.com/EdgeTX/edgetx-sdcard-sounds/releases</a>, например <code>edgetx-sdcard-sounds-ru-2.12.3.zip</code> для русского или <code>edgetx-sdcard-sounds-en-2.12.3.zip</code> для английского. Без него пульт не называет числа: время, высоту и напряжение.</li>
+    <li>Откройте страницу проекта <a href="https://github.com/vitas/soar-edgetx">github.com/vitas/soar-edgetx</a>, нажмите <span class="ui">Code</span> → <span class="ui">Download ZIP</span> и распакуйте архив. Папка <code>dist/SDCARD</code> — не полная SD-карта, в ней нет голосового пакета EdgeTX, поэтому из неё копируются только три вещи из раздела 2.</li>
   </ol>
 </section>
 
@@ -85,7 +96,8 @@
   <ol class="steps">
     <li>Подключите пульт к компьютеру USB-кабелем и выберите режим <span class="ui">USB Storage (SD)</span> — карта появится как диск. Можно и вынуть карту из пульта и вставить её в кардридер.</li>
     <li>Сделайте резервную копию карты, как минимум папок <code>MODELS</code> и <code>RADIO</code>.</li>
-    <li>Скопируйте из <code>dist/SDCARD</code> в корень карты три вещи:
+    <li>Сначала официальное содержимое: распакуйте архив SD-карты и голосовой пакет в корень карты и согласитесь на замену файлов. Модели и файлы, которые вы добавляли сами, останутся.</li>
+    <li>Затем скопируйте из <code>dist/SDCARD</code> в корень карты только три вещи:
       <table>
         <thead><tr><th>Что (из dist/SDCARD)</th><th>Куда на карте</th><th>Зачем</th></tr></thead>
         <tbody>
