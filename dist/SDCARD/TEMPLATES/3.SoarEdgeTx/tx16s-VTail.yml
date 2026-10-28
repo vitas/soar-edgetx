@@ -370,7 +370,7 @@ mixData:
     offset: 0
     name: ""
   - destCh: 6
-    srcRaw: I0
+    srcRaw: ch(17)
     weight: 50
     swtch: NONE
     curve:
@@ -389,7 +389,7 @@ mixData:
     offset: 0
     name: Vt-l
   - destCh: 6
-    srcRaw: ch(21)
+    srcRaw: ch(18)
     weight: -50
     swtch: NONE
     curve:
@@ -407,27 +407,8 @@ mixData:
     flightModes: 000000000
     offset: 0
     name:
-  - destCh: 6
-    srcRaw: I1
-    weight: 85
-    swtch: NONE
-    curve:
-      type: 0
-      value: 0
-    delayPrec: 0
-    delayUp: 0
-    delayDown: 0
-    speedPrec: 0
-    speedUp: 0
-    speedDown: 0
-    carryTrim: 0
-    mltpx: ADD
-    mixWarn: 0
-    flightModes: 000100000
-    offset: 0
-    name:
   - destCh: 7
-    srcRaw: I0
+    srcRaw: ch(17)
     weight: 50
     swtch: NONE
     curve:
@@ -446,7 +427,7 @@ mixData:
     offset: 0
     name:
   - destCh: 7
-    srcRaw: ch(21)
+    srcRaw: ch(18)
     weight: 50
     swtch: NONE
     curve:
@@ -464,25 +445,6 @@ mixData:
     flightModes: 000000000
     offset: 0
     name: Vt-R
-  - destCh: 7
-    srcRaw: I1
-    weight: 85
-    swtch: NONE
-    curve:
-      type: 0
-      value: 0
-    delayPrec: 0
-    delayUp: 0
-    delayDown: 0
-    speedPrec: 0
-    speedUp: 0
-    speedDown: 0
-    carryTrim: 0
-    mltpx: ADD
-    mixWarn: 0
-    flightModes: 000100000
-    offset: 0
-    name:
   - destCh: 10
     srcRaw: ch(30)
     weight: 100
@@ -521,6 +483,82 @@ mixData:
     flightModes: 000000000
     offset: 0
     name: ""
+  - destCh: 17
+    srcRaw: I0
+    weight: 100
+    swtch: NONE
+    curve:
+      type: 0
+      value: 0
+    delayPrec: 0
+    delayUp: 0
+    delayDown: 0
+    speedPrec: 0
+    speedUp: 0
+    speedDown: 0
+    carryTrim: 0
+    mltpx: ADD
+    mixWarn: 0
+    flightModes: 000000000
+    offset: 0
+    name:
+  - destCh: 17
+    srcRaw: I2
+    weight: gv(2)
+    swtch: NONE
+    curve:
+      type: 0
+      value: 0
+    delayPrec: 0
+    delayUp: 0
+    delayDown: 0
+    speedPrec: 0
+    speedUp: 0
+    speedDown: 0
+    carryTrim: 0
+    mltpx: ADD
+    mixWarn: 0
+    flightModes: 000000000
+    offset: 0
+    name: AilRud
+  - destCh: 18
+    srcRaw: ch(21)
+    weight: 100
+    swtch: NONE
+    curve:
+      type: 0
+      value: 0
+    delayPrec: 0
+    delayUp: 0
+    delayDown: 0
+    speedPrec: 0
+    speedUp: 0
+    speedDown: 0
+    carryTrim: 0
+    mltpx: ADD
+    mixWarn: 0
+    flightModes: 000000000
+    offset: 0
+    name:
+  - destCh: 18
+    srcRaw: I1
+    weight: 85
+    swtch: NONE
+    curve:
+      type: 0
+      value: 0
+    delayPrec: 0
+    delayUp: 0
+    delayDown: 0
+    speedPrec: 0
+    speedUp: 0
+    speedDown: 0
+    carryTrim: 0
+    mltpx: ADD
+    mixWarn: 0
+    flightModes: 000100000
+    offset: 0
+    name:
   - destCh: 19
     srcRaw: I3
     weight: 100
@@ -1313,6 +1351,24 @@ limitData:
     ppmCenter: 0
     symetrical: 0
     name: CtrF
+    curve: 0
+  17:
+    min: 0
+    max: 0
+    revert: 0
+    offset: 0
+    ppmCenter: 0
+    symetrical: 0
+    name: Rudd
+    curve: 0
+  18:
+    min: 0
+    max: 0
+    revert: 0
+    offset: 0
+    ppmCenter: 0
+    symetrical: 0
+    name: Elev
     curve: 0
   19:
     min: 0

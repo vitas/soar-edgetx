@@ -29,7 +29,8 @@ tx15-XTail  CH6 rudder, CH7 elevator, CH8 unused
 
 `tx15-XTail` deliberately has no aileron-to-elevator mix on the single elevator
 output. `tx15-VTail` uses `CH7/CH8` for the tail so an 8-channel receiver can
-be wired without receiver remapping.
+be wired without receiver remapping. Both V-tail servos mix the virtual rudder
+`CH18` and elevator `CH19` channels 50/50.
 
 The templates intentionally do not include aircraft-specific output endpoints,
 centers, reversals, or setup curve values. Start from the template, then use the

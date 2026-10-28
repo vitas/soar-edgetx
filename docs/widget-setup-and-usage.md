@@ -95,7 +95,9 @@ tx16s-mk3-XTail.yml
 
 All variants keep `CH1/CH2` for ailerons, `CH3` for motor, and `CH4/CH5` for
 flaps. `VTail` uses `CH7/CH8` for the V-tail so an 8-channel receiver can be
-wired without receiver remapping. `XTail` has no aileron-to-elevator or
+wired without receiver remapping. Both V-tail servos mix the virtual rudder
+`CH18` and elevator `CH19` channels 50/50, as described in
+`docs/model-templates.md`. `XTail` has no aileron-to-elevator or
 rudder-to-elevator mix on the single elevator output.
 
 With ExpressLRS, set `Packet Rate` to `100Hz Full` and `Switch Mode` to `8ch`
@@ -411,7 +413,7 @@ Edits mix-related global variables for the current flight mode:
 - Aileron travel.
 - Elevator travel.
 - Aileron to flap.
-- Aileron to elevator. This is used by TX15 MTail and VTail; XTail
+- Aileron to elevator. Only MTail uses it; VTail does not, and XTail
   intentionally leaves it disconnected from the single elevator output.
 - Aileron differential.
 - Flap differential for the aileron-to-flap path.

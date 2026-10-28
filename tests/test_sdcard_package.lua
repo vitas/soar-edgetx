@@ -194,6 +194,39 @@ local function find_mix_block_matching(blocks, expected)
   return nil
 end
 
+-- V-tail servos mix the virtual rudder CH18 and elevator CH19 50/50: rudder moves both
+-- servos the same way, elevator moves them in opposite directions.
+local function assert_vtail_mixes(model, elevator_weight)
+  local ch7_mixes = mix_blocks_for(model.content, 6)
+  local ch8_mixes = mix_blocks_for(model.content, 7)
+  local rudder_mixes = mix_blocks_for(model.content, 17)
+  local elevator_mixes = mix_blocks_for(model.content, 18)
+
+  assert_equal(#mix_blocks_for(model.content, 5), 0, model.label .. " CH6 should be unused")
+  assert_equal(#mix_blocks_for(model.content, 8), 0, model.label .. " CH9 should not be required")
+  assert_equal(#mix_blocks_for(model.content, 9), 0, model.label .. " CH10 should not be required")
+
+  assert_equal(#rudder_mixes, 2, model.label .. " CH18 mix count")
+  assert_mix_block(rudder_mixes[1], { "srcRaw: I0", "weight: 100", "flightModes: 000000000" }, model.label .. " CH18 rudder")
+  assert_mix_block(rudder_mixes[2], { "srcRaw: I2", "weight: gv(2)", "flightModes: 000000000", "name: AilRud" },
+    model.label .. " CH18 aileron-rudder")
+  assert_equal(#elevator_mixes, 2, model.label .. " CH19 mix count")
+  assert_mix_block(elevator_mixes[1], { "srcRaw: ch(21)", "weight: 100" }, model.label .. " CH19 elevator compensation")
+  assert_mix_block(elevator_mixes[2], { "srcRaw: I1", "weight: " .. elevator_weight, "flightModes: 000100000" },
+    model.label .. " CH19 elevator stick")
+
+  assert_equal(#ch7_mixes, 2, model.label .. " CH7 mix count")
+  assert_equal(#ch8_mixes, 2, model.label .. " CH8 mix count")
+  assert_mix_block(ch7_mixes[1], { "srcRaw: ch(17)", "weight: 50", "name: Vt-l" }, model.label .. " CH7 V-tail rudder")
+  assert_mix_block(ch7_mixes[2], { "srcRaw: ch(18)", "weight: -50" }, model.label .. " CH7 V-tail elevator")
+  assert_mix_block(ch8_mixes[1], { "srcRaw: ch(17)", "weight: 50" }, model.label .. " CH8 V-tail rudder")
+  assert_mix_block(ch8_mixes[2], { "srcRaw: ch(18)", "weight: 50", "name: Vt-R" }, model.label .. " CH8 V-tail elevator")
+
+  assert_contains(indexed_block(model.content, "limitData", 17), "name: Rudd", model.label .. " CH18 virtual rudder")
+  assert_contains(indexed_block(model.content, "limitData", 18), "name: Elev", model.label .. " CH19 virtual elevator")
+  assert_contains(indexed_block(model.content, "logicalSw", 45), "def: NONE,NONE", model.label .. " L46 should be disabled")
+end
+
 local function normalize_model_content(content)
   content = content:gsub("\r\n", "\n")
 
@@ -1133,53 +1166,26 @@ test("TX16S MTail template maps CH6 rudder and fixed CH7/CH8 elevator servos", f
   end
 end)
 
-test("TX15 VTail template maps V-tail servos to CH7/CH8 only", function()
+test("TX15 VTail template mixes virtual rudder and elevator into CH7/CH8", function()
   for _, model in ipairs(tx15_output_models("VTail")) do
-    local ch6_mixes = mix_blocks_for(model.content, 5)
-    local ch7_mixes = mix_blocks_for(model.content, 6)
-    local ch8_mixes = mix_blocks_for(model.content, 7)
-    local ch9_mixes = mix_blocks_for(model.content, 8)
-    local ch10_mixes = mix_blocks_for(model.content, 9)
-
-    assert_equal(#ch6_mixes, 0, model.label .. " CH6 should be unused")
-    assert_equal(#ch9_mixes, 0, model.label .. " CH9 should not be required")
-    assert_equal(#ch10_mixes, 0, model.label .. " CH10 should not be required")
-    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I0", "weight: 50", "name: Vt-l" }), model.label .. " missing CH7 V-tail rudder source")
-    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: ch(21)", "weight: -50" }), model.label .. " missing CH7 V-tail elevator source")
-    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I1", "weight: gv(10)" }), model.label .. " missing CH7 KAPOW elevator")
-    assert(find_mix_block_matching(ch8_mixes, { "srcRaw: I0", "weight: 50" }), model.label .. " missing CH8 V-tail rudder source")
-    assert(find_mix_block_matching(ch8_mixes, { "srcRaw: ch(21)", "weight: 50", "name: Vt-R" }), model.label .. " missing CH8 V-tail elevator source")
-    assert(find_mix_block_matching(ch8_mixes, { "srcRaw: I1", "weight: gv(10)" }), model.label .. " missing CH8 KAPOW elevator")
-    assert(not find_mix_block(ch7_mixes, "AilEle"), model.label .. " CH7 should not include AilEle")
-    assert(not find_mix_block(ch8_mixes, "AilEle"), model.label .. " CH8 should not include AilEle")
-    assert_contains(indexed_block(model.content, "logicalSw", 45), "def: NONE,NONE", model.label .. " L46 should be disabled")
+    assert_vtail_mixes(model, "gv(10)")
     assert_contains(indexed_block(model.content, "limitData", 5), "name: Unused", model.label .. " CH6 output")
     assert_contains(indexed_block(model.content, "limitData", 6), "name: LftV", model.label .. " CH7 output")
     assert_contains(indexed_block(model.content, "limitData", 7), "name: RgtV", model.label .. " CH8 output")
   end
 end)
 
-test("TX16S VTail template maps V-tail servos to CH7/CH8 only with fixed KAPOW elevator", function()
+test("TX16S VTail template mixes virtual rudder and fixed KAPOW elevator into CH7/CH8", function()
   for _, model in ipairs(tx16s_variant_models("VTail")) do
     model.content = normalize_model_content(model.content)
-    local ch6_mixes = mix_blocks_for(model.content, 5)
-    local ch7_mixes = mix_blocks_for(model.content, 6)
-    local ch8_mixes = mix_blocks_for(model.content, 7)
-    local ch9_mixes = mix_blocks_for(model.content, 8)
-    local ch10_mixes = mix_blocks_for(model.content, 9)
+    assert_vtail_mixes(model, "85")
+  end
+end)
 
-    assert_equal(#ch6_mixes, 0, model.label .. " CH6 should be unused")
-    assert_equal(#ch9_mixes, 0, model.label .. " CH9 should not be required")
-    assert_equal(#ch10_mixes, 0, model.label .. " CH10 should not be required")
-    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I0", "weight: 50", "name: Vt-l" }), model.label .. " missing CH7 V-tail rudder source")
-    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: ch(21)", "weight: -50" }), model.label .. " missing CH7 V-tail elevator source")
-    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I1", "weight: 85" }), model.label .. " missing CH7 fixed KAPOW elevator")
-    assert(find_mix_block_matching(ch8_mixes, { "srcRaw: I0", "weight: 50" }), model.label .. " missing CH8 V-tail rudder source")
-    assert(find_mix_block_matching(ch8_mixes, { "srcRaw: ch(21)", "weight: 50", "name: Vt-R" }), model.label .. " missing CH8 V-tail elevator source")
-    assert(find_mix_block_matching(ch8_mixes, { "srcRaw: I1", "weight: 85" }), model.label .. " missing CH8 fixed KAPOW elevator")
-    assert(not find_mix_block(ch7_mixes, "AilEle"), model.label .. " CH7 should not include AilEle")
-    assert(not find_mix_block(ch8_mixes, "AilEle"), model.label .. " CH8 should not include AilEle")
-    assert_contains(indexed_block(model.content, "logicalSw", 45), "def: NONE,NONE", model.label .. " L46 should be disabled")
+test("TX16S MK3 VTail template mixes virtual rudder and elevator into CH7/CH8", function()
+  for _, model in ipairs(tx16s_mk3_variant_models("VTail")) do
+    model.content = normalize_model_content(model.content)
+    assert_vtail_mixes(model, "gv(10)")
   end
 end)
 

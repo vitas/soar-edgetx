@@ -63,6 +63,14 @@ All template families use the same tail variant names.
 This keeps the template usable with a standard 8-channel receiver without
 receiver output remapping.
 
+The V-tail servos mix two virtual channels. `CH18` `Rudd` carries the rudder
+stick plus the `AilRud` aileron-to-rudder mix (`GV3` / `AiR`). `CH19` `Elev`
+carries the elevator stick plus the elevator compensation from `CH22`. `CH7`
+gets 50% of `CH18` minus 50% of `CH19`, and `CH8` gets 50% of both, so rudder
+moves the two servos the same way and elevator moves them in opposite
+directions. Each servo gets half of the rudder and elevator travel; set the
+throws with the output endpoints.
+
 `XTail` is for a conventional rudder plus one elevator servo. Its single
 elevator output intentionally does not include the switchable aileron-to-
 elevator mix.
@@ -96,7 +104,7 @@ physical stick or trim location depends on the radio stick mode.
 
 | Control | Model name/source | Default assignment | What it does |
 | --- | --- | --- | --- |
-| `Rud` | `Rudder` / `I1:Rud` | Stick source `Rud` | Rudder/yaw input. On `VTail` it feeds the V-tail yaw mix instead of a separate rudder channel. On `MTail` it also feeds the optional rudder-to-elevator mix. |
+| `Rud` | `Rudder` / `I1:Rud` | Stick source `Rud` | Rudder/yaw input. On `VTail` it feeds the virtual rudder channel `CH18` that drives both V-tail servos instead of a separate rudder channel. On `MTail` it also feeds the optional rudder-to-elevator mix. |
 | `Ele` | `Elev` / `I2:Ele` | Stick source `Ele` | Elevator/pitch input. |
 | `Ail` | `Ailero` / `I3:Ail` | Stick source `Ail` | Aileron input, plus source for aileron-to-rudder and optional aileron-to-elevator mixes. |
 | `Thr` | `Brake` / `I5:Brk` | Stick source `Thr`, inverted | Landing brake/crow control. |
