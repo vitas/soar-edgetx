@@ -26,7 +26,7 @@ six setup pages.
 | `4` | Outputs: reorder named outputs, reverse direction, and set offset, range, center, and endpoints. |
 | `5` | Wing alignment: align the four flaperon outputs with the trims and on-screen sliders. |
 | `6` | Brake curves: edit the airbrake flap and aileron curves. |
-| `7` | Aileron/camber: aileron travel, aileron-to-flap, camber-to-aileron, and thermal camber around maximum reflex. |
+| `7` | Aileron/camber: adjust aileron travel, aileron-to-flap, camber-to-aileron, and thermal camber with the trims. |
 
 Pages `2..7` are the setup UI. They write model changes immediately, so
 disconnect the motor before output, wing, brake, or camber setup. A setup page

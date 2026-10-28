@@ -234,7 +234,7 @@ There is no separate save button in the widget.
 5. Run `Page = 4` with the motor disconnected.
 6. Run `Page = 5` to align flaperon outputs and curves.
 7. Run `Page = 6` to tune the flap and aileron airbrake curves.
-8. Run `Page = 7` to set maximum reflex and related camber values.
+8. Run `Page = 7` to adjust aileron travel and camber values with the trims.
 9. Run `Page = 3` in each relevant flight mode and set receiver battery warning level.
 10. Return the contest widget to `Page = 1`.
 
@@ -371,22 +371,27 @@ curve shapes.
 
 ### `setup/aileron_camber`
 
-Sets aileron travel, aileron-to-flap behavior, camber-to-aileron coupling, and
-thermal camber around the maximum reflex position.
+Lists four wing values and the trim that adjusts each one while the page is
+open:
 
-Use the vertical slider to set maximum reflex. In normal flying, the templates
-drive thermal camber through `I6:CbP`. TX15 templates default that input to
-`T3`; TX16-family templates also default it to `T3` for Companion import
-compatibility. On Mode 2 radios `T3` is commonly the throttle trim, but the
-physical trim depends on the radio's stick mode. Moving the configured camber
-source changes how much thermal camber is applied between maximum reflex and
-the configured camber amount. The page writes the related global variables and
-temporarily enables the model adjustment mode while editing. When the page
-exits, it restores the previous adjustment state.
+| Value | Global variable | Trim |
+| --- | --- | --- |
+| Aileron travel | `GV1` / `Ail` | Aileron trim |
+| Aileron -> flap | `GV2` / `AiF` | Rudder trim |
+| Camber -> aileron | `GV7` / `CbA` | Elevator trim |
+| Thermal camber | `GV10` / `CbX` | `T3`, the throttle trim on Mode 2 radios |
 
-15-GVAR full templates use the page's adjustment mode for these trim-button
-edits: aileron trim adjusts `Ail`, rudder trim adjusts `AiF`, elevator trim
-adjusts `CbA`, and `T3` adjusts the thermal camber amount `GV10` / `CbX`.
+After the motor warning is acknowledged with `ENTER`, the page temporarily sets
+the model adjustment mode (`GV8` = 3), so these trims change the values instead
+of trimming the model. When the page exits, it restores the previous adjustment
+state and the trims work normally again.
+
+In normal flying, the templates drive thermal camber through `I6:CbP`. TX15
+templates default that input to `T3`; TX16-family templates also default it to
+`T3` for Companion import compatibility. On Mode 2 radios `T3` is commonly the
+throttle trim, but the physical trim depends on the radio's stick mode. Moving
+the configured camber source changes how much thermal camber is applied between
+maximum reflex and the configured camber amount.
 
 9-GVAR compatible templates keep only GV1 through GV9. Controls backed by
 GV10-GV15 are fixed in the template and show `N/A` in setup pages on radios

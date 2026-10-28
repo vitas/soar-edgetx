@@ -1062,6 +1062,7 @@ setup_quality_test("setup pages tolerate radios without extended global variable
   load_setup_page("src/SoarF5J/setup/aileron_camber.lua", aileron)
   aileron.widget.refresh(EVT_VIRTUAL_ENTER, nil)
   assert(pcall(function() aileron.widget.refresh(EVT_VIRTUAL_ENTER, nil) end), "aileron camber page crashed without extended GVARs")
+  assert(text_rendered(aileron):find("N/A", 1, true), "aileron camber page should show N/A without GV10")
 end)
 
 setup_quality_test("mixes page exposes expected mix adjustment ranges", function()
@@ -1167,9 +1168,8 @@ end)
 setup_quality_test("aileron camber cleanup tracks owned state", function()
   local content = read_file("src/SoarF5J/setup/aileron_camber.lua")
 
-  assert(content:find("ctrOwned", 1, true), "missing owned switch state")
   assert(content:find("adjustModePrevious", 1, true), "missing owned adjustment state")
-  assert(not content:find("if getLogicalSwitchValue(LS_CTR) then", 1, true), "cleanup still clears unowned switch")
+  assert(not content:find("setStickySwitch", 1, true), "aileron camber should not toggle logical switches")
 end)
 
 setup_quality_test("aileron camber cleanup restores previous GV8 mode", function()
@@ -1178,10 +1178,11 @@ setup_quality_test("aileron camber cleanup restores previous GV8 mode", function
   previousMode.widget.refresh(EVT_VIRTUAL_ENTER, nil)
   assert(previousMode.activePrompt, "aileron camber warning prompt was not active")
   assert(#previousMode.gvWrites == 0, "aileron camber wrote GV8 before warning acknowledgment")
-  assert(#previousMode.stickyWrites == 0, "aileron camber wrote center switch before warning acknowledgment")
+  assert(#previousMode.stickyWrites == 0, "aileron camber wrote a logical switch before warning acknowledgment")
   previousMode.prompts[1].fullScreenRefresh()
   assert(text_rendered(previousMode):find("Please disable the motor", 1, true), "aileron camber warning copy missing")
   previousMode.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+  assert(#previousMode.stickyWrites == 0, "aileron camber wrote a logical switch after warning acknowledgment")
   previousMode.widget.background()
 
   local restoredPrevious = false
@@ -1191,7 +1192,7 @@ setup_quality_test("aileron camber cleanup restores previous GV8 mode", function
   assert(restoredPrevious, "aileron camber did not restore previous GV8 mode")
 end)
 
-setup_quality_test("aileron camber layout keeps diagram clear of copy", function()
+setup_quality_test("aileron camber page lists trim-adjusted values without a slider", function()
   local aileron = setup_env({
     gvs = {
       [0] = 57,
@@ -1206,38 +1207,38 @@ setup_quality_test("aileron camber layout keeps diagram clear of copy", function
   aileron.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
   aileron.widget.refresh(EVT_VIRTUAL_ENTER, nil)
 
-  local diagram
+  local texts = {}
+  local numbers = {}
   local help
-  local throttle
   for _, call in ipairs(aileron.drawCalls) do
-    if call.method == "drawPie" and not diagram then
-      diagram = {
-        x = call.args[1],
-        y = call.args[2],
-        r = call.args[3]
-      }
-    elseif call.method == "drawTextLines" and tostring(call.args[5]):find("maximum reflex", 1, true) then
-      help = {
-        x = call.args[1],
-        y = call.args[2],
-        w = call.args[3]
-      }
-    elseif call.method == "drawText" and call.args[3] == "Throttle trim" then
-      throttle = {
-        y = call.args[2]
-      }
+    assert(call.method ~= "drawPie" and call.method ~= "drawAnnulus", "aileron camber page still draws the max reflex diagram")
+    if call.method == "drawText" then
+      texts[call.args[3]] = call.args[2]
+    elseif call.method == "drawNumber" then
+      numbers[call.args[3]] = call.args[2]
+    elseif call.method == "drawTextLines" then
+      help = { y = call.args[2], text = tostring(call.args[5]) }
     end
   end
 
-  assert(diagram, "missing aileron/camber diagram")
+  local rows = {
+    { "Aileron travel", "Ail", "Aileron trim", 57 },
+    { "Aileron -> flap", "AiF", "Rudder trim", 24 },
+    { "Camber -> aileron", "CbA", "Elevator trim", 153 },
+    { "Thermal camber", "CbX", "Throttle trim", 33 }
+  }
+  for _, row in ipairs(rows) do
+    local y = texts[row[1]]
+    assert(y, "missing aileron camber row " .. row[1])
+    assert_equal(texts[row[2]], y, row[1] .. " GV name")
+    assert_equal(texts[row[3]], y, row[1] .. " trim name")
+    assert_equal(numbers[row[4]], y, row[1] .. " value")
+  end
+
   assert(help, "missing aileron/camber help copy")
-  assert(throttle, "missing throttle trim row")
-  local smallTextH = select(2, lcd.sizeText("", SMLSIZE))
-  assert(diagram.y - diagram.r >= 44, "diagram overlaps top bar")
-  assert(diagram.x - diagram.r >= 220, "diagram overlaps trim/help copy column")
-  assert(diagram.x + diagram.r <= LCD_W - 50, "diagram overlaps slider area")
-  assert(throttle.y + smallTextH + 8 <= help.y, "help copy overlaps trim rows")
-  assert(help.x + help.w <= diagram.x - diagram.r, "help copy overlaps diagram")
+  assert(help.text:find("Trim buttons adjust", 1, true), "help copy should explain trim adjustment")
+  assert(not help.text:find("slider", 1, true), "help copy still mentions the slider")
+  assert(texts["Thermal camber"] < help.y, "help copy overlaps trim rows")
 end)
 
 setup_quality_test("wing alignment cleanup tracks owned GV8 state", function()

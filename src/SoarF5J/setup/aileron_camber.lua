@@ -28,28 +28,15 @@ local colors =  libGUI.colors
 local title =   "Aileron/camber"
 local safety =  loadScript(soarGlobals.path .. "lib/safety.lua")()
 local warningPrompt = libGUI.newGUI()
-local slider
-local ctrOwned = false
 local adjustModePrevious
-local editingEnabled = false
 local beginEditing
 
 -- Screen drawing constants
 local HEADER =    40
 local MARGIN =    20
-local TOP =       HEADER + MARGIN
-local SLIDER_X =  LCD_W - 30
-local SLIDER_W =  50
-local SLIDER_H =  LCD_H - TOP - 2 * MARGIN
-local LEFT_W =    220
-local HELP_Y
-local HELP_W =    LEFT_W - 2 * MARGIN
-local R2 =        math.min(82, (LCD_W - LEFT_W - MARGIN - 50) / 2, (LCD_H - TOP - MARGIN) / 2)
-local R1 =        math.max(20, R2 - 24)
-local CTR_X =     LEFT_W + MARGIN + R2
-local CTR_Y =     TOP + (LCD_H - TOP - MARGIN) / 2
-local SML_H =     select(2, lcd.sizeText("", SMLSIZE))
-HELP_Y =          TOP + 4 * (SML_H + 4) + 10
+local LINE =      28
+local COL_CODE =  math.floor(0.42 * LCD_W)
+local COL_TRIM =  math.floor(0.54 * LCD_W)
 
 -- Setup warning prompt
 do
@@ -88,11 +75,18 @@ end -- Warning prompt
 -- Global variables
 local GV_AIL = 0 -- Aileron travel
 local GV_AIL_TO_FLAP = 1 -- Aileron -> flap
-local GV_DIF = 3 -- Aileron differential
 local GV_CAMBER_TO_AIL = 6 -- Camber -> aileron
 local GV_THERMAL_CAMBER = 9 -- Thermal camber amount
 local GV_ADJUST_MODE = 7
 local ADJUST_MODE = 3
+
+-- Values that the trim buttons adjust in ADJUST_MODE
+local rows = {
+  { "Aileron travel", "Ail", "Aileron trim", GV_AIL },
+  { "Aileron -> flap", "AiF", "Rudder trim", GV_AIL_TO_FLAP },
+  { "Camber -> aileron", "CbA", "Elevator trim", GV_CAMBER_TO_AIL },
+  { "Thermal camber", "CbX", "Throttle trim", GV_THERMAL_CAMBER }
+}
 
 local function getGV(gv, phase)
   local value = model.getGlobalVariable(gv, phase)
@@ -100,52 +94,6 @@ local function getGV(gv, phase)
     return value
   end
   return nil
-end
-
--- Logical switch to disable camber etc. to center
-local LS_CTR = 11
-
--- Special: blend two theme colors
-local COLOR_BLEND
-do
-  local c1 = lcd.getColor(COLOR_THEME_SECONDARY1)
-  local b1 = 8 * bit32.band(bit32.rshift(c1, 16), 0x1F)
-  local g1 = 4 * bit32.band(bit32.rshift(c1, 21), 0x3F)
-  local r1 = 8 * bit32.band(bit32.rshift(c1, 27), 0x1F)
-
-  local c2 = lcd.getColor(COLOR_THEME_SECONDARY2)
-  local b2 = 8 * bit32.band(bit32.rshift(c2, 16), 0x1F)
-  local g2 = 4 * bit32.band(bit32.rshift(c2, 21), 0x3F)
-  local r2 = 8 * bit32.band(bit32.rshift(c2, 27), 0x1F)
-
-  COLOR_BLEND = lcd.RGB((r1 + r2) / 2, (g1 + g2) / 2, (b1 + b2) / 2)
-end
-
--- Draw radial line
-local function drawRadian(deg)
-  deg = deg * math.pi / 180
-  local x = CTR_X + R2 * math.sin(deg)
-  local y = CTR_Y - R2 * math.cos(deg)
-  lcd.drawLine(CTR_X, CTR_Y, x, y, SOLID, colors.primary3)
-end
-
--- Draw label on annulus
-local function drawLabel(deg, r, txt, color)
-  deg = deg * math.pi / 180
-  local x = CTR_X + r * math.sin(deg)
-  local y = CTR_Y - r * math.cos(deg)
-  lcd.drawText(x, y, txt, CENTER + VCENTER + SMLSIZE + color)
-end
-
--- Adjust global variables
-local function adjust(slider)
-  -- Compensate for possible negative differential.
-  local dif = getGV(GV_DIF, 0) or 0
-  local difComp = 100.0 / math.max(10.0, math.min(100.0, 100.0 + dif))
-  local ail = math.min(2 * slider.value, 2 * (100 - slider.value) * difComp)
-
-  model.setGlobalVariable(GV_AIL, 0, ail)
-  model.setGlobalVariable(GV_AIL_TO_FLAP, 0, slider.value)
 end
 
 local function adjustModeOn()
@@ -163,20 +111,6 @@ local function adjustModeOff()
   end
 end
 
-local function centerModeOn()
-  if not getLogicalSwitchValue(LS_CTR) then
-    setStickySwitch(LS_CTR, true)
-    ctrOwned = true
-  end
-end
-
-local function centerModeOff()
-  if ctrOwned then
-    setStickySwitch(LS_CTR, false)
-    ctrOwned = false
-  end
-end
-
 local function dismissPrompt()
   if gui then
     gui.dismissPrompt()
@@ -184,34 +118,26 @@ local function dismissPrompt()
 end
 
 beginEditing = function()
-  editingEnabled = true
-  centerModeOn()
   adjustModeOn()
 end -- beginEditing()
 
 local function drawAdjustmentRows()
-  local rows = {
-    { "Aileron trim", "Ail", GV_AIL },
-    { "Rudder trim", "AiF", GV_AIL_TO_FLAP },
-    { "Elevator trim", "CbA", GV_CAMBER_TO_AIL },
-    { "Throttle trim", "CbX", GV_THERMAL_CAMBER }
-  }
-  local x = MARGIN
-  local y = TOP
-  local labelW = 96
-  local codeW = 32
-  local valueW = 44
-
-  for _, row in ipairs(rows) do
-    lcd.drawText(x, y, row[1], SMLSIZE + colors.primary1)
-    lcd.drawText(x + labelW, y, row[2], SMLSIZE + colors.primary1)
-    local value = getGV(row[3], 0)
-    if value == nil then
-      lcd.drawText(x + labelW + codeW + valueW, y, "N/A", RIGHT + SMLSIZE + colors.primary1)
-    else
-      lcd.drawNumber(x + labelW + codeW + valueW, y, value, RIGHT + SMLSIZE + colors.primary1)
+  for i, row in ipairs(rows) do
+    local y = HEADER + LINE * (i - 1)
+    if i % 2 == 0 then
+      lcd.drawFilledRectangle(0, y, LCD_W, LINE, COLOR_THEME_SECONDARY2)
     end
-    y = y + SML_H + 4
+
+    y = y + LINE / 2
+    lcd.drawText(MARGIN, y, row[1], VCENTER + colors.primary1)
+    lcd.drawText(COL_CODE, y, row[2], VCENTER + colors.primary1)
+    lcd.drawText(COL_TRIM, y, row[3], VCENTER + colors.primary1)
+    local value = getGV(row[4], 0)
+    if value == nil then
+      lcd.drawText(LCD_W - MARGIN, y, "N/A", RIGHT + VCENTER + colors.primary1)
+    else
+      lcd.drawNumber(LCD_W - MARGIN, y, value, RIGHT + VCENTER + colors.primary1)
+    end
   end
 end
 
@@ -228,43 +154,12 @@ local function setup_gui()
     lcd.drawFilledRectangle(0, 0, LCD_W, HEADER, COLOR_THEME_SECONDARY1)
     lcd.drawText(10, 2, title, bit32.bor(DBLSIZE, colors.primary2))
 
-    -- Illustration of flap and aileron travel
-    local ail = getGV(GV_AIL, 0) or 0
-    local ailDeg = 0.45 * ail
-    local brk = 2 * (getGV(GV_AIL_TO_FLAP, 0) or 0)
-    local brkDeg = 0.45 * brk
-    local dif = 0.01 * (getGV(GV_DIF, 0) or 0)
-
-    lcd.drawPie(CTR_X, CTR_Y, R2, 90 - ailDeg * math.min(1, 1 + dif), 91 + brkDeg, colors.primary2)
-    lcd.drawAnnulus(CTR_X, CTR_Y, R1, R2, 90 + ailDeg * math.min(1, 1 - dif), 90 + brkDeg, COLOR_THEME_SECONDARY2)
-    lcd.drawAnnulus(CTR_X, CTR_Y, R1, R2, 90, 90 + ailDeg * math.min(1, 1 - dif), COLOR_BLEND)
-    lcd.drawAnnulus(CTR_X, CTR_Y, R1, R2, 90 - ailDeg * math.min(1, 1 + dif), 90, COLOR_THEME_SECONDARY1)
-
-    lcd.drawArc(CTR_X, CTR_Y, R2, 90 - ailDeg * math.min(1, 1 + dif), 90 + brkDeg, colors.primary3)
-    drawRadian(90 - ailDeg * math.min(1, 1 + dif))
-    drawRadian(90)
-    drawRadian(90 + brkDeg)
-
-    lcd.drawFilledCircle(CTR_X, CTR_Y, 2, colors.primary2)
-    lcd.drawCircle(CTR_X, CTR_Y, 3, colors.primary3)
-    lcd.drawCircle(CTR_X, CTR_Y, 2, colors.primary3)
-
-    lcd.drawFilledCircle(CTR_X + R2, CTR_Y, 4, colors.edit)
-    lcd.drawCircle(CTR_X + R2, CTR_Y, 5, colors.primary3)
-    lcd.drawCircle(CTR_X + R2, CTR_Y, 4, colors.primary3)
-
-    drawLabel(90 - ailDeg / 2 * math.min(1, 1 + dif), (R1 + R2) / 2, math.floor(ail * math.min(1, 1 + dif) + 0.5) .. "%", colors.primary2)
-    drawLabel(90 + math.min(brkDeg - 10, (ailDeg + brkDeg) / 2), (R1 + R2) / 2, math.floor(brk + 0.5) .. "%", colors.primary1)
-    lcd.drawText(CTR_X + R1, CTR_Y - SML_H, "aileron ", RIGHT + SMLSIZE + colors.primary1)
-    lcd.drawText(CTR_X + R1, CTR_Y, "brake ", RIGHT + SMLSIZE + colors.primary1)
-    lcd.drawText(CTR_X + R2, CTR_Y - SML_H, "  max.", SMLSIZE + colors.primary1)
-    lcd.drawText(CTR_X + R2, CTR_Y, "  reflex", SMLSIZE + colors.primary1)
-
     drawAdjustmentRows()
 
-    local txt = "Set maximum reflex with the slider.\n" ..
-                "Camber moves down from this position."
-    lcd.drawTextLines(MARGIN, HELP_Y, HELP_W, LCD_H - HELP_Y - MARGIN, txt, SMLSIZE + colors.primary1)
+    -- Help text
+    local txt = "Trim buttons adjust these values while this page is open."
+    local helpY = HEADER + #rows * LINE + 25
+    lcd.drawTextLines(MARGIN, helpY, LCD_W - 2 * MARGIN, LCD_H - helpY - MARGIN, txt, colors.primary1)
   end
 
   -- Close button
@@ -284,8 +179,6 @@ local function setup_gui()
       lcd.exitFullScreen()
     end
   end
-
-  slider = gui.verticalSlider(SLIDER_X, TOP, SLIDER_H, 70, 50, 90, 1, adjust)
 end -- Setup GUI
 
 -------------------- Background and Refresh functions ---------------------
@@ -293,8 +186,6 @@ end -- Setup GUI
 function widget.background()
   dismissPrompt()
   adjustModeOff()
-  centerModeOff()
-  editingEnabled = false
   gui = nil
 end -- background()
 
@@ -308,8 +199,6 @@ function widget.refresh(event, touchState)
   elseif gui == nil then
     setup_gui()
     return
-  elseif editingEnabled then
-    slider.value = getGV(GV_AIL_TO_FLAP, 0) or 0
   end
 
   gui.run(event, touchState)

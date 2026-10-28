@@ -115,6 +115,8 @@ test("aileron camber page includes SoarOTX adjustment behavior", function()
   assert(content:find("GV_CAMBER_TO_AIL = 6", 1, true), "missing camber-to-aileron GV index")
   assert(content:find("GV_THERMAL_CAMBER = 9", 1, true), "missing thermal camber GV index")
   assert(content:find("ADJUST_MODE = 3", 1, true), "missing adjustment mode")
+  assert(not content:find("verticalSlider", 1, true), "aileron camber page should not have the max reflex slider")
+  assert(not content:find("maximum reflex", 1, true), "aileron camber page should not mention maximum reflex")
 end)
 
 test("battery setup remains on mixes page only", function()
