@@ -8,7 +8,10 @@ the whole folder to a radio card. Install on a radio this way:
 1. Back up the SD card, at least `MODELS` and `RADIO`.
 2. Run EdgeTX 2.12 on the radio. Update older firmware with EdgeTX Buddy
    (https://buddy.edgetx.org) or as the EdgeTX manual describes
-   (https://manual.edgetx.org).
+   (https://manual.edgetx.org). If the radio uses ExpressLRS, also update the
+   TX module and the receiver to the same ExpressLRS 3 release with the
+   ExpressLRS Configurator
+   (https://github.com/ExpressLRS/ExpressLRS-Configurator/releases).
 3. Download the official SD-card content for the radio screen from the latest
    2.12 release at https://github.com/EdgeTX/edgetx-sdcard/releases:
 

@@ -98,6 +98,14 @@ flaps. `VTail` uses `CH7/CH8` for the V-tail so an 8-channel receiver can be
 wired without receiver remapping. `XTail` has no aileron-to-elevator or
 rudder-to-elevator mix on the single elevator output.
 
+With ExpressLRS, set `Packet Rate` to `100Hz Full` and `Switch Mode` to `8ch`
+in the ExpressLRS tool script, and keep receiver outputs 1-8 on channels 1-8.
+In the Hybrid and Wide switch modes `CH5` is the two-position arm channel and
+`CH6` to `CH8` have reduced resolution, so the right flap on `CH5` sits at an
+end and the tail servos move in steps. `CH5` stays the arm channel in `8ch`
+mode: ExpressLRS treats the model as armed while the right flap is above
+center.
+
 The templates start with neutral output endpoints, centers, and reversals.
 The wing alignment curves CV1 through CV4 start linear at
 `-100, -50, 0, 50, 100`. The brake curves CV5 `BrF` and CV6 `BrA` start at the
