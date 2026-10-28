@@ -85,7 +85,7 @@ tx16s-VTail.yml
 tx16s-XTail.yml
 ```
 
-14-GVAR full TX16S MK3 users can use the matching SD-card YAML template:
+15-GVAR full TX16S MK3 users can use the matching SD-card YAML template:
 
 ```text
 tx16s-mk3-MTail.yml
@@ -384,12 +384,12 @@ the configured camber amount. The page writes the related global variables and
 temporarily enables the model adjustment mode while editing. When the page
 exits, it restores the previous adjustment state.
 
-14-GVAR full templates use the page's adjustment mode for these trim-button
+15-GVAR full templates use the page's adjustment mode for these trim-button
 edits: aileron trim adjusts `Ail`, rudder trim adjusts `AiF`, elevator trim
 adjusts `CbA`, and `T3` adjusts the thermal camber amount `GV10` / `CbX`.
 
 9-GVAR compatible templates keep only GV1 through GV9. Controls backed by
-GV10-GV14 are fixed in the template and show `N/A` in setup pages on radios
+GV10-GV15 are fixed in the template and show `N/A` in setup pages on radios
 that do not expose those extended values to Lua.
 
 To put thermal camber selection on a switch instead, edit the model in Companion
@@ -410,6 +410,8 @@ Edits mix-related global variables for the current flight mode:
   intentionally leaves it disconnected from the single elevator output.
 - Aileron differential.
 - Flap differential for the aileron-to-flap path.
+- Elevator differential for the aileron-to-elevator path on MTail. Positive
+  values reduce the travel of the elevator half that moves down; `50` halves it.
 - Brake to elevator.
 - Snap flap.
 - Battery warning level.

@@ -142,6 +142,7 @@ test("setup pages expose aileron and rudder to elevator mix controls", function(
   assert(mixes:find('{ "Aileron -> Elevator", 11, -100, 100 }', 1, true), "mixes page missing GV12 aileron-elevator control")
   assert(mixes:find('{ "Rudder -> Elevator", 13, -100, 100 }', 1, true), "mixes page missing GV14 rudder-elevator control")
   assert(mixes:find('{ "Flap Differential", 12, -100, 100 }', 1, true), "mixes page missing GV13 flap-differential control")
+  assert(mixes:find('{ "Elevator Differential", 14, -100, 100 }', 1, true), "mixes page missing GV15 elevator-differential control")
   assert(switches:find('{ "Aileron -> Elevator", 45 }', 1, true), "switches page missing L46 aileron-elevator switch")
   assert(switches:find('{ "Rudder -> Elevator", 47 }', 1, true), "switches page missing L48 rudder-elevator switch")
 end)

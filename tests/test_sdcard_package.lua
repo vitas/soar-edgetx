@@ -487,11 +487,14 @@ test("TX16S templates avoid extended global variables", function()
     "!gv(12)",
     "gv(13)",
     "!gv(13)",
+    "gv(14)",
+    "!gv(14)",
     "name: CbX",
     "name: Elv",
     "name: AiE",
     "name: FlD",
     "name: RuE",
+    "name: ElD",
     "def: 9,Src,T3,1"
   }
 
@@ -501,7 +504,7 @@ test("TX16S templates avoid extended global variables", function()
     end
 
     local gvars = top_level_section(model.content, "gvars")
-    for index = 9, 13 do
+    for index = 9, 14 do
       assert(not gvars:find("\n  " .. tostring(index) .. ":", 1, true),
         model.label .. " should not define GV" .. tostring(index + 1))
     end
@@ -533,6 +536,12 @@ test("TX15 templates keep Vitas TX15 shared base setup", function()
       "max: 924"
     }, model.label .. " GV14 definition")
     assert_contains(model.content, "      13:\n        val: 20", model.label .. " GV14 Cruise value")
+    assert_mix_block(indexed_block(model.content, "gvars", 14), {
+      "name: ElD",
+      "min: 924",
+      "max: 924"
+    }, model.label .. " GV15 definition")
+    assert_contains(model.content, "      14:\n        val: 50", model.label .. " GV15 Cruise value")
   end
 end)
 
@@ -621,9 +630,9 @@ test("TX16S MK3 templates keep Crossfire RF", function()
   end
 end)
 
-test("TX16S MK3 templates keep full GV1 through GV14 definitions", function()
+test("TX16S MK3 templates keep full GV1 through GV15 definitions", function()
   for _, model in ipairs(tx16s_mk3_template_models()) do
-    for index = 0, 13 do
+    for index = 0, 14 do
       assert_contains(indexed_block(model.content, "gvars", index), "name:",
         model.label .. " GV" .. tostring(index + 1))
     end
@@ -632,6 +641,7 @@ test("TX16S MK3 templates keep full GV1 through GV14 definitions", function()
     assert_contains(indexed_block(model.content, "gvars", 10), "name: Elv", model.label .. " GV11 name")
     assert_contains(indexed_block(model.content, "gvars", 12), "name: FlD", model.label .. " GV13 name")
     assert_contains(indexed_block(model.content, "gvars", 13), "name: RuE", model.label .. " GV14 name")
+    assert_contains(indexed_block(model.content, "gvars", 14), "name: ElD", model.label .. " GV15 name")
   end
 end)
 
@@ -813,7 +823,7 @@ test("TX16S template documentation lists variants and extended GV limits", funct
     "tx16s-VTail.yml",
     "tx16s-XTail.yml",
     "9-GVAR compatible family",
-    "GV10-GV14 are replaced by fixed mixer values"
+    "GV10-GV15 are replaced by fixed mixer values"
   }
 
   for _, needle in ipairs(expected) do
@@ -821,14 +831,14 @@ test("TX16S template documentation lists variants and extended GV limits", funct
   end
 end)
 
-test("TX16S MK3 template documentation lists full 14-GVAR variants", function()
+test("TX16S MK3 template documentation lists full 15-GVAR variants", function()
   local docs = read_file(MODEL_TEMPLATE_DOC)
   local expected = {
     "tx16s-mk3-MTail.yml",
     "tx16s-mk3-VTail.yml",
     "tx16s-mk3-XTail.yml",
-    "14-GVAR full family",
-    "TX15 and TX16S MK3 templates use GV1 through GV14"
+    "15-GVAR full family",
+    "TX15 and TX16S MK3 templates use GV1 through GV15"
   }
 
   for _, needle in ipairs(expected) do
@@ -1081,6 +1091,13 @@ test("TX15 MTail template maps CH6 rudder and CH7/CH8 elevator servos", function
     assert_mix_block(ch7_rudder_elevator, { "mltpx: ADD", "flightModes: 011100111" }, model.label .. " CH7 RudEle")
     assert_mix_block(ch8_rudder_elevator, { "mltpx: ADD", "flightModes: 011100111" }, model.label .. " CH8 RudEle")
 
+    local ch7_aileron_elevator = find_mix_block_matching(ch7_mixes, { "srcRaw: I2", "weight: gv(11)", "swtch: L46", "name: AilEle" })
+    local ch8_aileron_elevator = find_mix_block_matching(ch8_mixes, { "srcRaw: I2", "weight: !gv(11)", "swtch: L46", "name: AilEle" })
+    assert(ch7_aileron_elevator, model.label .. " missing CH7 AilEle mix")
+    assert(ch8_aileron_elevator, model.label .. " missing CH8 AilEle mix")
+    assert_mix_block(ch7_aileron_elevator, { "type: 0", "value: !gv(14)" }, model.label .. " CH7 AilEle GV15 differential")
+    assert_mix_block(ch8_aileron_elevator, { "type: 0", "value: !gv(14)" }, model.label .. " CH8 AilEle GV15 differential")
+
     assert_contains(indexed_block(model.content, "limitData", 5), "name: Rudd", model.label .. " CH6 output")
     assert_contains(indexed_block(model.content, "limitData", 6), "name: ElevL", model.label .. " CH7 output")
     assert_contains(indexed_block(model.content, "limitData", 7), "name: ElevR", model.label .. " CH8 output")
@@ -1105,10 +1122,10 @@ test("TX16S MTail template maps CH6 rudder and fixed CH7/CH8 elevator servos", f
     assert(find_mix_block_matching(ch8_mixes, { "srcRaw: ch(21)", "weight: 100" }), model.label .. " missing CH8 elevator mix")
     assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I1", "weight: 85" }), model.label .. " missing CH7 fixed KAPOW elevator mix")
     assert(find_mix_block_matching(ch8_mixes, { "srcRaw: I1", "weight: 85" }), model.label .. " missing CH8 fixed KAPOW elevator mix")
-    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I2", "weight: 20", "swtch: L46", "name: AilEle" }),
-      model.label .. " missing CH7 fixed AilEle mix")
-    assert(find_mix_block_matching(ch8_mixes, { "srcRaw: I2", "weight: -20", "swtch: L46", "name: AilEle" }),
-      model.label .. " missing CH8 fixed AilEle mix")
+    assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I2", "weight: 20", "swtch: L46", "type: 0", "value: -50", "name: AilEle" }),
+      model.label .. " missing CH7 fixed AilEle mix with differential")
+    assert(find_mix_block_matching(ch8_mixes, { "srcRaw: I2", "weight: -20", "swtch: L46", "type: 0", "value: -50", "name: AilEle" }),
+      model.label .. " missing CH8 fixed AilEle mix with differential")
     assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I0", "weight: 20", "swtch: L48", "name: RudEle" }),
       model.label .. " missing CH7 fixed RudEle mix")
     assert(find_mix_block_matching(ch8_mixes, { "srcRaw: I0", "weight: -20", "swtch: L48", "name: RudEle" }),
@@ -1233,6 +1250,7 @@ test("TX15 MTail template adds switchable GV12 aileron and GV14 rudder to elevat
     }, model.label .. " aileron-elevator mix")
     assert(aileron_elevator:find("weight: gv%(11%)") or aileron_elevator:find("weight: !gv%(11%)"),
       model.label .. " aileron-elevator mix missing GV12 weight")
+    assert_contains(aileron_elevator, "value: !gv(14)", model.label .. " aileron-elevator mix GV15 differential")
 
     assert(rudder_elevator, model.label .. " missing RudEle mix")
     assert_mix_block(rudder_elevator, {
@@ -1249,6 +1267,7 @@ test("TX15 MTail template adds switchable GV12 aileron and GV14 rudder to elevat
     assert_contains(indexed_block(model.content, "logicalSw", 47), "def: NONE,NONE", model.label .. " L48 switch")
     assert_contains(indexed_block(model.content, "gvars", 11), "name: AiE", model.label .. " GV12 name")
     assert_contains(indexed_block(model.content, "gvars", 13), "name: RuE", model.label .. " GV14 name")
+    assert_contains(indexed_block(model.content, "gvars", 14), "name: ElD", model.label .. " GV15 name")
   end
 end)
 

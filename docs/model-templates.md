@@ -13,8 +13,8 @@ specific EdgeTX limits and artifact formats.
 | Family | Use on | Artifacts |
 | --- | --- | --- |
 | 9-GVAR compatible family: `tx16s-*` | TX16S, TX16S Mark II, T16/T18-class landscape color radios | SD-card YAML files under `dist/SDCARD/TEMPLATES/3.SoarEdgeTx/`. |
-| 14-GVAR full family: `tx15-*` | RadioMaster TX15 | `.etx` archives under `models/tx15/` and matching SD-card YAML files. |
-| 14-GVAR full family: `tx16s-mk3-*` | TX16S MK3 | SD-card YAML files under `dist/SDCARD/TEMPLATES/3.SoarEdgeTx/`. |
+| 15-GVAR full family: `tx15-*` | RadioMaster TX15 | `.etx` archives under `models/tx15/` and matching SD-card YAML files. |
+| 15-GVAR full family: `tx16s-mk3-*` | TX16S MK3 | SD-card YAML files under `dist/SDCARD/TEMPLATES/3.SoarEdgeTx/`. |
 
 TX15 artifacts:
 
@@ -41,7 +41,7 @@ dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-VTail.yml
 dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-XTail.yml
 ```
 
-14-GVAR full TX16S MK3 artifacts:
+15-GVAR full TX16S MK3 artifacts:
 
 ```text
 dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-mk3-MTail.yml
@@ -175,6 +175,15 @@ elevator servos move together. The 9-GVAR compatible family replaces both
 amounts with the fixed values `20` and `-20`. `VTail` and `XTail` do not use
 either mix.
 
+`AilEle` also has an elevator differential, `GV15` / `ElD`, default `50`. It
+reduces the travel of the elevator half that moves down during a roll: at `50`
+the down-going half moves half as far as the up-going half, `0` moves both
+halves the same amount, and a negative value reduces the up-going half instead.
+Both `AilEle` lines use the same differential (`!gv(15)`), because EdgeTX
+applies the differential after the negated `CH8` weight. The 9-GVAR compatible
+family uses the fixed differential `-50`, the same as `ElD` = `50`. `RudEle`
+has no differential.
+
 ## Template Contract
 
 Every supported template family should define:
@@ -193,8 +202,8 @@ exists.
 
 ## GVAR Capability Limits
 
-TX15 and TX16S MK3 templates use GV1 through GV14. The 9-GVAR compatible
-family uses GV1 through GV9. GV10-GV14 are replaced by fixed mixer values so the
+TX15 and TX16S MK3 templates use GV1 through GV15. The 9-GVAR compatible
+family uses GV1 through GV9. GV10-GV15 are replaced by fixed mixer values so the
 model can run on radios where Lua cannot read or write the extended global
 variables.
 
@@ -205,6 +214,7 @@ variables.
 | `GV12` / `AiE` aileron-to-elevator | Fixed on `MTail`; disabled on `VTail` and `XTail`. |
 | `GV13` / `FlD` flap differential | Fixed at neutral `0`. |
 | `GV14` / `RuE` rudder-to-elevator | Fixed on `MTail`; disabled on `VTail` and `XTail`. |
+| `GV15` / `ElD` elevator differential | Fixed at `50` on `MTail`; not used on `VTail` and `XTail`. |
 
 Setup page fields that belong to unsupported extended GV values show `N/A` on
 9-GVAR compatible radios instead of editing the model.

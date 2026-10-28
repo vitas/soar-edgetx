@@ -46,6 +46,7 @@ local mixes = {
   { "Rudder -> Elevator", 13, -100, 100 },
   { "Aileron Differential", 3, -100, 100 },
   { "Flap Differential", 12, -100, 100 },
+  { "Elevator Differential", 14, -100, 100 },
   { "Brake -> Elevator", 4, 0, 100 },
   { "Snap - flap", 5, -50, 0 }
 }

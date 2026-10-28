@@ -131,7 +131,7 @@
     <li>Проверьте радиомодуль. Если у вас другая радиосистема, смените тип модуля в настройках модели. Для ExpressLRS сначала выполните шаги из блока «ExpressLRS» ниже. Забиндьте приёмник.</li>
     <li>Настройте failsafe так, чтобы при потере сигнала мотор выключался (CH3 — минимум).</li>
   </ol>
-  <div class="callout note"><span class="t">Шаблон tx16s-MTail (9 переменных)</span>Часть параметров в нём зафиксирована, на страницах настройки они показаны как <b>N/A</b>: <span class="ui">Elevator Travel</span>, <span class="ui">Aileron -&gt; Elevator</span>, <span class="ui">Rudder -&gt; Elevator</span>, <span class="ui">Flap Differential</span> и величина термического камбера. Миксы руля высоты от элеронов и от руля направления при этом работают с фиксированной величиной 20.</div>
+  <div class="callout note"><span class="t">Шаблон tx16s-MTail (9 переменных)</span>Часть параметров в нём зафиксирована, на страницах настройки они показаны как <b>N/A</b>: <span class="ui">Elevator Travel</span>, <span class="ui">Aileron -&gt; Elevator</span>, <span class="ui">Rudder -&gt; Elevator</span>, <span class="ui">Flap Differential</span>, <span class="ui">Elevator Differential</span> и величина термического камбера. Миксы руля высоты от элеронов и от руля направления при этом работают с фиксированной величиной 20, дифференциал руля высоты — 50.</div>
 
   <h3>ExpressLRS: обновление и полное разрешение</h3>
   <ol class="steps">
@@ -329,9 +329,11 @@
     <tbody>
       <tr><td><span class="ui">Aileron -&gt; Elevator</span></td><td>20 (Cruise)</td><td>в Cruise, Speed и Float, когда включён тумблер микса (по умолчанию <span class="sw">SA↑</span>)</td></tr>
       <tr><td><span class="ui">Rudder -&gt; Elevator</span></td><td>20 (Cruise)</td><td>в Cruise, Speed и Float, когда включён тумблер микса; при NONE — всегда</td></tr>
+      <tr><td><span class="ui">Elevator&nbsp;Differential</span></td><td>50 (Cruise)</td><td>вместе с <span class="ui">Aileron -&gt; Elevator</span></td></tr>
     </tbody>
   </table>
   <p>Оба микса двигают половины руля высоты в разные стороны, и руль высоты помогает крену. Знак значения задаёт направление, 0 выключает микс. Проверьте значения в каждом режиме: Cruise, Speed и Float.</p>
+  <p><span class="ui">Elevator Differential</span> уменьшает ход опускающейся половины в миксе <span class="ui">Aileron -&gt; Elevator</span>: при 50 — вдвое, например вверх 6°, вниз 3°; при 0 ход одинаковый, отрицательное значение уменьшает ход вверх.</p>
 
   <figure>
     <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" font-family="PT Sans, sans-serif" role="img" aria-label="Вид сзади: правый элерон и правая половина руля высоты вверх, левые вниз">
@@ -364,13 +366,13 @@
   <h3>Проверка направления</h3>
   <ol class="steps">
     <li>Включите микс тумблером (для <span class="ui">Aileron -&gt; Elevator</span> по умолчанию <span class="sw">SA↑</span>).</li>
-    <li>Ручку элеронов вправо: правая половина руля высоты должна подняться, левая — опуститься, как элероны (рис. 2).</li>
+    <li>Ручку элеронов вправо: правая половина руля высоты должна подняться, левая — опуститься, как элероны (рис. 2). Опускающаяся половина отклоняется меньше.</li>
     <li>Если наоборот — смените знак: 20 → −20.</li>
     <li><span class="ui">Rudder -&gt; Elevator</span> с тем же знаком при ручке РН вправо двигает половины так же, как ручка элеронов вправо. Если меняли знак у <span class="ui">Aileron -&gt; Elevator</span>, смените его и здесь.</li>
     <li>Начинайте с небольших значений и проверяйте их в полёте на безопасной высоте.</li>
   </ol>
   <div class="callout warn"><span class="t">Rudder -&gt; Elevator работает сразу</span>В текущей версии шаблона у этого микса нет тумблера (NONE), а EdgeTX считает пустое условие выполненным. Поэтому микс включён постоянно с величиной 20. Не нужен — поставьте 0 в Cruise, Speed и Float. Нужен по тумблеру — назначьте тумблер на странице <span class="ui">Switches</span> (шаг 6.1).</div>
-  <div class="callout note"><span class="t">Шаблон tx16s-MTail</span>Здесь оба поля показывают N/A: величина задана прямо в миксах CH7 и CH8, это строки <code>AilEle</code> и <code>RudEle</code> с весом +20 на CH7 и −20 на CH8. Чтобы сменить направление, поменяйте знаки в этих строках в меню миксов модели. Чтобы выключить микс, поставьте вес 0.</div>
+  <div class="callout note"><span class="t">Шаблон tx16s-MTail</span>Здесь оба поля и <span class="ui">Elevator Differential</span> показывают N/A: величина задана прямо в миксах CH7 и CH8, это строки <code>AilEle</code> и <code>RudEle</code> с весом +20 на CH7 и −20 на CH8. Чтобы сменить направление, поменяйте знаки в этих строках в меню миксов модели. Чтобы выключить микс, поставьте вес 0. Дифференциал задан в строках <code>AilEle</code>: Diff −50 и на CH7, и на CH8. Меняйте его в обеих строках одинаково.</div>
   <p><span class="ui">Battery warning level (V)</span> — порог напряжения батареи приёмника. Ниже порога пульт вибрирует и называет напряжение, не чаще раза в 20 секунд.</p>
 
   <h3>6.7. Проверка мотора <span class="tag">пропеллер снят!</span></h3>

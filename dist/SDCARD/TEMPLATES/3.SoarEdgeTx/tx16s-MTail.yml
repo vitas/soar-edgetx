@@ -432,7 +432,7 @@ mixData:
     swtch: L46
     curve:
       type: 0
-      value: 0
+      value: -50
     delayPrec: 0
     delayUp: 0
     delayDown: 0
@@ -508,7 +508,7 @@ mixData:
     swtch: L46
     curve:
       type: 0
-      value: 0
+      value: -50
     delayPrec: 0
     delayUp: 0
     delayDown: 0

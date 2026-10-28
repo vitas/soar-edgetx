@@ -1039,6 +1039,16 @@ setup_quality_test("setup pages tolerate radios without extended global variable
   load_setup_page("src/SoarF5J/setup/mixes.lua", mixes)
   mixes.widget.refresh(EVT_VIRTUAL_ENTER, nil)
   assert(pcall(function() mixes.widget.refresh(EVT_VIRTUAL_ENTER, nil) end), "mixes page crashed without extended GVARs")
+  local sawElevatorDifferential = false
+  for index, label in ipairs(mixes.labels) do
+    if label == "Elevator Differential" then
+      local control = mixes.numberControls[index]
+      assert_equal(control.value, "N/A", "elevator differential without GV15")
+      assert(control.disabled, "elevator differential should be disabled without GV15")
+      sawElevatorDifferential = true
+    end
+  end
+  assert(sawElevatorDifferential, "mixes page missing elevator differential label")
 
   local aileron = setup_env({
     missingGvarReturnsNil = true,
@@ -1055,12 +1065,13 @@ setup_quality_test("setup pages tolerate radios without extended global variable
 end)
 
 setup_quality_test("mixes page exposes expected mix adjustment ranges", function()
-  local mixes = setup_env({ gvs = { [3] = 0, [5] = -16, [12] = 0 } })
+  local mixes = setup_env({ gvs = { [3] = 0, [5] = -16, [12] = 0, [14] = 50 } })
   load_setup_page("src/SoarF5J/setup/mixes.lua", mixes)
   mixes.widget.refresh(EVT_VIRTUAL_ENTER, nil)
 
   local differential
   local flapDifferential
+  local elevatorDifferential
   local brakeElevator
   local snapFlap
   for index, label in ipairs(mixes.labels) do
@@ -1068,6 +1079,8 @@ setup_quality_test("mixes page exposes expected mix adjustment ranges", function
       differential = mixes.numberControls[index]
     elseif label == "Flap Differential" then
       flapDifferential = mixes.numberControls[index]
+    elseif label == "Elevator Differential" then
+      elevatorDifferential = mixes.numberControls[index]
     elseif label == "Brake -> Elevator" then
       brakeElevator = mixes.numberControls[index]
     elseif label == "Snap - flap" then
@@ -1090,6 +1103,14 @@ setup_quality_test("mixes page exposes expected mix adjustment ranges", function
   flapDifferential.value = 0
   assert_equal(flapDifferential.onChangeValue(-1, flapDifferential), -1, "flap differential decrement")
   assert_equal(mixes.gvs[12], -1, "flap differential GV write")
+
+  assert(elevatorDifferential, "missing elevator differential number control")
+  assert_equal(elevatorDifferential.min_val, -100, "elevator differential minimum")
+  assert_equal(elevatorDifferential.max_val, 100, "elevator differential maximum")
+
+  elevatorDifferential.value = 50
+  assert_equal(elevatorDifferential.onChangeValue(1, elevatorDifferential), 51, "elevator differential increment")
+  assert_equal(mixes.gvs[14], 51, "elevator differential GV write")
 
   assert(brakeElevator, "missing brake elevator number control")
   assert_equal(brakeElevator.min_val, 0, "brake elevator minimum")
