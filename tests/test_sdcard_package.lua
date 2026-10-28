@@ -386,6 +386,37 @@ local function tx15_output_models(id)
   return models
 end
 
+local CURVE_POINTS = 5
+
+local function curve_point_values(content, curve_index)
+  local values = {}
+  for point = 0, CURVE_POINTS - 1 do
+    local block = indexed_block(content, "points", curve_index * CURVE_POINTS + point)
+    values[#values + 1] = tonumber(block:match("val: (%-?%d+)"))
+  end
+  return values
+end
+
+local function brake_page_reset_curves()
+  local source = read_file("src/SoarF5J/setup/brake_curves.lua")
+  local body = assert(source:match("\nlocal function reset%(%)(.-)\nend"), "missing brake page reset function")
+  local curves = {}
+
+  for values, name in body:gmatch("ys = {([^}]*)}.-model%.setCurve%((CRV_%u+)") do
+    local ys = {}
+    for value in values:gmatch("%-?%d+") do
+      ys[#ys + 1] = tonumber(value)
+    end
+    assert_equal(#ys, CURVE_POINTS, name .. " reset point count")
+    local index = assert(source:match("\nlocal " .. name .. " = (%d+)"), "missing " .. name .. " index")
+    curves[name] = { index = tonumber(index), ys = ys }
+  end
+
+  assert(curves.CRV_FLP, "brake page reset should set the flap brake curve")
+  assert(curves.CRV_AIL, "brake page reset should set the aileron brake curve")
+  return curves
+end
+
 test("static SD card content survives package rebuild", function()
   local required_files = {
     "dist/SDCARD/edgetx.sdcard.version",
@@ -693,29 +724,47 @@ test("TX16S templates start output endpoints and centers neutral", function()
   end
 end)
 
-test("TX15 templates start CV1 through CV6 linear", function()
+test("F5J templates start CV1 through CV4 linear", function()
   local linear = { -100, -50, 0, 50, 100 }
-  for _, model in ipairs(tx15_template_models()) do
+  local models = tx15_template_models()
+  for _, model in ipairs(tx16_family_template_models()) do
+    models[#models + 1] = model
+  end
+
+  for _, model in ipairs(models) do
     model.content = normalize_model_content(model.content)
 
-    for index = 0, 29 do
-      local expected = linear[index % #linear + 1]
-      assert_contains(indexed_block(model.content, "points", index), "val: " .. tostring(expected),
-        model.label .. " CV" .. tostring(math.floor(index / #linear) + 1) .. " point " .. tostring(index % #linear + 1))
+    for curve_index = 0, 3 do
+      local values = curve_point_values(model.content, curve_index)
+      for point, expected in ipairs(linear) do
+        assert_equal(values[point], expected,
+          model.label .. " CV" .. tostring(curve_index + 1) .. " point " .. tostring(point))
+      end
     end
   end
 end)
 
-test("TX16S templates start CV1 through CV6 linear", function()
-  local linear = { -100, -50, 0, 50, 100 }
-  for _, model in ipairs(tx16s_template_models()) do
+test("F5J templates start CV5 and CV6 at the brake page Reset values", function()
+  local reset = brake_page_reset_curves()
+  local models = tx15_template_models()
+  for _, model in ipairs(tx16_family_template_models()) do
+    models[#models + 1] = model
+  end
+
+  for _, model in ipairs(models) do
     model.content = normalize_model_content(model.content)
 
-    for index = 0, 29 do
-      local expected = linear[index % #linear + 1]
-      assert_contains(indexed_block(model.content, "points", index), "val: " .. tostring(expected),
-        model.label .. " CV" .. tostring(math.floor(index / #linear) + 1) .. " point " .. tostring(index % #linear + 1))
+    for _, name in ipairs({ "CRV_FLP", "CRV_AIL" }) do
+      local curve = reset[name]
+      local values = curve_point_values(model.content, curve.index)
+      for point, expected in ipairs(curve.ys) do
+        assert_equal(values[point], expected,
+          model.label .. " " .. name .. " CV" .. tostring(curve.index + 1) .. " point " .. tostring(point))
+      end
     end
+
+    assert_equal(curve_point_values(model.content, reset.CRV_AIL.index)[CURVE_POINTS], 0,
+      model.label .. " aileron brake curve should hold ailerons neutral with brakes off")
   end
 end)
 

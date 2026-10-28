@@ -99,8 +99,13 @@ wired without receiver remapping. `XTail` has no aileron-to-elevator or
 rudder-to-elevator mix on the single elevator output.
 
 The templates start with neutral output endpoints, centers, and reversals.
-CV1 through CV6 start linear at `-100, -50, 0, 50, 100`; tune those curves for
-the actual airframe during wing alignment and brake curve setup.
+The wing alignment curves CV1 through CV4 start linear at
+`-100, -50, 0, 50, 100`. The brake curves CV5 `BrF` and CV6 `BrA` start at the
+brake page `Reset` values, `-100, -50, 0, 25, 50` and `50, 50, 50, 25, 0`.
+With brakes off the ailerons sit at center and the flaps at `-50`/`+50`; at
+full brake the flaps go down and the ailerons go up.
+Tune those curves for the actual airframe during wing alignment and brake curve
+setup.
 
 The widget expects the model to provide the template structure:
 

@@ -355,7 +355,7 @@ local function reset()
 	end
 	model.setCurve(CRV_FLP, tblFlp)
 
-	ys = { -50, -50, -50, -25, 0 }
+	ys = { 50, 50, 50, 25, 0 }
 	for i, y in ipairs(ys) do
 		tblAil.y[i] = y
 	end

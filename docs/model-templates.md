@@ -78,9 +78,11 @@ CH4/CH5  Flaps
 ```
 
 Template artifacts must stay airframe-neutral: no copied output endpoints,
-centers, reversals, or curve-point tuning from a flown aircraft. CV1 through
-CV6 start with the safe linear sequence `-100, -50, 0, 50, 100`; tune them for
-the actual model through the setup pages and EdgeTX output checks.
+centers, reversals, or curve-point tuning from a flown aircraft. The wing
+alignment curves CV1 through CV4 start with the linear sequence
+`-100, -50, 0, 50, 100`. The brake curves CV5 `BrF` and CV6 `BrA` start at the
+brake page `Reset` values, so the ailerons sit at center with brakes off. Tune
+them for the actual model through the setup pages and EdgeTX output checks.
 
 ## Current Control Assignments
 
