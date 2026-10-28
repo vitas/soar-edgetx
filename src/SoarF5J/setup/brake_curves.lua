@@ -31,8 +31,10 @@ local warningPrompt = libGUI.newGUI()
 local errMsg
 
 -- Screen drawing constants
-local HEADER =    40
-local TOP =       50
+-- Fonts are larger on high resolution screens, so sizes follow the title font.
+local FONT_SCALE = math.max(1, select(2, lcd.sizeText(title, DBLSIZE)) / 40)
+local HEADER =    math.floor(40 * FONT_SCALE)
+local TOP =       HEADER + 10
 local MARGIN =    20
 local DIST_X =    40
 local HEIGHT =    150
@@ -42,12 +44,18 @@ local BUTTON_X =  LCD_W - BUTTON_W - MARGIN
 local BUTTON_H =  36
 local BUTTON_Y =  (LCD_H + TOP + HEIGHT - BUTTON_H) / 2
 local TEXT_Y =    BUTTON_Y
+local CLOSE_W =   math.floor(28 * FONT_SCALE)
+local CLOSE_Y =   math.floor(6 * FONT_SCALE)
+local CLOSE_X =   LCD_W - CLOSE_Y - CLOSE_W
 local beginEditing
 
 -- Setup warning prompt
 do
-  local PROMPT_W = 300
-  local PROMPT_H = 172
+  local PROMPT_W = math.floor(300 * FONT_SCALE)
+  local PROMPT_H = math.floor(172 * FONT_SCALE)
+  local BTN_W = math.floor(20 * FONT_SCALE)
+  local BTN_Y = math.floor(10 * FONT_SCALE)
+  local BTN_X = PROMPT_W - BTN_Y - BTN_W
   warningPrompt.x = (LCD_W - PROMPT_W) / 2
   warningPrompt.y = (LCD_H - PROMPT_H) / 2
   warningPrompt.colors = libGUI.colors
@@ -60,11 +68,11 @@ do
     safety.drawMotorDisabledWarning(warningPrompt)
   end
 
-  local buttonClose = warningPrompt.custom({ }, PROMPT_W - 30, 10, 20, 20)
+  local buttonClose = warningPrompt.custom({ }, BTN_X, BTN_Y, BTN_W, BTN_W)
 
   function buttonClose.draw(focused)
-    warningPrompt.drawRectangle(PROMPT_W - 30, 10, 20, 20, colors.primary2)
-    warningPrompt.drawText(PROMPT_W - 20, 20, "X", MIDSIZE + CENTER + VCENTER + colors.primary2)
+    warningPrompt.drawRectangle(BTN_X, BTN_Y, BTN_W, BTN_W, colors.primary2)
+    warningPrompt.drawText(BTN_X + BTN_W / 2, BTN_Y + BTN_W / 2, "X", MIDSIZE + CENTER + VCENTER + colors.primary2)
     if focused then
       buttonClose.drawFocus()
     end
@@ -391,11 +399,11 @@ local function setup_gui()
   end
 
   -- Close button
-  local buttonClose = gui.custom({ }, LCD_W - 34, 6, 28, 28)
+  local buttonClose = gui.custom({ }, CLOSE_X, CLOSE_Y, CLOSE_W, CLOSE_W)
 
   function buttonClose.draw(focused)
-    lcd.drawRectangle(LCD_W - 34, 6, 28, 28, colors.primary2)
-    lcd.drawText(LCD_W - 20, 20, "X", CENTER + VCENTER + MIDSIZE + colors.primary2)
+    lcd.drawRectangle(CLOSE_X, CLOSE_Y, CLOSE_W, CLOSE_W, colors.primary2)
+    lcd.drawText(CLOSE_X + CLOSE_W / 2, CLOSE_Y + CLOSE_W / 2, "X", CENTER + VCENTER + MIDSIZE + colors.primary2)
 
     if focused then
       buttonClose.drawFocus()

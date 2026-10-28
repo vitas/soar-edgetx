@@ -42,7 +42,9 @@ local MINDIF = 100                            -- Minimum difference between lowe
 local CHAN_BASE = getFieldInfo("ch1").id - 1  -- Base of channel sources
 
 -- Screen drawing constants
-local HEADER =     40
+-- Fonts are larger on high resolution screens, so sizes follow the title font.
+local FONT_SCALE = math.max(1, select(2, lcd.sizeText(title, DBLSIZE)) / 40)
+local HEADER =     math.floor(40 * FONT_SCALE)
 local MARGIN =     10
 local TOP =        50
 local ROW =        38
@@ -52,6 +54,9 @@ local STEP =       10
 local SCALE =      12
 local MAXOUT =     1500
 local MINDIF =     100
+local CLOSE_W =    math.floor(28 * FONT_SCALE)
+local CLOSE_Y =    math.floor(6 * FONT_SCALE)
+local CLOSE_X =    LCD_W - CLOSE_Y - CLOSE_W
 
 -- Function that gives the active points for a given value of editPoints
 local function activePoints(ep)
@@ -81,8 +86,11 @@ end
 
 -- Setup warning prompt
 do
-  local PROMPT_W = 300
-  local PROMPT_H = 172
+  local PROMPT_W = math.floor(300 * FONT_SCALE)
+  local PROMPT_H = math.floor(172 * FONT_SCALE)
+  local BTN_W = math.floor(20 * FONT_SCALE)
+  local BTN_Y = math.floor(10 * FONT_SCALE)
+  local BTN_X = PROMPT_W - BTN_Y - BTN_W
   warningPrompt.x = (LCD_W - PROMPT_W) / 2
   warningPrompt.y = (LCD_H - PROMPT_H) / 2
   warningPrompt.colors = libGUI.colors
@@ -96,11 +104,11 @@ do
   end
 
   -- Make a dismiss button from a custom element
-  local custom = warningPrompt.custom({ }, PROMPT_W - 30, 10, 20, 20)
+  local custom = warningPrompt.custom({ }, BTN_X, BTN_Y, BTN_W, BTN_W)
 
   function custom.draw(focused)
-    warningPrompt.drawRectangle(PROMPT_W - 30, 10, 20, 20, libGUI.colors.primary2)
-    warningPrompt.drawText(PROMPT_W - 20, 20, "X", MIDSIZE + CENTER + VCENTER + libGUI.colors.primary2)
+    warningPrompt.drawRectangle(BTN_X, BTN_Y, BTN_W, BTN_W, libGUI.colors.primary2)
+    warningPrompt.drawText(BTN_X + BTN_W / 2, BTN_Y + BTN_W / 2, "X", MIDSIZE + CENTER + VCENTER + libGUI.colors.primary2)
     if focused then
       custom.drawFocus()
     end
@@ -115,14 +123,6 @@ end -- Warning prompt
 
 -- Setup prompt for selecting what to edit
 do
-  local PROMPT_W = 280
-  local PROMPT_H = 210
-  local MENU_W = 75
-  local MENU_H = PROMPT_H - HEADER - 2 * MARGIN
-  local X = { 110, 180, 250 }
-  local MAX_D = 20
-  local t0 = 0
-  local h = select(2, lcd.sizeText("", libGUI.flags))
   local menuItems = {
     "Offset",
     "Range",
@@ -130,6 +130,15 @@ do
     "Center",
     "Upper"
   }
+  local h = select(2, lcd.sizeText("", libGUI.flags))
+  local PROMPT_W = math.floor(280 * FONT_SCALE)
+  -- Tall enough to show every menu item without scrolling
+  local PROMPT_H = math.max(math.floor(210 * FONT_SCALE), HEADER + 2 * MARGIN + #menuItems * h)
+  local MENU_W = math.floor(75 * FONT_SCALE)
+  local MENU_H = PROMPT_H - HEADER - 2 * MARGIN
+  local X = { math.floor(110 * FONT_SCALE), math.floor(180 * FONT_SCALE), math.floor(250 * FONT_SCALE) }
+  local MAX_D = 20
+  local t0 = 0
   editPrompt.x = (LCD_W - PROMPT_W) / 2
   editPrompt.y = (LCD_H - PROMPT_H) / 2
 
@@ -299,11 +308,11 @@ local function init()
   end
 
   -- Close button
-  local buttonClose = gui.custom({ }, LCD_W - 34, 6, 28, 28)
+  local buttonClose = gui.custom({ }, CLOSE_X, CLOSE_Y, CLOSE_W, CLOSE_W)
 
   function buttonClose.draw(focused)
-    lcd.drawRectangle(LCD_W - 34, 6, 28, 28, colors.primary2)
-    lcd.drawText(LCD_W - 20, 20, "X", CENTER + VCENTER + MIDSIZE + colors.primary2)
+    lcd.drawRectangle(CLOSE_X, CLOSE_Y, CLOSE_W, CLOSE_W, colors.primary2)
+    lcd.drawText(CLOSE_X + CLOSE_W / 2, CLOSE_Y + CLOSE_W / 2, "X", CENTER + VCENTER + MIDSIZE + colors.primary2)
 
     if focused then
       buttonClose.drawFocus()

@@ -27,10 +27,15 @@ local colors = libGUI.colors
 local title = "Switches"
 
 -- Screen drawing constants
-local HEADER = 40
+-- Fonts are larger on high resolution screens, so sizes follow the title font.
+local FONT_SCALE = math.max(1, select(2, lcd.sizeText(title, DBLSIZE)) / 40)
+local HEADER = math.floor(40 * FONT_SCALE)
 local MARGIN = 25
 local WIDTH = 60
 local COL2 = LCD_W - MARGIN - WIDTH
+local CLOSE_W = math.floor(28 * FONT_SCALE)
+local CLOSE_Y = math.floor(6 * FONT_SCALE)
+local CLOSE_X = LCD_W - CLOSE_Y - CLOSE_W
 
 -- List of 1. text label 2. logical switch.
 local items = {
@@ -74,11 +79,11 @@ local function init()
   end
 
   -- Close button
-  local buttonClose = gui.custom({}, LCD_W - 34, 6, 28, 28)
+  local buttonClose = gui.custom({}, CLOSE_X, CLOSE_Y, CLOSE_W, CLOSE_W)
 
   function buttonClose.draw(focused)
-    lcd.drawRectangle(LCD_W - 34, 6, 28, 28, colors.primary2)
-    lcd.drawText(LCD_W - 20, 20, "X", CENTER + VCENTER + MIDSIZE + colors.primary2)
+    lcd.drawRectangle(CLOSE_X, CLOSE_Y, CLOSE_W, CLOSE_W, colors.primary2)
+    lcd.drawText(CLOSE_X + CLOSE_W / 2, CLOSE_Y + CLOSE_W / 2, "X", CENTER + VCENTER + MIDSIZE + colors.primary2)
 
     if focused then
       buttonClose.drawFocus()

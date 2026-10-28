@@ -29,13 +29,18 @@ local fm = getFlightMode()
 local adjustModePrevious
 
 -- Screen drawing constants
+-- Fonts are larger on high resolution screens, so sizes follow the title font.
+local FONT_SCALE = math.max(1, select(2, lcd.sizeText(title, DBLSIZE)) / 40)
 local LCD_W2 = LCD_W / 2
-local HEADER = 40
+local HEADER = math.floor(40 * FONT_SCALE)
 local LINE = 28
 local HEIGHT = LINE - 4
 local MARGIN = 15
 local W1 = 170
 local W2 = LCD_W2 - 2 * MARGIN - W1
+local CLOSE_W = math.floor(28 * FONT_SCALE)
+local CLOSE_Y = math.floor(6 * FONT_SCALE)
+local CLOSE_X = LCD_W - CLOSE_Y - CLOSE_W
 
 local mixes = {
   { "Aileron -> Rudder", 2, -100, 100 },
@@ -121,11 +126,11 @@ local function init()
   end
 
   -- Close button
-  local buttonClose = gui.custom({}, LCD_W - 34, 6, 28, 28)
+  local buttonClose = gui.custom({}, CLOSE_X, CLOSE_Y, CLOSE_W, CLOSE_W)
 
   function buttonClose.draw(focused)
-    lcd.drawRectangle(LCD_W - 34, 6, 28, 28, colors.primary2)
-    lcd.drawText(LCD_W - 20, 20, "X", CENTER + VCENTER + MIDSIZE + colors.primary2)
+    lcd.drawRectangle(CLOSE_X, CLOSE_Y, CLOSE_W, CLOSE_W, colors.primary2)
+    lcd.drawText(CLOSE_X + CLOSE_W / 2, CLOSE_Y + CLOSE_W / 2, "X", CENTER + VCENTER + MIDSIZE + colors.primary2)
 
     if focused then
       buttonClose.drawFocus()

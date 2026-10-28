@@ -173,7 +173,11 @@ local function new_gui_stub(env)
       active = COLOR_THEME_ACTIVE
     },
     flags = 0,
-    newGUI = make_gui
+    newGUI = function()
+      local gui = make_gui()
+      env.guis[#env.guis + 1] = gui
+      return gui
+    end
   }
 end
 
@@ -185,6 +189,7 @@ local function setup_env(options)
     drawCalls = {},
     drawTexts = {},
     drawTextLines = {},
+    guis = {},
     labels = {},
     dropDowns = {},
     numbers = {},
@@ -265,7 +270,14 @@ local function setup_env(options)
       env.drawTextLines[#env.drawTextLines + 1] = tostring(text)
     end,
     exitFullScreen = function() end,
-    sizeText = function() return 24, 12 end,
+    sizeText = function(text, flags)
+      if not options.fonts then
+        return 24, 12
+      end
+      -- The bit32 stub cannot mask flags, so the size bits are decoded arithmetically.
+      local h = options.fonts[math.floor((flags or 0) / SMLSIZE) % 8] or options.fonts[0]
+      return math.floor(#tostring(text or "") * h / 2), h
+    end,
     getColor = function() return 0 end,
     RGB = function() return 0 end
   }
@@ -649,6 +661,142 @@ setup_quality_test("setup pages render inside supported landscape screen sizes",
     render_after_warning(outputs)
     assert_screen_size(screen)
     assert_draw_calls_in_screen(outputs, screen, "outputs")
+  end
+end)
+
+-- Font heights by size bits: 0 standard, 1 SMLSIZE, 2 MIDSIZE, 4 DBLSIZE.
+local font_sets = {
+  { name = "TX16S", screen = { name = "480x272", w = 480, h = 272 }, fonts = { [0] = 21, [1] = 17, [2] = 29, [4] = 40 } },
+  { name = "MK3", screen = { name = "800x480", w = 800, h = 480 }, fonts = { [0] = 27, [1] = 23, [2] = 42, [4] = 55 } }
+}
+
+local function prepare_outputs_page(env)
+  for i = 0, 31 do
+    env.outputs[i] = { name = "", min = -1000, offset = 0, max = 1000 }
+  end
+  function getFieldInfo(name)
+    if name == "ch1" then
+      return { id = 100 }
+    end
+    return nil
+  end
+  model.getMixesCount = function() return 0 end
+  model.getMix = function() return {} end
+  model.deleteMix = function() end
+  model.insertMix = function() end
+end
+
+local font_pages = {
+  { name = "switches", path = "src/SoarF5J/setup/switches.lua", options = function() return {} end },
+  { name = "mixes", path = "src/SoarF5J/setup/mixes.lua", options = function() return {} end },
+  {
+    name = "brake curves",
+    path = "src/SoarF5J/setup/brake_curves.lua",
+    warning = true,
+    options = function()
+      return { input8 = 800, curves = { [4] = five_point_curve(), [5] = five_point_curve() } }
+    end
+  },
+  {
+    name = "wing alignment",
+    path = "src/SoarF5J/setup/wing_alignment.lua",
+    warning = true,
+    options = function()
+      return {
+        input8 = 800,
+        curves = { [0] = five_point_curve(), [1] = five_point_curve(), [2] = five_point_curve(), [3] = five_point_curve() },
+        outputs = valid_wing_outputs()
+      }
+    end
+  },
+  {
+    name = "aileron camber",
+    path = "src/SoarF5J/setup/aileron_camber.lua",
+    warning = true,
+    options = function()
+      return { gvs = { [0] = 57, [1] = 24, [3] = 0, [6] = 153, [9] = 33 } }
+    end
+  },
+  {
+    name = "outputs",
+    path = "src/SoarF5J/setup/outputs.lua",
+    warning = true,
+    prepare = prepare_outputs_page,
+    options = function() return {} end
+  }
+}
+
+setup_quality_test("setup headers and warning prompts follow the title font size", function()
+  for _, set in ipairs(font_sets) do
+    local scale = set.fonts[4] / 40
+    for _, page in ipairs(font_pages) do
+      local options = page.options()
+      options.screen = set.screen
+      options.fonts = set.fonts
+      local env = setup_env(options)
+      if page.prepare then
+        page.prepare(env)
+      end
+      load_setup_page(page.path, env)
+      env.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+      local label = page.name .. " on " .. set.name
+
+      if page.warning then
+        local prompt = env.prompts[1]
+        assert(prompt and prompt.customs[1], label .. " shows the motor warning")
+        local promptW = LCD_W - 2 * prompt.x
+        local promptH = LCD_H - 2 * prompt.y
+        assert(promptW >= math.floor(300 * scale), label .. " warning is too narrow")
+        assert(promptH >= math.floor(172 * scale), label .. " warning is too low")
+        reset_draw_output(env)
+        prompt.customs[1].draw(false)
+        local button = env.drawCalls[1]
+        assert(button and button.method == "drawRectangle", label .. " draws the warning close button")
+        local x, y, w = button.args[1], button.args[2], button.args[3]
+        assert(w >= math.floor(20 * scale), label .. " warning close button is too small")
+        assert(x + w <= promptW, label .. " warning close button sticks out of the prompt")
+        if scale == 1 then
+          assert_equal(promptW, 300, label .. " warning width")
+          assert_equal(promptH, 172, label .. " warning height")
+          assert_equal(x, 270, label .. " warning close button x")
+          assert_equal(y, 10, label .. " warning close button y")
+          assert_equal(w, 20, label .. " warning close button size")
+        end
+        prompt.customs[1].onEvent(EVT_VIRTUAL_ENTER)
+      end
+
+      -- The first refresh only builds the page, and the stub GUI does not draw custom elements.
+      reset_draw_output(env)
+      env.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+      for _, gui in ipairs(env.guis) do
+        for _, custom in ipairs(gui.customs) do
+          if custom.draw then
+            custom.draw(false)
+          end
+        end
+      end
+
+      local header
+      local close
+      for _, call in ipairs(env.drawCalls) do
+        local a = call.args
+        if call.method == "drawFilledRectangle" and a[1] == 0 and a[2] == 0 and a[3] == LCD_W then
+          header = a[4]
+        elseif call.method == "drawRectangle" and a[3] == a[4] and a[1] + a[3] + a[2] == LCD_W then
+          close = a
+        end
+      end
+      assert(header, label .. " draws a header")
+      assert(header >= set.fonts[4], label .. " header is lower than the title font")
+      assert(close, label .. " draws the close button")
+      assert(close[2] + close[4] <= header, label .. " close button sticks out of the header")
+      if scale == 1 then
+        assert_equal(header, 40, label .. " header height")
+        assert_equal(close[1], LCD_W - 34, label .. " close button x")
+        assert_equal(close[2], 6, label .. " close button y")
+        assert_equal(close[3], 28, label .. " close button size")
+      end
+    end
   end
 end)
 
