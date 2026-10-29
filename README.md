@@ -6,8 +6,8 @@ covers the whole workflow:
 - **Competition** - the F5J contest flow, from launch and motor run through
   glide timing, finish, and zero result.
 - **Model setup** - a full in-radio setup UI for switches, outputs, wing
-  alignment, brake curves, camber, and mixes, so a model can be configured from
-  the radio screen without a PC or Companion.
+  alignment, brake curves, camber, mixes, and motor idle, so a model can be
+  configured from the radio screen without a PC or Companion.
 
 The widget runs from the radio SD card. The active model template supplies the
 flight modes, timers, logical switches, global variables, curves, mixes, and
@@ -16,7 +16,7 @@ named outputs that the widget reads or edits.
 ## Pages
 
 `Page` is the only widget option; it selects the competition page or one of the
-six setup pages.
+seven setup pages.
 
 | Page | Purpose |
 | --- | --- |
@@ -27,12 +27,13 @@ six setup pages.
 | `5` | Wing alignment: align the four flaperon outputs with the trims and on-screen sliders. |
 | `6` | Brake curves: edit the airbrake flap and aileron curves. |
 | `7` | Aileron/camber: adjust aileron travel, aileron-to-flap, camber-to-aileron, and thermal camber with the trims. |
+| `8` | Motor: set the motor idle at minimum throttle with the throttle trim while the motor runs. |
 
-Pages `2..7` are the setup UI. They write model changes immediately, so
-disconnect the motor before output, wing, brake, or camber setup. A setup page
-takes keys and taps only in full screen: long-press its tile and choose
-`Full screen`. The normal EdgeTX keys, trims, and touch gestures then drive the
-controls, and there is no separate save button. See [widget setup and
+Pages `2..8` are the setup UI and write model changes immediately. Disconnect
+the motor before output, wing, brake, or camber setup; only the Motor page
+needs it connected. A setup page takes keys and taps only in full screen:
+long-press its tile and choose `Full screen`. EdgeTX keys, trims, and touch
+gestures then drive the controls, with no save button. See [widget setup and
 usage](docs/widget-setup-and-usage.md#setup-pages) for the full workflow.
 
 ## What To Configure

@@ -1030,7 +1030,7 @@ test("TX15 template assigns SoarF5J widget", function()
   end
 end)
 
-test("exported templates assign SoarF5J pages 1 through 7 on layouts EdgeTX 2.9 loads", function()
+test("exported templates assign SoarF5J pages 1 through 8 on layouts EdgeTX 2.9 loads", function()
   for _, variants in ipairs({ TX15_TEMPLATE_VARIANTS, TX16S_TEMPLATE_VARIANTS, TX16S_MK3_TEMPLATE_VARIANTS }) do
     for _, variant in ipairs(variants) do
       local model = read_file(variant.exported)
@@ -1044,11 +1044,34 @@ test("exported templates assign SoarF5J pages 1 through 7 on layouts EdgeTX 2.9 
         pages[#pages + 1] = block:match("signedValue:%s*(%d+)") or "?"
       end
 
-      assert_equal(table.concat(layouts, " "), "Layout1x1 Layout2x3",
+      assert_equal(table.concat(layouts, " "), "Layout1x1 Layout2x3 Layout1x1",
         variant.exported .. " screen layouts (EdgeTX before 2.12 stops at Layout1x6)")
-      assert_equal(table.concat(pages, " "), "1 2 3 4 6 7 5",
+      assert_equal(table.concat(pages, " "), "1 2 3 4 6 7 5 8",
         variant.exported .. " SoarF5J pages by zone (Layout2x3 zones 0-2 left, 5/3/4 right top-down)")
     end
+  end
+end)
+
+test("templates let the throttle trim set the Motor page idle", function()
+  local models = tx15_template_models()
+  for _, model in ipairs(tx16_family_template_models()) do
+    models[#models + 1] = model
+  end
+
+  for _, model in ipairs(models) do
+    local counter = indexed_block(model.content, "logicalSw", 48)
+    assert_contains(counter, "func: FUNC_VPOS", model.label .. " L49 compares GV8")
+    assert_contains(counter, "def: gv(7),50", model.label .. " L49 turns on above GV8 50")
+
+    local trim = indexed_block(model.content, "customFn", 38)
+    assert_contains(trim, "swtch: L49", model.label .. " SF39 switch")
+    assert_contains(trim, "func: ADJUST_GVAR", model.label .. " SF39 function")
+    assert_contains(trim, "def: 7,Src,T3,1", model.label .. " SF39 moves GV8 with the throttle trim")
+
+    local pot = indexed_block(model.content, "curves", 12)
+    assert_contains(pot, "type: 1", model.label .. " CV13 custom curve")
+    assert_contains(pot, "points: -2", model.label .. " CV13 three points")
+    assert_contains(pot, "name: Pot", model.label .. " CV13 name")
   end
 end)
 

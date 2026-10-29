@@ -5,6 +5,7 @@ local required_sources = {
   "src/SoarF5J/setup/wing_alignment.lua",
   "src/SoarF5J/setup/brake_curves.lua",
   "src/SoarF5J/setup/aileron_camber.lua",
+  "src/SoarF5J/setup/motor.lua",
   "src/SoarF5J/lib/safety.lua"
 }
 
@@ -14,7 +15,8 @@ local setup_sources = {
   "src/SoarF5J/setup/outputs.lua",
   "src/SoarF5J/setup/wing_alignment.lua",
   "src/SoarF5J/setup/brake_curves.lua",
-  "src/SoarF5J/setup/aileron_camber.lua"
+  "src/SoarF5J/setup/aileron_camber.lua",
+  "src/SoarF5J/setup/motor.lua"
 }
 
 local forbidden_class_labels = {

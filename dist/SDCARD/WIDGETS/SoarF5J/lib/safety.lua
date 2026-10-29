@@ -21,7 +21,10 @@ local M = {
   motor_warning_title = "W A R N I N G",
   motor_warning_text = "Please disable the motor!\n\n" ..
                        "Sudden spikes may occur when channels are moved.\n\n" ..
-                       "Press ENTER to proceed."
+                       "Press ENTER to proceed.",
+  motor_runs_text = "The motor can run on this page!\n\n" ..
+                    "Hold the model and keep clear of the propeller.\n\n" ..
+                    "Press ENTER to proceed."
 }
 
 local function global(name)
@@ -35,7 +38,7 @@ local function gui_color(gui, key, fallback)
   return global(fallback)
 end
 
-function M.drawMotorDisabledWarning(gui)
+local function drawWarning(gui, text)
   local promptW = gui.motor_warning_width or 300
   local promptH = gui.motor_warning_height or 172
   local header = gui.motor_warning_header or 40
@@ -48,7 +51,16 @@ function M.drawMotorDisabledWarning(gui)
   gui.drawFilledRectangle(0, header, promptW, promptH - header, gui_color(gui, "primary2", "COLOR_THEME_PRIMARY2"))
   gui.drawRectangle(0, 0, promptW, promptH, gui_color(gui, "primary1", "COLOR_THEME_PRIMARY1"), 2)
   gui.drawText(margin, header / 2, M.motor_warning_title, titleFlags)
-  gui.drawTextLines(margin, header + margin, textW, textH, M.motor_warning_text)
+  gui.drawTextLines(margin, header + margin, textW, textH, text)
+end
+
+function M.drawMotorDisabledWarning(gui)
+  drawWarning(gui, M.motor_warning_text)
+end
+
+-- The Motor page needs the motor connected, so it warns about the propeller instead.
+function M.drawMotorRunsWarning(gui)
+  drawWarning(gui, M.motor_runs_text)
 end
 
 return M

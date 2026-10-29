@@ -114,7 +114,7 @@ physical stick or trim location depends on the radio stick mode.
 
 | Template family | Model input | Default assignment | What it does |
 | --- | --- | --- | --- |
-| `tx15-*` | `I4:Mot` | `Thr` stick, inverted | Motor throttle source in the `Motor` flight mode. Outside `Motor`, the `Off` input line holds the motor at idle. |
+| `tx15-*` | `I4:Mot` | `Thr` stick, inverted | Motor throttle source in the `Motor` flight mode. Outside `Motor`, the `Off` input line holds the motor off. |
 | `tx15-*` | `I6:CbP` | `T3` trim source | Thermal camber position between maximum reflex and the configured camber amount. |
 | `tx16s-*` | `I4:Mot` | `Thr` stick, inverted | TX16S/T16-class motor throttle source in the `Motor` flight mode. |
 | `tx16s-*` | `I6:CbP` | `T3` trim source | TX16S/T16-class thermal camber position source. The physical trim depends on the radio stick mode. |
@@ -151,8 +151,9 @@ Switches page to keep a function on without a physical switch.
 | `L8` | Report current altitude every 10 sec. | `SB up` / `SB0`, gated by `L1` | Speaks current altitude every 10 seconds after the F5J height window has closed. |
 
 Internal logical switches such as `L23`, `L24`, `L26`, `L35`, `L36`, `L37`,
-and `L44` are model-state and audio helpers. Do not assign them directly from
-the setup page unless you are intentionally editing the template logic.
+`L44`, and `L49` are model-state, audio, and setup helpers. Do not assign them
+directly from the setup page unless you are intentionally editing the template
+logic.
 
 Default launch sequence: arm with `SA down`, flick `SE down` and back, then
 control motor power with the throttle stick. Holding `SE down` is also part of
@@ -171,6 +172,21 @@ better launch workflow.
 | `KAPOW` | `L32` | Launch/snap helper mode used by the template's internal launch logic. |
 | `Speed` | `L3` | Speed flight mode, defaulted to `SD up`. |
 | `Float` | `L4` | Float flight mode, defaulted to `SD down`. |
+
+### Motor Idle
+
+In the `Motor` flight mode, `I4:Mot` takes the throttle stick through curve
+CV9 `Mot`, and `CH3` adds curve CV13 `Pot` to it. CV13 has three points, `37`,
+`18`, and `0` by default: it lifts minimum throttle by `37` and leaves full
+throttle alone, so its first point is the motor idle. At `0` the motor stops at
+minimum throttle. Outside `Motor`, `CH3` holds the motor off.
+
+The Motor setup page (`Page = 8`) sets the idle with the throttle trim while the
+motor runs. `L49` is on while `GV8` is above `50`, and `SF39` then adjusts
+`GV8` with the throttle trim `T3` instead of moving the trim. The page holds
+`GV8` at `100` while it is open, turns each click into an idle step, and
+restores `GV8` when it closes. In normal flying `GV8` stays below `50`, so
+`L49` and `SF39` stay off.
 
 ### M-tail Elevator Mixes
 

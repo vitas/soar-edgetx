@@ -146,11 +146,12 @@ or curves.
 
 ## Add The Widget
 
-Models created from the bundled templates already have the widget on two
-screens. Screen 1 runs the competition page (`Page = 1`). Screen 2 holds the six
+Models created from the bundled templates already have the widget on three
+screens. Screen 1 runs the competition page (`Page = 1`). Screen 2 holds six
 setup pages in a `2 x 3` layout: Switches, Mixes, and Outputs down the left
 column; Wing alignment, Brake curves, and Aileron/camber down the right one.
-Both layouts exist in EdgeTX 2.9 and later.
+Screen 3 runs the Motor page (`Page = 8`) on its own. These layouts exist in
+EdgeTX 2.9 and later.
 
 To add the widget to another screen, on the radio or in the EdgeTX simulator:
 
@@ -174,6 +175,7 @@ Page values:
 5  Wing alignment
 6  Brake curves
 7  Aileron/camber
+8  Motor
 ```
 
 The underlying file paths are:
@@ -186,6 +188,7 @@ setup/outputs
 setup/wing_alignment
 setup/brake_curves
 setup/aileron_camber
+setup/motor
 ```
 
 The easiest bench workflow is to keep one `SoarF5J` widget on a setup screen
@@ -205,7 +208,9 @@ no taps or keys to it. Open the page full screen:
 
 Pages that can move controls or rewrite curves show a motor-disabled warning
 prompt before editing starts. Close the prompt only after the motor is
-physically safe.
+physically safe. The Motor page needs the motor connected, so its prompt warns
+about the propeller instead: close it only with the model held and the
+propeller clear.
 
 Use the `X` button in the page header, or long-press `Exit` (`RTN`), to leave
 full screen. Leaving a setup page also clears temporary adjustment modes used
@@ -237,8 +242,10 @@ There is no separate save button in the widget.
 6. Run `Page = 5` to align flaperon outputs and curves.
 7. Run `Page = 6` to tune the flap and aileron airbrake curves.
 8. Run `Page = 7` to adjust aileron travel and camber values with the trims.
-9. Run `Page = 3` in each relevant flight mode and set receiver battery warning level.
-10. Return the contest widget to `Page = 1`.
+9. Run `Page = 8` with the model held and the propeller clear to set the motor
+   idle.
+10. Run `Page = 3` in each relevant flight mode and set receiver battery warning level.
+11. Return the contest widget to `Page = 1`.
 
 ## Setup Pages
 
@@ -409,6 +416,37 @@ logical switch. Use weight/offset or a curve if the switch positions need
 specific camber percentages. This is a model-template change, not a Lua widget
 setting.
 
+### `setup/motor`
+
+Sets the motor idle: the motor command at minimum throttle in the `Motor`
+flight mode. Set it by ear with the motor running, so that the motor keeps
+turning slowly at minimum throttle.
+
+Unlike the other setup pages, this page needs the motor connected. Its prompt
+warns about the propeller; hold the model and keep clear before you press
+`ENTER`. The page does not start the motor:
+
+1. Open the page full screen and acknowledge the prompt.
+2. Hold the throttle at minimum and start the motor as usual: `SA down`, then
+   flick `SE` down and back.
+3. Press the throttle trim (`T3`) up or down. Each click raises or lowers the
+   idle by 1, holding the trim repeats, and the motor follows at once.
+4. Stop the motor as usual and close the page. The idle stays in the model.
+
+The idle runs from `0` to `60`; at `0` the motor stops at minimum throttle. The
+value is the first point of curve CV13 `Pot`. The page keeps the middle point at
+half the idle, so the throttle still rises evenly, and full throttle does not
+change. The header shows the flight mode, so you can see when `Motor` is on.
+
+While the page is open, it sets the model adjustment mode to `GV8` = 100. The
+template's `L49` and `SF39` then count throttle trim clicks in `GV8` instead of
+moving the trim, so thermal camber does not change. The page turns the count
+into idle steps and restores `GV8` when it closes.
+
+Models made from older templates have no `L49` and `SF39`. There the throttle
+trim works as a normal trim and does not change the idle; select the value and
+turn the wheel, or tap it and slide, instead.
+
 ### `setup/mixes`
 
 Edits mix-related global variables for the current flight mode:
@@ -544,7 +582,16 @@ The model has no screen with the six setup tiles:
   loads that layout only from 2.12 and stops loading screens at the first
   layout it does not know, so older firmware shows only the competition screen.
   Create the model again from the current template, update EdgeTX, or add a
-  screen with `SoarF5J` widgets set to `Page = 2..7`.
+  screen with `SoarF5J` widgets set to `Page = 2..8`.
+
+The throttle trim does not change the idle on the Motor page:
+
+- The model was made from a template without `L49` and `SF39`. Change the idle
+  with the wheel or by touch, or create the model again from the current
+  template.
+- The page reports that curve CV13 `Pot` is missing or changed: the model's
+  CV13 is not the templates' three-point `Pot` curve, so the page leaves it
+  alone.
 
 Edits seem to affect the wrong flight mode:
 

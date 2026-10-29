@@ -39,7 +39,9 @@ local globalNames = {
   "getLogicalSwitchValue",
   "playTone",
   "loadScript",
-  "CHAR_TRIM"
+  "CHAR_TRIM",
+  "FUNC_ADJUST_GVAR",
+  "LS_FUNC_VPOS"
 }
 
 for _, name in ipairs(globalNames) do
@@ -200,9 +202,11 @@ local function setup_env(options)
     prompts = {},
     dismissedPrompts = 0,
     gvWrites = {},
+    curveWrites = {},
     stickyWrites = {},
     sticky = options.sticky or {},
     curves = options.curves or {},
+    customFunctions = options.customFunctions or {},
     outputs = options.outputs or {},
     gvs = options.gvs or {},
     logicalSwitches = options.logicalSwitches or {},
@@ -240,6 +244,9 @@ local function setup_env(options)
   FORCE = 4
   EVT_VIRTUAL_ENTER = 1
   CHAR_TRIM = "~"
+  -- Function codes as the TX16S simulator reports them.
+  FUNC_ADJUST_GVAR = 5
+  LS_FUNC_VPOS = 3
   bit32 = {
     band = function(a, b) return 0 end,
     rshift = function(a, b) return 0 end,
@@ -290,6 +297,7 @@ local function setup_env(options)
       return env.curves[index]
     end,
     setCurve = function(index, curve)
+      env.curveWrites[#env.curveWrites + 1] = { index = index, curve = curve }
       env.curves[index] = curve
     end,
     getOutput = function(index)
@@ -317,6 +325,10 @@ local function setup_env(options)
     end,
     setLogicalSwitch = function(index, value)
       env.logicalSwitches[index] = value
+    end,
+    getCustomFunction = function(index)
+      return env.customFunctions[index] or
+        { switch = 0, func = 0, value = 0, mode = 0, param = 0, repetition = 0, active = 0 }
     end
   }
 
@@ -352,6 +364,8 @@ local function setup_env(options)
       return { id = name }
     elseif name == "T1" or name == "T2" or name == "T3" or name == "T4" then
       return { id = name }
+    elseif name == "gvar8" then
+      return { id = 265 }
     end
     return nil
   end
@@ -474,6 +488,49 @@ local function valid_wing_outputs()
     [2] = { curve = 2, min = -1000, offset = 0, max = 1000 },
     [3] = { curve = 3, min = -1000, offset = 0, max = 1000 }
   }
+end
+
+-- CV13 "Pot" as EdgeTX 2.12 returns it: the idle at minimum throttle, then the middle point.
+local function pot_curve(idle, middle)
+  return { name = "Pot", type = 1, smooth = false, points = 3, y = { idle, middle, 0 }, x = { -100, 0, 100 } }
+end
+
+-- Options for a template model whose L49 and SF39 let the throttle trim count clicks in GV8.
+-- Source and switch ids follow the setup_env stubs.
+local function motor_page_options(idle, middle, gv8)
+  return {
+    curves = { [12] = pot_curve(idle or 37, middle or 18) },
+    gvs = { [7] = gv8 or 0 },
+    logicalSwitches = {
+      [48] = { func = 3, v1 = 265, v2 = 50, v3 = 0, ["and"] = 0, delay = 0, duration = 0,
+        persistent = false, state = false }
+    },
+    customFunctions = {
+      [38] = { switch = "L49", func = 5, value = "trim-thr", mode = 1, param = 7, repetition = 0, active = 1 }
+    }
+  }
+end
+
+local function open_motor_page(options)
+  local env = setup_env(options)
+  load_setup_page("src/SoarF5J/setup/motor.lua", env)
+  env.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  env.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+  env.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  return env
+end
+
+local function assert_pot_curve(curve, idle, middle, label)
+  assert(curve, label .. " missing CV13")
+  assert_equal(curve.name, "Pot", label .. " curve name")
+  assert_equal(curve.type, 1, label .. " curve type")
+  assert_equal(#curve.y, 3, label .. " point count")
+  assert_equal(curve.y[1], idle, label .. " idle point")
+  assert_equal(curve.y[2], middle, label .. " middle point")
+  assert_equal(curve.y[3], 0, label .. " full-throttle point")
+  assert_equal(curve.x[1], -100, label .. " first x")
+  assert_equal(curve.x[2], 0, label .. " middle x")
+  assert_equal(curve.x[3], 100, label .. " last x")
 end
 
 local function setup_quality_test(name, fn)
@@ -667,6 +724,14 @@ setup_quality_test("setup pages render inside supported landscape screen sizes",
     render_after_warning(outputs)
     assert_screen_size(screen)
     assert_draw_calls_in_screen(outputs, screen, "outputs")
+
+    local motorOptions = motor_page_options()
+    motorOptions.screen = screen
+    local motor = setup_env(motorOptions)
+    load_setup_page("src/SoarF5J/setup/motor.lua", motor)
+    render_after_warning(motor)
+    assert_screen_size(screen)
+    assert_draw_calls_in_screen(motor, screen, "motor")
   end
 end)
 
@@ -729,6 +794,12 @@ local font_pages = {
     warning = true,
     prepare = prepare_outputs_page,
     options = function() return {} end
+  },
+  {
+    name = "motor",
+    path = "src/SoarF5J/setup/motor.lua",
+    warning = true,
+    options = function() return motor_page_options() end
   }
 }
 
@@ -1802,4 +1873,102 @@ setup_quality_test("motor warning prompts are dismissed before page background c
   aileron.widget.background()
   assert(not aileron.activePrompt, "aileron camber left warning prompt active")
   assert(aileron.dismissedPrompts > 0, "aileron camber did not dismiss prompt")
+
+  local motor = setup_env(motor_page_options())
+  load_setup_page("src/SoarF5J/setup/motor.lua", motor)
+  motor.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert(motor.activePrompt, "motor warning prompt was not active")
+  motor.widget.background()
+  assert(not motor.activePrompt, "motor left warning prompt active")
+  assert(motor.dismissedPrompts > 0, "motor did not dismiss prompt")
+end)
+
+setup_quality_test("motor page warns that the motor runs before it touches GV8 or the idle curve", function()
+  local motor = setup_env(motor_page_options())
+  load_setup_page("src/SoarF5J/setup/motor.lua", motor)
+  motor.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  assert(motor.activePrompt, "motor page warning prompt was not active")
+  assert_equal(#motor.gvWrites, 0, "GV8 writes before the warning")
+  assert_equal(#motor.curveWrites, 0, "curve writes before the warning")
+  motor.prompts[1].fullScreenRefresh()
+  local text = text_rendered(motor)
+  assert(text:find("propeller", 1, true), "motor page warning should mention the propeller")
+  assert(not text:find("disable the motor", 1, true), "motor page must not ask to disable the motor")
+end)
+
+setup_quality_test("motor page turns throttle trim clicks into idle curve points", function()
+  local motor = open_motor_page(motor_page_options(37, 18))
+  assert_equal(motor.gvs[7], 100, "GV8 after opening the page")
+
+  motor.gvs[7] = 103
+  motor.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_pot_curve(motor.curves[12], 40, 20, "three clicks up")
+  assert_equal(motor.gvs[7], 100, "GV8 after three clicks up")
+
+  motor.gvs[7] = 98
+  motor.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_pot_curve(motor.curves[12], 38, 19, "two clicks down")
+  assert_equal(motor.gvs[7], 100, "GV8 after two clicks down")
+
+  local writes = #motor.curveWrites
+  motor.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_equal(#motor.curveWrites, writes, "curve writes without a click")
+end)
+
+setup_quality_test("motor page keeps the idle between 0 and 60", function()
+  local high = open_motor_page(motor_page_options(58, 29))
+  high.gvs[7] = 105
+  high.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_pot_curve(high.curves[12], 60, 30, "five clicks up from 58")
+
+  local low = open_motor_page(motor_page_options(2, 1))
+  low.gvs[7] = 95
+  low.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_pot_curve(low.curves[12], 0, 0, "five clicks down from 2")
+end)
+
+setup_quality_test("motor page applies the last trim click and restores GV8 when it closes", function()
+  local motor = open_motor_page(motor_page_options(37, 18, 0))
+  motor.gvs[7] = 101
+  motor.widget.background()
+  assert_pot_curve(motor.curves[12], 38, 19, "click just before closing")
+  assert_equal(motor.gvs[7], 0, "GV8 after closing")
+
+  -- A count left over from an interrupted session must not keep the throttle trim on GV8.
+  local leftover = open_motor_page(motor_page_options(37, 18, 100))
+  leftover.widget.background()
+  assert_equal(leftover.gvs[7], 0, "GV8 after closing over a leftover count")
+end)
+
+setup_quality_test("motor page edits the idle with the value field when the model has no trim function", function()
+  local options = motor_page_options(37, 18)
+  options.logicalSwitches = {}
+  options.customFunctions = {}
+  local motor = open_motor_page(options)
+  assert_equal(#motor.gvWrites, 0, "GV8 writes on a model without the trim function")
+
+  local field = motor.numberControls[1]
+  assert(field, "missing idle value field")
+  field.value = field.onChangeValue(1, field)
+  assert_equal(field.value, 38, "value field after one step up")
+  assert_pot_curve(motor.curves[12], 38, 19, "value field step")
+
+  reset_draw_output(motor)
+  motor.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert(text_rendered(motor):find("no throttle trim", 1, true), "help should say the throttle trim is not set up")
+end)
+
+setup_quality_test("motor page leaves a model without the CV13 Pot curve untouched", function()
+  local options = motor_page_options()
+  options.curves = { [12] = { name = "LSl", type = 0, smooth = false, points = 2, y = { 0, 100 } } }
+  local motor = open_motor_page(options)
+
+  local field = motor.numberControls[1]
+  assert(field and field.disabled, "idle value field should be disabled")
+  motor.gvs[7] = 103
+  motor.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_equal(#motor.curveWrites, 0, "curve writes without CV13 Pot")
+  assert_equal(#motor.gvWrites, 0, "GV8 writes without CV13 Pot")
+  assert(text_rendered(motor):find("CV13", 1, true), "missing CV13 Pot message")
 end)

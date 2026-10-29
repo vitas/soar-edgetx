@@ -27,7 +27,8 @@ local pageFiles = {
   "setup/outputs",
   "setup/wing_alignment",
   "setup/brake_curves",
-  "setup/aileron_camber"
+  "setup/aileron_camber",
+  "setup/motor"
 }
 
 local options = {
