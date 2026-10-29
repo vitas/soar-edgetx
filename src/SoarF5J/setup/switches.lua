@@ -100,9 +100,10 @@ local function init()
   local y = HEADER + 2
   local w1 = COL2 - MARGIN
 
-  -- Build lists of physical switch position indices and names.
-  local swIndices = { 0 }
-  local swNames = { "NONE" }
+  -- Build lists of switch position indices and names. EdgeTX treats an empty switch as
+  -- always on, so NONE is stored as the always-off "!ON" and ON keeps a function on.
+  local swIndices = { getSwitchIndex("!ON") or 0, getSwitchIndex("ON") or 0 }
+  local swNames = { "NONE", "ON" }
 
   for swIdx, swName in switches() do
     if string.find(swName, "^!?S[A-H][+-]?") then
@@ -127,8 +128,14 @@ local function init()
   for _, item in ipairs(items) do
     gui.label(MARGIN, y, w1, HEIGHT, item[1])
 
-    local swIdx = model.getLogicalSwitch(item[2]).v1
+    local ls = model.getLogicalSwitch(item[2])
+    local swIdx = ls.v1
     local selected = 0
+
+    -- Older templates left the switch empty, which keeps a defined logical switch on.
+    if swIdx == 0 then
+      swIdx = ls.func == 0 and swIndices[1] or swIndices[2]
+    end
 
     for i, idx in ipairs(swIndices) do
       if swIdx == idx then

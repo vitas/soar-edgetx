@@ -262,23 +262,23 @@
       <tr><td><span class="ui">Launch mode (Motor Arm) and flight timer control</span></td><td><span class="sw">SA↓</span></td><td>активиране на мотора (arm), нулиране на полета и управление на таймера</td></tr>
       <tr><td><span class="ui">Start/Stop timer and Motor</span></td><td><span class="sw">SE↓</span></td><td>щракване надолу-нагоре: старт и стоп на мотора и таймера</td></tr>
       <tr><td><span class="ui">Allow vario and voice reporting of altitude</span></td><td><span class="sw">SB↓</span></td><td>разрешава гласовото съобщаване на височината (заедно с последния ред)</td></tr>
-      <tr><td><span class="ui">Variometer sound</span></td><td><span class="sw">NONE</span></td><td>звук на вариометъра (източника изберете в настройките за телеметрия на модела); при NONE — винаги, освен при SA↓</td></tr>
+      <tr><td><span class="ui">Variometer sound</span></td><td><span class="sw">NONE</span></td><td>звук на вариометъра (източника изберете в настройките за телеметрия на модела); при NONE е изключен, при ON — винаги, освен при SA↓</td></tr>
       <tr><td><span class="ui">Speed flight mode</span></td><td><span class="sw">SD↑</span></td><td>полетен режим Speed</td></tr>
       <tr><td><span class="ui">Float flight mode</span></td><td><span class="sw">SD↓</span></td><td>полетен режим Float</td></tr>
       <tr><td><span class="ui">Landing</span></td><td><span class="sw">SF↓</span></td><td>режим за кацане: спирачки (crow) със стика за газ</td></tr>
       <tr><td><span class="ui">Landing off / crow off</span></td><td><span class="sw">SF↑</span></td><td>изход от режима за кацане</td></tr>
       <tr class="hl"><td><span class="ui">Aileron -&gt; Elevator</span></td><td><span class="sw">SA↑</span></td><td>микс: елерони → половините на кормилото за височина</td></tr>
-      <tr class="hl"><td><span class="ui">Rudder -&gt; Elevator</span></td><td><span class="sw">NONE</span></td><td>микс: кормило за посока → половините на кормилото за височина; при NONE работи винаги</td></tr>
+      <tr class="hl"><td><span class="ui">Rudder -&gt; Elevator</span></td><td><span class="sw">NONE</span></td><td>микс: кормило за посока → половините на кормилото за височина; при NONE е изключен</td></tr>
       <tr><td><span class="ui">Model Timer 1 report every 10 sec.</span></td><td><span class="sw">SC↓</span></td><td>съобщава таймер 1 на всеки 10 секунди</td></tr>
       <tr><td><span class="ui">Report current altitude every 10 sec.</span></td><td><span class="sw">SB↑</span></td><td>съобщава височината на всеки 10 секунди (само заедно с третия ред)</td></tr>
     </tbody>
   </table>
-  <div class="callout warn"><span class="t">NONE не означава „изключено“</span>В EdgeTX празното условие се смята за изпълнено, затова ред с NONE обикновено означава „работи винаги“. Не задавайте NONE на функции, които трябва да са изключени, например <span class="ui">Landing</span> или <span class="ui">Speed flight mode</span>. Миксът се изключва със стойност 0 на страницата <span class="ui">Mixes &amp; Battery</span> (стъпка 6.6).</div>
+  <div class="callout note"><span class="t">NONE и ON</span>NONE изключва функцията, ON я включва постоянно, без превключвател. В модел от по-стар шаблон ред без превключвател показва ON: EdgeTX смята празното условие за изпълнено и функцията работеше винаги. За да я изключите, изберете NONE.</div>
   <ul class="plain">
     <li><span class="sw">SA</span> има две роли: надолу — активиране на мотора, нагоре — миксът <span class="ui">Aileron -&gt; Elevator</span>, в средата — нито едното, нито другото.</li>
     <li>Ако искате да включвате <span class="ui">Rudder -&gt; Elevator</span> ръчно, задайте му свободен превключвател.</li>
     <li>За <span class="ui">Start/Stop timer and Motor</span> най-удобен е бутон с пружина. С обикновен превключвател връщайте <span class="sw">SE</span> нагоре веднага след щракването: <span class="sw">SE↓</span> по време на работа на мотора го изключва.</li>
-    <li>Гласовото съобщаване на височината работи само когато са включени и двата реда — третият и последният. По подразбиране това са <span class="sw">SB↓</span> и <span class="sw">SB↑</span>, които не могат да са включени едновременно. За да чувате височината при <span class="sw">SB↓</span>, задайте на реда <span class="ui">Report current altitude every 10 sec.</span> стойност NONE.</li>
+    <li>Гласовото съобщаване на височината работи само когато са включени и двата реда — третият и последният. По подразбиране това са <span class="sw">SB↓</span> и <span class="sw">SB↑</span>, които не могат да са включени едновременно. За да чувате височината при <span class="sw">SB↓</span>, задайте на реда <span class="ui">Report current altitude every 10 sec.</span> стойност ON.</li>
   </ul>
 
   <h3>6.2. Канали и посоки <span class="tag">Page 4 · Outputs</span></h3>
@@ -330,7 +330,7 @@
     <thead><tr><th>Поле</th><th class="nowrap">В шаблона</th><th>Кога работи</th></tr></thead>
     <tbody>
       <tr><td><span class="ui">Aileron -&gt; Elevator</span></td><td>20 (Cruise)</td><td>в Cruise, Speed и Float, когато превключвателят на микса е включен (по подразбиране <span class="sw">SA↑</span>)</td></tr>
-      <tr><td><span class="ui">Rudder -&gt; Elevator</span></td><td>20 (Cruise)</td><td>в Cruise, Speed и Float, когато превключвателят на микса е включен; при NONE — винаги</td></tr>
+      <tr><td><span class="ui">Rudder -&gt; Elevator</span></td><td>20 (Cruise)</td><td>в Cruise, Speed и Float, когато превключвателят на микса е включен; при NONE (по подразбиране) е изключен</td></tr>
       <tr><td><span class="ui">Elevator&nbsp;Differential</span></td><td>50 (Cruise)</td><td>заедно с <span class="ui">Aileron -&gt; Elevator</span></td></tr>
     </tbody>
   </table>
@@ -373,7 +373,7 @@
     <li><span class="ui">Rudder -&gt; Elevator</span> със същия знак при стик за посока надясно движи половините така, както стикът за елерони надясно. Ако сте сменили знака на <span class="ui">Aileron -&gt; Elevator</span>, сменете го и тук.</li>
     <li>Започнете с малки стойности и ги проверете в полет на безопасна височина.</li>
   </ol>
-  <div class="callout warn"><span class="t">Rudder -&gt; Elevator работи веднага</span>В текущата версия на шаблона този микс няма превключвател (NONE), а EdgeTX смята празното условие за изпълнено. Затова миксът е включен постоянно със стойност 20. Ако не ви трябва, задайте 0 в Cruise, Speed и Float. Ако го искате с превключвател, задайте превключвател на страницата <span class="ui">Switches</span> (стъпка 6.1).</div>
+  <div class="callout note"><span class="t">Rudder -&gt; Elevator по подразбиране е изключен</span>В шаблона този микс няма превключвател (NONE), затова не работи, въпреки че стойността 20 вече е зададена. За да го включвате с превключвател, задайте превключвател на страницата <span class="ui">Switches</span> (стъпка 6.1); ON включва микса постоянно.</div>
   <div class="callout note"><span class="t">Шаблонът tx16s-MTail</span>Тук двете полета и <span class="ui">Elevator Differential</span> показват N/A: стойността е зададена направо в миксовете на CH7 и CH8, това са редовете <code>AilEle</code> и <code>RudEle</code> с тегло +20 на CH7 и −20 на CH8. За да смените посоката, сменете знаците в тези редове в менюто с миксове на модела. За да изключите микса, задайте тегло 0. Диференциалът е зададен в редовете <code>AilEle</code>: Diff −50 и на CH7, и на CH8. Променяйте го еднакво и в двата реда.</div>
   <p><span class="ui">Battery warning level (V)</span> — праг на напрежението на батерията на приемника. Под прага предавателят вибрира и казва напрежението, не по-често от веднъж на 20 секунди.</p>
 

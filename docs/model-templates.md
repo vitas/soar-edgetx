@@ -130,18 +130,23 @@ servo monitor with the motor disconnected.
 EdgeTX stores three-position switch positions as `0`, `1`, and `2`; this table
 uses normal position names and also shows the raw template value.
 
+`NONE` on the Switches page turns a function off. EdgeTX treats an empty switch
+as always on, so the templates and the page store `NONE` as the always-off
+source `!ON`; `L48`, for example, is stored as `"!ON,NONE"`. Select `ON` on the
+Switches page to keep a function on without a physical switch.
+
 | Logical switch | Switches page name | Default assignment | What it does |
 | --- | --- | --- | --- |
 | `L5` | Launch mode (Motor Arm) and flight timer control | `SA down` / `SA2` | Arms the launch/motor logic and is part of the flight-timer reset/control path. |
 | `L9` | Start/Stop timer and Motor | `SE down` / `SE2` | Start/stop trigger for the motor/timer path. Use a brief down-up switch action; a spring-loaded momentary switch is optional. |
 | `L1` | Allow vario and voice reporting of altitude | `SB down` / `SB2`, gated by flight timer `L19` | Enables the altitude voice/vario gate while the flight timer is active. |
-| `L2` | Variometer sound | Not assigned (`NONE`), blocked while `SA down` | Drives the EdgeTX `VARIO` special function when assigned. |
+| `L2` | Variometer sound | Not assigned (`NONE`), blocked while `SA down` | Drives the EdgeTX `VARIO` special function. It is off until you assign a switch or select `ON`. |
 | `L3` | Speed flight mode | `SD up` / `SD0` | Selects the `Speed` flight mode. |
 | `L4` | Float flight mode | `SD down` / `SD2` | Selects the `Float` flight mode. |
 | `L6` | Landing | `SF down` / `SF2`, blocked in `Motor` | Enables landing/crow mode and plays the landing voice prompt. |
 | `L45` | Landing off / crow off | `SF up` / `SF0`, blocked in `Motor` | Leaves landing/crow mode and plays the crow-off voice prompt. The setup page also mirrors this assignment to the linked crow-off audio helper. |
 | `L46` | Aileron -> Elevator | `MTail`: `SA up` / `SA0`; `VTail` and `XTail`: `NONE` | Enables the optional `AilEle` mix only on `MTail`. It is disabled in the V-tail and single-elevator templates. |
-| `L48` | Rudder -> Elevator | Not assigned (`NONE`) | Enables the optional `RudEle` mix only on `MTail`. Assign a physical switch on the Switches page to use it. |
+| `L48` | Rudder -> Elevator | Not assigned (`NONE`) | Enables the optional `RudEle` mix only on `MTail`. It is off until you assign a physical switch on the Switches page or select `ON`. |
 | `L7` | Model Timer 1 report every 10 sec. | `SC down` / `SC2` | Speaks Timer 1 every 10 seconds. |
 | `L8` | Report current altitude every 10 sec. | `SB up` / `SB0`, gated by `L1` | Speaks current altitude every 10 seconds after the F5J height window has closed. |
 

@@ -260,23 +260,23 @@
       <tr><td><span class="ui">Launch mode (Motor Arm) and flight timer control</span></td><td><span class="sw">SA↓</span></td><td>взвод мотора, сброс полёта и управление таймером</td></tr>
       <tr><td><span class="ui">Start/Stop timer and Motor</span></td><td><span class="sw">SE↓</span></td><td>щелчок вниз-вверх: старт и стоп мотора и таймера</td></tr>
       <tr><td><span class="ui">Allow vario and voice reporting of altitude</span></td><td><span class="sw">SB↓</span></td><td>разрешает озвучку высоты (вместе с последней строкой)</td></tr>
-      <tr><td><span class="ui">Variometer sound</span></td><td><span class="sw">NONE</span></td><td>звук вариометра (источник выберите в настройках телеметрии модели); при NONE — всегда, кроме SA↓</td></tr>
+      <tr><td><span class="ui">Variometer sound</span></td><td><span class="sw">NONE</span></td><td>звук вариометра (источник выберите в настройках телеметрии модели); при NONE выключен, при ON — всегда, кроме SA↓</td></tr>
       <tr><td><span class="ui">Speed flight mode</span></td><td><span class="sw">SD↑</span></td><td>полётный режим Speed</td></tr>
       <tr><td><span class="ui">Float flight mode</span></td><td><span class="sw">SD↓</span></td><td>полётный режим Float</td></tr>
       <tr><td><span class="ui">Landing</span></td><td><span class="sw">SF↓</span></td><td>посадочный режим: тормоза (crow) на ручке газа</td></tr>
       <tr><td><span class="ui">Landing off / crow off</span></td><td><span class="sw">SF↑</span></td><td>выход из посадочного режима</td></tr>
       <tr class="hl"><td><span class="ui">Aileron -&gt; Elevator</span></td><td><span class="sw">SA↑</span></td><td>микс: элероны → половины руля высоты</td></tr>
-      <tr class="hl"><td><span class="ui">Rudder -&gt; Elevator</span></td><td><span class="sw">NONE</span></td><td>микс: РН → половины руля высоты; при NONE работает всегда</td></tr>
+      <tr class="hl"><td><span class="ui">Rudder -&gt; Elevator</span></td><td><span class="sw">NONE</span></td><td>микс: РН → половины руля высоты; при NONE выключен</td></tr>
       <tr><td><span class="ui">Model Timer 1 report every 10 sec.</span></td><td><span class="sw">SC↓</span></td><td>озвучка таймера 1 каждые 10 с</td></tr>
       <tr><td><span class="ui">Report current altitude every 10 sec.</span></td><td><span class="sw">SB↑</span></td><td>озвучка высоты каждые 10 с (только вместе с третьей строкой)</td></tr>
     </tbody>
   </table>
-  <div class="callout warn"><span class="t">NONE — это не «выключено»</span>В EdgeTX пустое условие считается выполненным, поэтому строка с NONE обычно означает «работает всегда». Не ставьте NONE функциям, которые должны быть выключены, например <span class="ui">Landing</span> или <span class="ui">Speed flight mode</span>. Микс выключают значением 0 на странице <span class="ui">Mixes &amp; Battery</span> (шаг 6.6).</div>
+  <div class="callout note"><span class="t">NONE и ON</span>NONE выключает функцию, ON включает её постоянно, без тумблера. В модели из старого шаблона строка без тумблера показывает ON: EdgeTX считает пустое условие выполненным, и функция работала всегда. Чтобы выключить её, выберите NONE.</div>
   <ul class="plain">
     <li>У <span class="sw">SA</span> две роли: вниз — взвод мотора, вверх — микс <span class="ui">Aileron -&gt; Elevator</span>, в середине — ни то, ни другое.</li>
     <li>Хотите включать <span class="ui">Rudder -&gt; Elevator</span> вручную — назначьте ему свободный тумблер.</li>
     <li>Для <span class="ui">Start/Stop timer and Motor</span> удобнее всего подпружиненная кнопка. С обычным тумблером возвращайте <span class="sw">SE</span> вверх сразу после щелчка: <span class="sw">SE↓</span> во время работы мотора выключает мотор.</li>
-    <li>Озвучка высоты срабатывает, только когда включены обе строки — третья и последняя. По умолчанию это <span class="sw">SB↓</span> и <span class="sw">SB↑</span>, вместе они не включаются. Чтобы слышать высоту при <span class="sw">SB↓</span>, поставьте строке <span class="ui">Report current altitude every 10 sec.</span> значение NONE.</li>
+    <li>Озвучка высоты срабатывает, только когда включены обе строки — третья и последняя. По умолчанию это <span class="sw">SB↓</span> и <span class="sw">SB↑</span>, вместе они не включаются. Чтобы слышать высоту при <span class="sw">SB↓</span>, поставьте строке <span class="ui">Report current altitude every 10 sec.</span> значение ON.</li>
   </ul>
 
   <h3>6.2. Каналы и направления <span class="tag">Page 4 · Outputs</span></h3>
@@ -328,7 +328,7 @@
     <thead><tr><th>Поле</th><th class="nowrap">В шаблоне</th><th>Когда работает</th></tr></thead>
     <tbody>
       <tr><td><span class="ui">Aileron -&gt; Elevator</span></td><td>20 (Cruise)</td><td>в Cruise, Speed и Float, когда включён тумблер микса (по умолчанию <span class="sw">SA↑</span>)</td></tr>
-      <tr><td><span class="ui">Rudder -&gt; Elevator</span></td><td>20 (Cruise)</td><td>в Cruise, Speed и Float, когда включён тумблер микса; при NONE — всегда</td></tr>
+      <tr><td><span class="ui">Rudder -&gt; Elevator</span></td><td>20 (Cruise)</td><td>в Cruise, Speed и Float, когда включён тумблер микса; при NONE (по умолчанию) выключен</td></tr>
       <tr><td><span class="ui">Elevator&nbsp;Differential</span></td><td>50 (Cruise)</td><td>вместе с <span class="ui">Aileron -&gt; Elevator</span></td></tr>
     </tbody>
   </table>
@@ -371,7 +371,7 @@
     <li><span class="ui">Rudder -&gt; Elevator</span> с тем же знаком при ручке РН вправо двигает половины так же, как ручка элеронов вправо. Если меняли знак у <span class="ui">Aileron -&gt; Elevator</span>, смените его и здесь.</li>
     <li>Начинайте с небольших значений и проверяйте их в полёте на безопасной высоте.</li>
   </ol>
-  <div class="callout warn"><span class="t">Rudder -&gt; Elevator работает сразу</span>В текущей версии шаблона у этого микса нет тумблера (NONE), а EdgeTX считает пустое условие выполненным. Поэтому микс включён постоянно с величиной 20. Не нужен — поставьте 0 в Cruise, Speed и Float. Нужен по тумблеру — назначьте тумблер на странице <span class="ui">Switches</span> (шаг 6.1).</div>
+  <div class="callout note"><span class="t">Rudder -&gt; Elevator по умолчанию выключен</span>В шаблоне у этого микса нет тумблера (NONE), поэтому микс не работает, хотя величина 20 уже задана. Чтобы включать его тумблером, назначьте тумблер на странице <span class="ui">Switches</span> (шаг 6.1); ON включает микс постоянно.</div>
   <div class="callout note"><span class="t">Шаблон tx16s-MTail</span>Здесь оба поля и <span class="ui">Elevator Differential</span> показывают N/A: величина задана прямо в миксах CH7 и CH8, это строки <code>AilEle</code> и <code>RudEle</code> с весом +20 на CH7 и −20 на CH8. Чтобы сменить направление, поменяйте знаки в этих строках в меню миксов модели. Чтобы выключить микс, поставьте вес 0. Дифференциал задан в строках <code>AilEle</code>: Diff −50 и на CH7, и на CH8. Меняйте его в обеих строках одинаково.</div>
   <p><span class="ui">Battery warning level (V)</span> — порог напряжения батареи приёмника. Ниже порога пульт вибрирует и называет напряжение, не чаще раза в 20 секунд.</p>
 

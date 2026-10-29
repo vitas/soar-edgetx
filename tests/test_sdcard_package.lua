@@ -224,7 +224,7 @@ local function assert_vtail_mixes(model, elevator_weight)
 
   assert_contains(indexed_block(model.content, "limitData", 17), "name: Rudd", model.label .. " CH18 virtual rudder")
   assert_contains(indexed_block(model.content, "limitData", 18), "name: Elev", model.label .. " CH19 virtual elevator")
-  assert_contains(indexed_block(model.content, "logicalSw", 45), "def: NONE,NONE", model.label .. " L46 should be disabled")
+  assert_contains(indexed_block(model.content, "logicalSw", 45), 'def: "!ON,NONE"', model.label .. " L46 should be off")
 end
 
 local function normalize_model_content(content)
@@ -1206,7 +1206,7 @@ test("TX15 XTail template maps one elevator to CH7 without aileron-elevator mix"
     assert(find_mix_block_matching(ch7_mixes, { "srcRaw: ch(21)", "weight: 100" }), model.label .. " missing CH7 elevator")
     assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I1", "weight: gv(10)" }), model.label .. " missing CH7 KAPOW elevator")
     assert(not find_mix_block(ch7_mixes, "AilEle"), model.label .. " CH7 should not include AilEle")
-    assert_contains(indexed_block(model.content, "logicalSw", 45), "def: NONE,NONE", model.label .. " L46 should be disabled")
+    assert_contains(indexed_block(model.content, "logicalSw", 45), 'def: "!ON,NONE"', model.label .. " L46 should be off")
     assert_contains(indexed_block(model.content, "limitData", 5), "name: Rudd", model.label .. " CH6 output")
     assert_contains(indexed_block(model.content, "limitData", 6), "name: Elev", model.label .. " CH7 output")
     assert_contains(indexed_block(model.content, "limitData", 7), "name: Unused", model.label .. " CH8 output")
@@ -1231,7 +1231,7 @@ test("TX16S XTail template maps one elevator to CH7 without aileron-elevator mix
     assert(find_mix_block_matching(ch7_mixes, { "srcRaw: ch(21)", "weight: 100" }), model.label .. " missing CH7 elevator")
     assert(find_mix_block_matching(ch7_mixes, { "srcRaw: I1", "weight: 85" }), model.label .. " missing CH7 fixed KAPOW elevator")
     assert(not find_mix_block(ch7_mixes, "AilEle"), model.label .. " CH7 should not include AilEle")
-    assert_contains(indexed_block(model.content, "logicalSw", 45), "def: NONE,NONE", model.label .. " L46 should be disabled")
+    assert_contains(indexed_block(model.content, "logicalSw", 45), 'def: "!ON,NONE"', model.label .. " L46 should be off")
   end
 end)
 
@@ -1270,10 +1270,29 @@ test("TX15 MTail template adds switchable GV12 aileron and GV14 rudder to elevat
 
     assert_contains(indexed_block(model.content, "logicalSw", 4), "def: SA2,NONE", model.label .. " L5 motor arm switch")
     assert_contains(indexed_block(model.content, "logicalSw", 45), "def: SA0,NONE", model.label .. " L46 switch")
-    assert_contains(indexed_block(model.content, "logicalSw", 47), "def: NONE,NONE", model.label .. " L48 switch")
+    assert_contains(indexed_block(model.content, "logicalSw", 47), 'def: "!ON,NONE"', model.label .. " L48 switch")
     assert_contains(indexed_block(model.content, "gvars", 11), "name: AiE", model.label .. " GV12 name")
     assert_contains(indexed_block(model.content, "gvars", 13), "name: RuE", model.label .. " GV14 name")
     assert_contains(indexed_block(model.content, "gvars", 14), "name: ElD", model.label .. " GV15 name")
+  end
+end)
+
+test("templates leave no Switches page function on an empty switch", function()
+  -- EdgeTX treats an empty switch as always on, so unassigned functions use the always-off "!ON".
+  local switches_page_ls = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 44, 45, 47 }
+  local models = tx15_template_models()
+  for _, model in ipairs(tx16_family_template_models()) do
+    models[#models + 1] = model
+  end
+
+  for _, model in ipairs(models) do
+    for _, index in ipairs(switches_page_ls) do
+      local ok, block = pcall(indexed_block, model.content, "logicalSw", index)
+      if ok then
+        assert(not block:find("def: NONE,", 1, true), model.label .. " L" .. tostring(index + 1) .. " uses an empty switch")
+      end
+    end
+    assert_contains(indexed_block(model.content, "logicalSw", 1), 'def: "!ON,!SA2"', model.label .. " L2 variometer switch")
   end
 end)
 

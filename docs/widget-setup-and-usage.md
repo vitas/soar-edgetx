@@ -262,17 +262,21 @@ The page currently covers:
 
 Use the drop-down fields to select the desired physical switch position for
 each function. The current defaults are listed in `docs/model-templates.md`.
-Select `NONE` when a function should be disabled or should not be assigned to
-any physical switch.
+Select `NONE` to turn a function off, or `ON` to keep it on without a physical
+switch. EdgeTX treats an empty switch as always on, so the page stores `NONE`
+as the always-off source `!ON`. Models made from older templates can still
+have an empty switch; the page shows it as `ON`, which is how it behaves, until
+you select `NONE`.
 
 The committed templates default motor arm to `SA down` and use the throttle
 stick for motor control. `MTail` defaults the aileron to elevator mix enable
 switch to `SA up`. `VTail` and `XTail` default that switch to `NONE` and do not
-use the aileron-to-elevator mix.
+use the aileron-to-elevator mix. `Variometer sound` defaults to `NONE`, so the
+vario stays silent until you assign a switch or select `ON`.
 
 The optional rudder to elevator mix has its own `L48` enable switch. It defaults
-to `NONE` on every variant, so assign a physical switch on this page before
-using it. The mix is only present on `MTail`.
+to `NONE` on every variant, which keeps the mix off; assign a physical switch on
+this page, or select `ON`, to use it. The mix is only present on `MTail`.
 
 If the motor is remapped to `P1`, `S1`, `S2`, or a side slider, configure that
 control in the radio hardware settings first. The committed TX15 `.etx`

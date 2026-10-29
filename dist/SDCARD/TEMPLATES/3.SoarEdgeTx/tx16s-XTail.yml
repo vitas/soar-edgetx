@@ -1767,7 +1767,7 @@ logicalSw:
     lsState: 0
   1:
     func: FUNC_AND
-    def: NONE,!SA2
+    def: "!ON,!SA2"
     delay: 0
     duration: 0
     andsw: NONE
@@ -2047,7 +2047,7 @@ logicalSw:
     lsState: 0
   45:
     func: FUNC_AND
-    def: NONE,NONE
+    def: "!ON,NONE"
     delay: 0
     duration: 0
     andsw: NONE

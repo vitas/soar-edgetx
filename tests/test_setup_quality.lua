@@ -181,6 +181,9 @@ local function new_gui_stub(env)
   }
 end
 
+-- Always-on and always-off switch indices, as the TX15 simulator reports them.
+local ON_SWITCHES = { ["ON"] = 237, ["!ON"] = -237 }
+
 local function setup_env(options)
   restore_globals()
   options = options or {}
@@ -363,6 +366,9 @@ local function setup_env(options)
   function getSwitchIndex(name)
     if env.availableSwitches and not env.availableSwitches[name] then
       return nil
+    end
+    if ON_SWITCHES[name] then
+      return ON_SWITCHES[name]
     end
     return name
   end
@@ -881,7 +887,37 @@ setup_quality_test("switches page can disable logical switches", function()
   aileronElevator.selected = assert(drop_down_item_index(aileronElevator, "NONE"), "missing NONE switch option")
   aileronElevator.onChange(aileronElevator)
 
-  assert_equal(switchesPage.logicalSwitches[45].v1, 0, "L46 disabled switch")
+  assert_equal(switchesPage.logicalSwitches[45].v1, ON_SWITCHES["!ON"], "L46 disabled switch")
+end)
+
+setup_quality_test("switches page shows an empty switch as ON", function()
+  local switchesPage = setup_env({
+    logicalSwitches = {
+      [45] = { func = 0, v1 = 0 },
+      [47] = { func = 1, v1 = 0 }
+    }
+  })
+  load_setup_page("src/SoarF5J/setup/switches.lua", switchesPage)
+  switchesPage.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  local dropDowns = {}
+  for _, dropDown in ipairs(switchesPage.dropDowns) do
+    dropDowns[dropDown.ls] = dropDown
+  end
+
+  local rudderElevator = assert(dropDowns[47], "missing L48 rudder-elevator dropdown")
+  assert_equal(rudderElevator.items[rudderElevator.selected], "ON", "L48 empty switch keeps the mix on")
+  assert_equal(switchesPage.logicalSwitches[47].v1, 0, "opening the page should not change L48")
+  local aileronElevator = assert(dropDowns[45], "missing L46 aileron-elevator dropdown")
+  assert_equal(aileronElevator.items[aileronElevator.selected], "NONE", "L46 without a function is off")
+
+  rudderElevator.selected = assert(drop_down_item_index(rudderElevator, "NONE"), "missing NONE switch option")
+  rudderElevator.onChange(rudderElevator)
+  assert_equal(switchesPage.logicalSwitches[47].v1, ON_SWITCHES["!ON"], "L48 NONE switch")
+
+  rudderElevator.selected = assert(drop_down_item_index(rudderElevator, "ON"), "missing ON switch option")
+  rudderElevator.onChange(rudderElevator)
+  assert_equal(switchesPage.logicalSwitches[47].v1, ON_SWITCHES["ON"], "L48 ON switch")
 end)
 
 setup_quality_test("switches page keeps crow-off audio edge switch aligned", function()
@@ -912,8 +948,8 @@ setup_quality_test("switches page keeps crow-off audio edge switch aligned", fun
   landingOff.selected = assert(drop_down_item_index(landingOff, "NONE"), "missing NONE switch option")
   landingOff.onChange(landingOff)
 
-  assert_equal(switchesPage.logicalSwitches[44].v1, 0, "L45 disabled switch")
-  assert_equal(switchesPage.logicalSwitches[46].v1, 0, "L47 disabled crow-off audio switch")
+  assert_equal(switchesPage.logicalSwitches[44].v1, ON_SWITCHES["!ON"], "L45 disabled switch")
+  assert_equal(switchesPage.logicalSwitches[46].v1, ON_SWITCHES["!ON"], "L47 disabled crow-off audio switch")
 end)
 
 setup_quality_test("curve setup pages show motor warning prompt before edits", function()
