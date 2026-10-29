@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SoarF5J: installing and setting up an M-tail model</title>
+<link rel="stylesheet" href="guide.css">
+<style>
+@page {
+  size: A4;
+  margin: 14mm 16mm 16mm;
+  @bottom-left {
+    content: "SoarF5J · M-tail model · EdgeTX 2.12";
+    font-family: "PT Sans", sans-serif;
+    font-size: 8pt;
+    color: #7a8692;
+  }
+  @bottom-right {
+    content: "page " counter(page) " of " counter(pages);
+    font-family: "PT Sans", sans-serif;
+    font-size: 8pt;
+    color: #7a8692;
+  }
+}
+</style>
+</head>
+<body>
+
+<header class="cover">
+  <div class="kicker">SoarF5J for EdgeTX · guide</div>
+  <h1>Installing and setting up <span class="nb">an M-tail</span> model</h1>
+  <p class="lead">Step by step: from copying the files to the SD card to checking the controls and the first F5J flight. The example is the <b>MTail</b> template: the rudder on CH6 and an elevator in two halves, each with its own servo (CH7 and CH8).</p>
+  <div class="meta"><span>EdgeTX 2.12</span><span>TX15</span><span>TX16S MK3</span><span>TX16S · T16 · T18</span><span>October 2026</span></div>
+</header>
+
+<p class="intro">SoarF5J is a single widget for EdgeTX color radios with two roles. The <b>competition</b> screen runs the F5J flight: motor run, glide, finish, start height and the voice countdown of the working time. The <b>setup</b> pages let you set up the model right on the radio, without a computer or Companion. The model template provides the flight modes, timers, logical switches, global variables, curves, mixes and channels, and the widget reads and changes them.</p>
+
+<div class="grid2">
+  <div class="box">
+    <h4>What you need</h4>
+    <ul class="dash">
+      <li>A radio with EdgeTX 2.12 and a color landscape screen of 480×272, 480×320 or 800×480. Tested on the TX15 and TX16S-class radios.</li>
+      <li>A receiver with at least 8 channels.</li>
+      <li>A computer and a USB cable or a card reader.</li>
+      <li>An altitude sensor with telemetry (the <code>Alt</code> sensor) for the start height.</li>
+      <li>Receiver voltage telemetry (<code>RxBt</code>, <code>Cels</code>, <code>A1</code> or <code>A2</code>) for the low battery warning.</li>
+      <li>Optionally EdgeTX Companion, to try everything in the simulator first.</li>
+    </ul>
+  </div>
+  <div class="box warn">
+    <h4>Safety</h4>
+    <ul class="dash">
+      <li>The setup pages write changes to the model <b>at once</b> and move the control surfaces.</li>
+      <li>Before setup, <b>remove the propeller or disconnect the motor</b>. Do not rely on a switch position alone.</li>
+      <li>Set up a copy of the model or work in the simulator first, then on the radio, with the model held securely.</li>
+      <li>After setup, check the channel order, directions, endpoints and failsafe.</li>
+    </ul>
+  </div>
+</div>
+
+<nav class="toc">
+  <div class="toc-title">Contents</div>
+  <ol>
+    <li><a href="#s1">Update EdgeTX and download the files</a></li>
+    <li><a href="#s2">Copy the files to the SD card</a></li>
+    <li><a href="#s3">Create a model from the template</a></li>
+    <li><a href="#s4">Connect the servos</a></li>
+    <li><a href="#s5">Screens and widget controls</a></li>
+    <li><a href="#s6">Model setup step by step</a></li>
+    <li><a href="#s7">Flying F5J with the widget</a></li>
+    <li><a href="#s8">Troubleshooting</a></li>
+    <li><a href="#s9">Checklist before the first flight</a></li>
+  </ol>
+</nav>
+
+<section id="s1" class="page-break">
+  <h2><span class="n">1</span>Update EdgeTX and download the files</h2>
+  <ol class="steps">
+    <li>Check the EdgeTX version: <span class="ui">SYS</span> → the last tab with the <span class="ui">i</span> icon, the <span class="ui">VERS</span> line. You need EdgeTX 2.12 (the latest is 2.12.5). If your version is older, update the firmware as the EdgeTX manual describes (<a href="https://manual.edgetx.org">manual.edgetx.org</a>), for example with <a href="https://buddy.edgetx.org">EdgeTX Buddy</a>.</li>
+    <li>Download the official SD card content for EdgeTX 2.12. From the latest 2.12 release at <a href="https://github.com/EdgeTX/edgetx-sdcard/releases">github.com/EdgeTX/edgetx-sdcard/releases</a> (now v2.12.3), take the archive for your radio's screen:
+      <table>
+        <thead><tr><th>Radio</th><th>Screen</th><th>Archive</th></tr></thead>
+        <tbody>
+          <tr><td>TX16S, TX16S MK2, T16, T18</td><td class="nowrap">480×272</td><td class="nowrap"><code>c480x272.zip</code></td></tr>
+          <tr><td>TX15</td><td class="nowrap">480×320</td><td class="nowrap"><code>c480x320.zip</code></td></tr>
+          <tr><td>TX16S MK3</td><td class="nowrap">800×480</td><td class="nowrap"><code>c800x480.zip</code></td></tr>
+        </tbody>
+      </table>
+    </li>
+    <li>Download the voice pack of the same version from <a href="https://github.com/EdgeTX/edgetx-sdcard-sounds/releases">github.com/EdgeTX/edgetx-sdcard-sounds/releases</a>, for example <code>edgetx-sdcard-sounds-en-2.12.3.zip</code> for English. Without it the radio does not speak numbers: time, altitude and voltage.</li>
+    <li>Open the project page <a href="https://github.com/vitas/soar-edgetx">github.com/vitas/soar-edgetx</a>, press <span class="ui">Code</span> → <span class="ui">Download ZIP</span> and unzip it. The <code>dist/SDCARD</code> folder is not a complete SD card and has no EdgeTX voice pack, so only the three items listed in section 2 are copied from it.</li>
+  </ol>
+</section>
+
+<section id="s2">
+  <h2><span class="n">2</span>Copy the files to the SD card</h2>
+  <ol class="steps">
+    <li>Connect the radio to the computer with a USB cable and choose <span class="ui">USB Storage (SD)</span>: the card shows up as a drive. You can also take the card out of the radio and put it in a card reader.</li>
+    <li>Back up the card, at least the <code>MODELS</code> and <code>RADIO</code> folders.</li>
+    <li>The official content first: unzip the SD card archive and the voice pack to the root of the card and agree to replace the files. Your models and the files you added yourself stay.</li>
+    <li>Then copy only three items from <code>dist/SDCARD</code> to the root of the card:
+      <table>
+        <thead><tr><th>What (from dist/SDCARD)</th><th>Where on the card</th><th>What for</th></tr></thead>
+        <tbody>
+          <tr><td class="nowrap"><code>WIDGETS/SoarF5J</code></td><td class="nowrap"><code>/WIDGETS/SoarF5J</code></td><td>the widget: competition and setup pages</td></tr>
+          <tr><td class="nowrap"><code>TEMPLATES/3.SoarEdgeTx</code></td><td class="nowrap"><code>/TEMPLATES/3.SoarEdgeTx</code></td><td>the MTail, VTail and XTail model templates</td></tr>
+          <tr><td class="nowrap"><code>SOUNDS/en/*.wav</code></td><td class="nowrap"><code>/SOUNDS/en</code></td><td>the template's voice prompts: launch, landing, motor off and others</td></tr>
+        </tbody>
+      </table>
+    </li>
+    <li>Eject the drive safely, unplug the cable and restart the radio.</li>
+  </ol>
+  <div class="callout note"><span class="t">Updating the widget</span>Before copying a new version, delete the whole old <code>/WIDGETS/SoarF5J</code> folder. Otherwise old compiled <code>.luac</code> files may stay on the card.</div>
+  <div class="callout tip"><span class="t">Radio voice in another language?</span>The template prompts are recorded in English and live in <code>/SOUNDS/en</code>. Copy the same <code>.wav</code> files into the folder of your radio's voice language too, for example <code>/SOUNDS/de</code>, or they may not play.</div>
+</section>
+
+<section id="s3">
+  <h2><span class="n">3</span>Create a model from the template</h2>
+  <ol class="steps">
+    <li>Open the model list on the radio and choose <span class="ui">New model</span>.</li>
+    <li>Open the <span class="ui">3.SoarEdgeTx</span> template folder and choose the template for your radio:
+      <table>
+        <thead><tr><th>Radio</th><th>Template</th><th>What is inside</th></tr></thead>
+        <tbody>
+          <tr><td>RadioMaster TX15</td><td class="nowrap"><code>tx15-MTail</code></td><td>full set, 14 global variables; CRSF module (ExpressLRS/Crossfire), 16 channels</td></tr>
+          <tr><td>RadioMaster TX16S MK3</td><td class="nowrap"><code>tx16s-mk3-MTail</code></td><td>full set, 14 variables; CRSF, 16 channels</td></tr>
+          <tr><td>TX16S, TX16S MkII, T16, T18 and similar</td><td class="nowrap"><code>tx16s-MTail</code></td><td>compatible set, 9 variables; internal multiprotocol module, 8 channels</td></tr>
+        </tbody>
+      </table>
+    </li>
+    <li>Rename the model in its settings if you like.</li>
+    <li>Check the RF module. If you use another radio system, change the module type in the model settings. For ExpressLRS, first do the steps in “ExpressLRS” below. Bind the receiver.</li>
+    <li>Set the failsafe so that the motor stops when the signal is lost (CH3 at minimum).</li>
+  </ol>
+  <div class="callout note"><span class="t">The tx16s-MTail template (9 variables)</span>Some parameters are fixed in it, and the setup pages show them as <b>N/A</b>: <span class="ui">Elevator Travel</span>, <span class="ui">Aileron -&gt; Elevator</span>, <span class="ui">Rudder -&gt; Elevator</span>, <span class="ui">Flap Differential</span>, <span class="ui">Elevator Differential</span> and the amount of thermal camber. The elevator mixes from the ailerons and from the rudder work with a fixed value of 20, and the elevator differential is 50.</div>
+
+  <h3>ExpressLRS: update and full resolution</h3>
+  <ol class="steps">
+    <li>Update ExpressLRS in the radio module and in the receiver to the same version 3, preferably the latest stable release. Versions 2 and 3 do not work together. Flash with <a href="https://github.com/ExpressLRS/ExpressLRS-Configurator/releases">ExpressLRS Configurator</a>: choose the device, the version and the same <span class="ui">Binding Phrase</span> for the module and the receiver. Flash the module over USB (choose <span class="ui">USB Serial (VCP)</span> on the radio and the <span class="ui">EdgeTX Passthrough</span> method in Configurator) or over WiFi. Flash the receiver over WiFi: power it up without the radio, and after about a minute it opens the <code>ExpressLRS RX</code> network with the password <code>expresslrs</code>. Connect to it and open <code>10.0.0.1</code>. More at <a href="https://www.expresslrs.org">expresslrs.org</a>.</li>
+    <li>Open <span class="ui">SYS</span> → <span class="ui">Tools</span> → <span class="ui">ExpressLRS</span> and set <span class="ui">Packet Rate</span> to “100Hz Full” and <span class="ui">Switch Mode</span> to “8ch”. Of the Full modes, 100Hz has the longest range. The script must be the same version as the module.</li>
+    <li>If the receiver outputs were remapped, set them back to the defaults: output 1 to channel 1 and so on up to output 8 to channel 8.</li>
+  </ol>
+  <div class="callout warn"><span class="t">Why Full mode</span>In the normal modes (Hybrid, Wide) channel 5 is the arm channel and is sent with only two positions, and channels 6–8 have low resolution. The right flap on CH5 then sits at an end, and the surfaces on CH6–CH8 move in steps. There is no need to move channels to other outputs: Full mode solves it.</div>
+  <div class="callout note"><span class="t">Channel 5 stays the arm channel</span>When the right flap is above center, ExpressLRS treats the model as armed. If the ExpressLRS script then will not let you change a setting, deploy the brakes (SF↓, throttle stick up): channel 5 goes below center.</div>
+</section>
+
+<section id="s4" class="page-break">
+  <h2><span class="n">4</span>Connect the servos</h2>
+  <figure class="wiring">
+    <svg viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg" font-family="PT Sans, sans-serif" role="img" aria-label="Channel wiring for the MTail template">
+      <text x="20" y="30" font-size="13" fill="#5d6a77">↑ direction of flight</text>
+      <rect x="40" y="112" width="620" height="33" rx="12" fill="#eef2f6" stroke="#8a96a3" stroke-width="1.5"/>
+      <rect x="52" y="145" width="138" height="15" rx="2" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+      <rect x="196" y="145" width="134" height="15" rx="2" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5"/>
+      <rect x="370" y="145" width="134" height="15" rx="2" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5"/>
+      <rect x="510" y="145" width="138" height="15" rx="2" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+      <rect x="262" y="288" width="176" height="17" rx="6" fill="#eef2f6" stroke="#8a96a3" stroke-width="1.5"/>
+      <rect x="266" y="305" width="74" height="13" rx="2" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+      <rect x="360" y="305" width="74" height="13" rx="2" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+      <path d="M350 34 C362 34 367 52 367 74 L362 250 L356 352 L344 352 L338 250 L333 74 C333 52 338 34 350 34 Z" fill="#e3e9ef" stroke="#8a96a3" stroke-width="1.5"/>
+      <rect x="318" y="27" width="64" height="5" rx="2.5" fill="#64748b"/>
+      <circle cx="350" cy="30" r="5" fill="#475569"/>
+      <rect x="347" y="282" width="6" height="64" rx="2" fill="#cfd6de" stroke="#8a96a3" stroke-width="1"/>
+      <rect x="347" y="346" width="6" height="30" rx="2" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+
+      <line x1="386" y1="30" x2="402" y2="30" stroke="#64748b" stroke-width="1.2"/>
+      <text x="408" y="34" font-size="14" font-weight="700" fill="#334155">CH3 · Moto</text>
+      <text x="408" y="51" font-size="13" fill="#334155">motor controller (ESC)</text>
+
+      <line x1="121" y1="161" x2="121" y2="178" stroke="#2563eb" stroke-width="1.2"/>
+      <text x="121" y="195" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">CH1 · Ai-L</text>
+      <text x="121" y="212" text-anchor="middle" font-size="13" fill="#334155">left aileron</text>
+
+      <line x1="263" y1="161" x2="263" y2="178" stroke="#0d9488" stroke-width="1.2"/>
+      <text x="263" y="195" text-anchor="middle" font-size="14" font-weight="700" fill="#0f766e">CH4 · Fl-L</text>
+      <text x="263" y="212" text-anchor="middle" font-size="13" fill="#334155">left flap</text>
+
+      <line x1="437" y1="161" x2="437" y2="178" stroke="#0d9488" stroke-width="1.2"/>
+      <text x="437" y="195" text-anchor="middle" font-size="14" font-weight="700" fill="#0f766e">CH5 · Fl-R</text>
+      <text x="437" y="212" text-anchor="middle" font-size="13" fill="#334155">right flap</text>
+
+      <line x1="579" y1="161" x2="579" y2="178" stroke="#2563eb" stroke-width="1.2"/>
+      <text x="579" y="195" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">CH2 · Ai-R</text>
+      <text x="579" y="212" text-anchor="middle" font-size="13" fill="#334155">right aileron</text>
+
+      <line x1="264" y1="311" x2="250" y2="311" stroke="#ea580c" stroke-width="1.2"/>
+      <text x="244" y="307" text-anchor="end" font-size="14" font-weight="700" fill="#c2410c">CH7 · ElevL</text>
+      <text x="244" y="324" text-anchor="end" font-size="13" fill="#334155">left elevator half</text>
+
+      <line x1="436" y1="311" x2="450" y2="311" stroke="#ea580c" stroke-width="1.2"/>
+      <text x="456" y="307" font-size="14" font-weight="700" fill="#c2410c">CH8 · ElevR</text>
+      <text x="456" y="324" font-size="13" fill="#334155">right elevator half</text>
+
+      <line x1="355" y1="364" x2="370" y2="364" stroke="#7c3aed" stroke-width="1.2"/>
+      <text x="376" y="368" font-size="14" font-weight="700" fill="#6d28d9">CH6 · Rudd</text>
+      <text x="376" y="385" font-size="13" fill="#334155">rudder</text>
+    </svg>
+    <figcaption>Fig. 1. Wiring for the MTail template, top view. Next to each channel number is the output name in the model.</figcaption>
+  </figure>
+
+  <table>
+    <thead><tr><th>Channel</th><th>Name in the model</th><th>What to connect</th></tr></thead>
+    <tbody>
+      <tr><td>CH1</td><td><code>Ai-L</code></td><td>left aileron</td></tr>
+      <tr><td>CH2</td><td><code>Ai-R</code></td><td>right aileron</td></tr>
+      <tr><td>CH3</td><td><code>Moto</code></td><td>motor controller (ESC)</td></tr>
+      <tr><td>CH4</td><td><code>Fl-L</code></td><td>left flap</td></tr>
+      <tr><td>CH5</td><td><code>Fl-R</code></td><td>right flap</td></tr>
+      <tr class="hl"><td>CH6</td><td><code>Rudd</code></td><td>rudder</td></tr>
+      <tr class="hl"><td>CH7</td><td><code>ElevL</code></td><td>left elevator half</td></tr>
+      <tr class="hl"><td>CH8</td><td><code>ElevR</code></td><td>right elevator half</td></tr>
+    </tbody>
+  </table>
+  <p>The wing and the motor are wired the same way in all template variants (MTail, VTail, XTail); only the tail differs. The template is neutral: centers, travels, reverses and curves are not fitted to any particular glider; that is done in section 6. The alignment curves CV1–CV4 start linear: −100, −50, 0, 50, 100. The brake curves CV5, CV6 and CV14 start as after <span class="ui">Reset</span> on page 6: with the brakes off the ailerons (CH1/CH2) sit at 0 and the flaps (CH4/CH5) at −50 and +50 %, so three quarters of the flap travel stays for the brakes.</p>
+</section>
+
+<section id="s5" class="page-break">
+  <h2><span class="n">5</span>Screens and widget controls</h2>
+  <p>The template already has three screens with the SoarF5J widget. <b>Screen 1</b> is the competition (Page = 1). <b>Screen 2</b> has six setup tiles (Page = 2…7) in two columns: <span class="ui">Switches</span>, <span class="ui">Mixes &amp; Battery</span> and <span class="ui">Outputs</span> on the left, <span class="ui">Wing alignment</span>, <span class="ui">Airbrake curves</span> and <span class="ui">Aileron/camber</span> on the right. <b>Screen 3</b> is the <span class="ui">Motor</span> page (Page = 8). Switch screens with the <kbd>PAGE</kbd> key or by swiping.</p>
+  <table>
+    <thead><tr><th>Page</th><th>Screen title</th><th>What it sets</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><span class="ui">Ready</span>, <span class="ui">Motor ON</span>, <span class="ui">Glide</span>…</td><td>F5J competition: motor, glide, finish, start height, voice countdown</td></tr>
+      <tr><td>2</td><td><span class="ui">Switches</span></td><td>which switch does what</td></tr>
+      <tr><td>3</td><td><span class="ui">Mixes &amp; Battery</span></td><td>mix values for the flight mode, receiver battery threshold</td></tr>
+      <tr><td>4</td><td><span class="ui">Outputs</span></td><td>channel order, reverse, center and endpoints</td></tr>
+      <tr><td>5</td><td><span class="ui">Wing alignment</span></td><td>aligning the ailerons and flaps</td></tr>
+      <tr><td>6</td><td><span class="ui">Airbrake curves</span></td><td>airbrake (crow) curves for the flaps, the ailerons and the elevator compensation</td></tr>
+      <tr><td>7</td><td><span class="ui">Aileron/camber</span></td><td>aileron travel, aileron to flap and camber, tuned with the trims</td></tr>
+      <tr><td>8</td><td><span class="ui">Motor</span></td><td>motor idle, with the throttle trim while the motor runs</td></tr>
+    </tbody>
+  </table>
+  <h3>How to open a page</h3>
+  <ol class="steps">
+    <li>Hold your finger on the tile until a menu appears and choose <span class="ui">Full screen</span>. If the tiles only get a frame, tap the tile you want once more: then the menu appears. With the keys: hold <kbd>Enter</kbd>, choose the tile with the wheel, press <kbd>Enter</kbd> and choose <span class="ui">Full screen</span>. A plain tap or <kbd>Enter</kbd> does not open the page: EdgeTX passes keys and touches to a widget only in full screen.</li>
+    <li>Pages that move the control surfaces first show a <span class="ui">W A R N I N G</span>: “Please disable the motor!”. Press <kbd>Enter</kbd> only after the motor is disconnected. The <span class="ui">Motor</span> page warns about the propeller (step 6.8).</li>
+    <li>To exit, tap the <span class="ui">X</span> at the top right or long-press <kbd>RTN</kbd>. On exit the temporary setup modes turn off.</li>
+  </ol>
+  <table>
+    <thead><tr><th>Key or gesture</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td><kbd>Next</kbd> / <kbd>Prev</kbd> (wheel or keys)</td><td>move between fields</td></tr>
+      <tr><td><kbd>Enter</kbd></td><td>press a button, start or finish editing</td></tr>
+      <tr><td><kbd>Inc</kbd> / <kbd>Dec</kbd> (wheel while editing)</td><td>change the value</td></tr>
+      <tr><td><kbd>Exit</kbd> (<kbd>RTN</kbd>)</td><td>leave the field or the help</td></tr>
+      <tr><td>Tap and drag</td><td>select, move sliders, scroll a list</td></tr>
+    </tbody>
+  </table>
+  <div class="callout note"><span class="t">No need to save</span>Changes are written to the model at once; there is no Save button.</div>
+  <div class="callout tip"><span class="t">No widget on the screen?</span>For example in a model made earlier. Open the model's screen setup, add the <span class="ui">SoarF5J</span> widget and choose the <span class="ui">Page</span> you need in its settings.</div>
+</section>
+
+<section id="s6" class="page-break">
+  <h2><span class="n">6</span>Model setup step by step</h2>
+  <p>Do the steps in order. The motor is disconnected (except in step 6.8), and the model is held securely.</p>
+
+  <h3>6.1. Switches <span class="tag">Page 2 · Switches</span></h3>
+  <p>Each row has a drop-down list with a switch position. Check the assignments and change them if needed.</p>
+  <table>
+    <thead><tr><th>Row on the screen</th><th class="nowrap">Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><span class="ui">Launch mode (Motor Arm) and flight timer control</span></td><td><span class="sw">SA↓</span></td><td>arms the motor, resets the flight and controls the timer</td></tr>
+      <tr><td><span class="ui">Start/Stop timer and Motor</span></td><td><span class="sw">SE↓</span></td><td>flick down and up: starts and stops the motor and the timer</td></tr>
+      <tr><td><span class="ui">Allow vario and voice reporting of altitude</span></td><td><span class="sw">SB↓</span></td><td>allows altitude callouts (together with the last row)</td></tr>
+      <tr><td><span class="ui">Variometer sound</span></td><td><span class="sw">NONE</span></td><td>vario sound (choose its source in the model's telemetry settings); off with NONE, with ON always on except at SA↓</td></tr>
+      <tr><td><span class="ui">Speed flight mode</span></td><td><span class="sw">SD↑</span></td><td>Speed flight mode</td></tr>
+      <tr><td><span class="ui">Float flight mode</span></td><td><span class="sw">SD↓</span></td><td>Float flight mode</td></tr>
+      <tr><td><span class="ui">Landing</span></td><td><span class="sw">SF↓</span></td><td>landing mode: airbrakes (crow) on the throttle stick</td></tr>
+      <tr><td><span class="ui">Landing off / crow off</span></td><td><span class="sw">SF↑</span></td><td>leaves landing mode</td></tr>
+      <tr class="hl"><td><span class="ui">Aileron -&gt; Elevator</span></td><td><span class="sw">SA↑</span></td><td>mix: ailerons → elevator halves</td></tr>
+      <tr class="hl"><td><span class="ui">Rudder -&gt; Elevator</span></td><td><span class="sw">NONE</span></td><td>mix: rudder → elevator halves; off with NONE</td></tr>
+      <tr><td><span class="ui">Model Timer 1 report every 10 sec.</span></td><td><span class="sw">SC↓</span></td><td>timer 1 callout every 10 s</td></tr>
+      <tr><td><span class="ui">Report current altitude every 10 sec.</span></td><td><span class="sw">SB↑</span></td><td>altitude callout every 10 s (only together with the third row)</td></tr>
+    </tbody>
+  </table>
+  <div class="callout note"><span class="t">NONE and ON</span>NONE turns the function off; ON keeps it on all the time, without a switch. In a model made from an older template, a row with no switch shows ON: EdgeTX treats an empty condition as true, so the function was always on. To turn it off, choose NONE.</div>
+  <ul class="plain">
+    <li><span class="sw">SA</span> has two roles: down arms the motor, up turns on the <span class="ui">Aileron -&gt; Elevator</span> mix, and the middle does neither.</li>
+    <li>To switch <span class="ui">Rudder -&gt; Elevator</span> by hand, assign it a free switch.</li>
+    <li>A spring-loaded switch works best for <span class="ui">Start/Stop timer and Motor</span>. With a normal switch, return <span class="sw">SE</span> up right after the flick: <span class="sw">SE↓</span> while the motor runs stops the motor.</li>
+    <li>Altitude callouts work only when both rows are on, the third and the last. By default they are <span class="sw">SB↓</span> and <span class="sw">SB↑</span>, which are never on together. To hear the altitude at <span class="sw">SB↓</span>, set the <span class="ui">Report current altitude every 10 sec.</span> row to ON.</li>
+  </ul>
+
+  <h3>6.2. Channels and directions <span class="tag">Page 4 · Outputs</span></h3>
+  <p>The page shows the named channels. Each row has the channel number, the name, a direction arrow and a bar with three points (lower end, center, upper end) and a live position marker.</p>
+  <ul class="plain">
+    <li><b>Direction:</b> select the arrow and press <kbd>Enter</kbd>, or tap it: the channel is reversed.</li>
+    <li><b>Center and endpoints:</b> select the bar and press <kbd>Enter</kbd>, then choose what to change: <span class="ui">Offset</span> moves all three points, <span class="ui">Range</span> changes the travel symmetrically, <span class="ui">Lower</span> the lower end, <span class="ui">Center</span> the center, <span class="ui">Upper</span> the upper end. Change it with <kbd>Inc</kbd>/<kbd>Dec</kbd> or by dragging the point, and finish with <kbd>Enter</kbd> or <kbd>Exit</kbd>.</li>
+    <li><b>Channel number:</b> <kbd>Enter</kbd> on the number and <kbd>Inc</kbd>/<kbd>Dec</kbd> move the channel with its mixes to another output. You need this only if the servos are not wired as in the table in section 4.</li>
+  </ul>
+  <table>
+    <thead><tr><th>Action</th><th>Correct response</th></tr></thead>
+    <tbody>
+      <tr><td>Elevator stick back</td><td>both elevator halves up</td></tr>
+      <tr><td>Rudder stick right</td><td>rudder right</td></tr>
+      <tr><td>Aileron stick right</td><td>right aileron up, left aileron down</td></tr>
+    </tbody>
+  </table>
+  <p><b>For an <span class="nb">M-tail</span></b>, first make both elevator halves move together: reverse <code>ElevL</code> or <code>ElevR</code> if needed. Then adjust <span class="ui">Center</span>, <span class="ui">Lower</span> and <span class="ui">Upper</span>: at neutral the halves should be level, with equal travel up and down. If the <span class="ui">Aileron -&gt; Elevator</span> and <span class="ui">Rudder -&gt; Elevator</span> mixes are on, the elevator halves move in opposite directions with the aileron and rudder sticks; that is normal (step 6.6).</p>
+
+  <h3>6.3. Wing alignment <span class="tag">Page 5 · Wing alignment</span></h3>
+  <p>Aligns the four wing surfaces: <span class="ui">Lft ail</span>, <span class="ui">Lft flp</span>, <span class="ui">Rgt flp</span>, <span class="ui">Rgt ail</span>. The changes are written to the curves and to the channel centers and endpoints.</p>
+  <ul class="plain">
+    <li>The throttle stick selects one of the five curve points.</li>
+    <li>The throttle trim moves the pair of flaps, the elevator trim the pair of ailerons.</li>
+    <li>The rudder trim aligns the left flap with the right one, the aileron trim the left aileron with the right one.</li>
+    <li>The on-screen sliders move single surfaces.</li>
+    <li>Order: the end points first, then the center, then ±50 %.</li>
+    <li><span class="ui">Reset</span> returns the alignment to the start; press it only if you want to start over.</li>
+  </ul>
+
+  <h3>6.4. Airbrakes <span class="tag">Page 6 · Airbrake curves</span></h3>
+  <ul class="plain">
+    <li>The throttle stick selects a curve point, and the surfaces move live.</li>
+    <li>The throttle trim changes the flap point (<span class="ui">Flaps</span>), the aileron trim the aileron point (<span class="ui">Aileron</span>), and the elevator trim the elevator compensation at this point of the brake travel (<span class="ui">Elevator</span>). The on-screen sliders also work. The trims themselves do not move while the page is open.</li>
+    <li><span class="ui">Brake -&gt; Elevator</span> on page 3 sets the amount of compensation, separately for each flight mode, and the <span class="ui">Elevator</span> curve sets how it builds up along the brake travel: at the bottom of the plot there is none, on the middle line it equals <span class="ui">Brake -&gt; Elevator</span>, and at the top it is twice as much.</li>
+    <li>The last point (brakes off) always stays at the bottom and has no slider, so in normal flight the elevator stays where the trim puts it.</li>
+    <li>Usually, with full brakes the flaps are down and the ailerons up. If the model pitches its nose up or down as the brakes come out, note at what travel it happens and adjust that point of the <span class="ui">Elevator</span> curve.</li>
+    <li><span class="ui">Reset</span> returns the curves to their starting shape.</li>
+    <li>Models made from older templates have no CV14 curve: the page shows N/A, the compensation follows the flap curve, and the trims move as usual.</li>
+  </ul>
+
+  <h3>6.5. Ailerons and camber <span class="tag">Page 7 · Aileron/camber</span></h3>
+  <ul class="plain">
+    <li>The page shows four parameters: for each, its code, the trim that changes it and the current value.</li>
+    <li>While the page is open, the trims change the parameters: the aileron trim the aileron travel (<code>Ail</code>), the rudder trim aileron → flap (<code>AiF</code>), the elevator trim camber → aileron (<code>CbA</code>), and the throttle trim the amount of thermal camber (<code>CbX</code>; N/A in tx16s).</li>
+    <li>In flight the camber position comes from the <code>CbP</code> input, by default trim T3 (in Mode 2 usually the throttle trim). After you leave the page, the trims work as usual again.</li>
+  </ul>
+
+  <h3>6.6. M-tail mixes and battery <span class="tag">Page 3 · Mixes &amp; Battery</span></h3>
+  <p>The values are stored separately for each flight mode. First select the mode with its switch, Cruise (the default), Speed (<span class="sw">SD↑</span>) or Float (<span class="sw">SD↓</span>), then change the values. The current mode shows at the top right, for example <span class="ui">FM0:Cruise</span>. While the page is open, the trims also change the mix values.</p>
+  <table>
+    <thead><tr><th>Field</th><th class="nowrap">In the template</th><th>When it works</th></tr></thead>
+    <tbody>
+      <tr><td><span class="ui">Aileron -&gt; Elevator</span></td><td>20 (Cruise)</td><td>in Cruise, Speed and Float, when the mix switch is on (by default <span class="sw">SA↑</span>)</td></tr>
+      <tr><td><span class="ui">Rudder -&gt; Elevator</span></td><td>20 (Cruise)</td><td>in Cruise, Speed and Float, when the mix switch is on; off with NONE (the default)</td></tr>
+      <tr><td><span class="ui">Elevator&nbsp;Differential</span></td><td>50 (Cruise)</td><td>together with <span class="ui">Aileron -&gt; Elevator</span></td></tr>
+    </tbody>
+  </table>
+  <p>Both mixes move the elevator halves in opposite directions, so the elevator helps the roll. The sign of the value sets the direction, and 0 turns the mix off. Check the values in each mode: Cruise, Speed and Float.</p>
+  <p><span class="ui">Elevator Differential</span> reduces the travel of the half going down in the <span class="ui">Aileron -&gt; Elevator</span> mix: at 50 by half, for example 6° up and 3° down; at 0 the travel is equal, and a negative value reduces the travel up.</p>
+
+  <figure>
+    <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" font-family="PT Sans, sans-serif" role="img" aria-label="Rear view: right aileron and right elevator half up, left ones down">
+      <defs>
+        <marker id="ah-en-b" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#2563eb"/></marker>
+        <marker id="ah-en-o" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#ea580c"/></marker>
+      </defs>
+      <rect x="70" y="58" width="560" height="9" rx="4.5" fill="#eef2f6" stroke="#8a96a3" stroke-width="1.5"/>
+      <rect x="70" y="58" width="120" height="9" rx="4.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+      <rect x="510" y="58" width="120" height="9" rx="4.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+      <circle cx="350" cy="64" r="17" fill="#e3e9ef" stroke="#8a96a3" stroke-width="1.5"/>
+      <line x1="130" y1="74" x2="130" y2="100" stroke="#2563eb" stroke-width="3" marker-end="url(#ah-en-b)"/>
+      <line x1="570" y1="50" x2="570" y2="24" stroke="#2563eb" stroke-width="3" marker-end="url(#ah-en-b)"/>
+      <text x="150" y="98" font-size="13" fill="#1d4ed8">left aileron down</text>
+      <text x="550" y="30" text-anchor="end" font-size="13" fill="#1d4ed8">right aileron up</text>
+
+      <rect x="346" y="104" width="8" height="40" rx="2" fill="#cfd6de" stroke="#8a96a3" stroke-width="1"/>
+      <rect x="250" y="142" width="200" height="9" rx="4.5" fill="#eef2f6" stroke="#8a96a3" stroke-width="1.5"/>
+      <rect x="250" y="142" width="92" height="9" rx="4.5" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+      <rect x="358" y="142" width="92" height="9" rx="4.5" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+      <line x1="296" y1="158" x2="296" y2="184" stroke="#ea580c" stroke-width="3" marker-end="url(#ah-en-o)"/>
+      <line x1="404" y1="135" x2="404" y2="109" stroke="#ea580c" stroke-width="3" marker-end="url(#ah-en-o)"/>
+      <text x="284" y="182" text-anchor="end" font-size="13" fill="#c2410c">left elevator half down</text>
+      <text x="416" y="116" font-size="13" fill="#c2410c">right elevator half up</text>
+      <text x="20" y="190" font-size="12" fill="#5d6a77">rear view</text>
+    </svg>
+    <figcaption>Fig. 2. Aileron stick right with the <span class="ui">Aileron -&gt; Elevator</span> mix on: each elevator half works like the aileron on its side.</figcaption>
+  </figure>
+
+  <h3>Direction check</h3>
+  <ol class="steps">
+    <li>Turn the mix on with its switch (for <span class="ui">Aileron -&gt; Elevator</span> by default <span class="sw">SA↑</span>).</li>
+    <li>Aileron stick right: the right elevator half should go up and the left one down, like the ailerons (Fig. 2). The half going down moves less.</li>
+    <li>If it is the other way round, change the sign: 20 → −20.</li>
+    <li><span class="ui">Rudder -&gt; Elevator</span> with the same sign moves the halves with the rudder stick right the same way as the aileron stick right does. If you changed the sign of <span class="ui">Aileron -&gt; Elevator</span>, change it here too.</li>
+    <li>Start with small values and check them in flight at a safe height.</li>
+  </ol>
+  <div class="callout note"><span class="t">Rudder -&gt; Elevator is off by default</span>In the template this mix has no switch (NONE), so it does not work even though the value 20 is set. To switch it, assign a switch on the <span class="ui">Switches</span> page (step 6.1); ON keeps the mix on all the time.</div>
+  <div class="callout note"><span class="t">The tx16s-MTail template</span>Here both fields and <span class="ui">Elevator Differential</span> show N/A: the amount is set directly in the CH7 and CH8 mixes, the <code>AilEle</code> and <code>RudEle</code> lines with weight +20 on CH7 and −20 on CH8. To change the direction, swap the signs in these lines in the model's mixer menu. To turn a mix off, set its weight to 0. The differential is set in the <code>AilEle</code> lines: Diff −50 on both CH7 and CH8. Change it the same way in both lines.</div>
+  <p><span class="ui">Battery warning level (V)</span> is the receiver battery voltage threshold. Below it the radio vibrates and says the voltage, at most once every 20 seconds.</p>
+
+  <h3>6.7. Motor check <span class="tag">propeller off!</span></h3>
+  <ol class="steps">
+    <li>Open the radio's channel monitor.</li>
+    <li>Without arming (SA not down), CH3 stays at −100 at any throttle stick position.</li>
+    <li>Arm with <span class="sw">SA↓</span>. Start with <span class="sw">SE↓</span> and right back: the motor starts when the switch returns. The Motor flight mode comes on, and CH3 follows the throttle stick.</li>
+    <li>Find the stick position where CH3 = +100 (full throttle). The motor input in the template is reversed (<code>I4:Mot</code>: source <code>Thr</code>, weight −100). At the start the motor gets the throttle that matches the stick position right away.</li>
+    <li>Stopping: <span class="sw">SE↓</span> again, moving SA out of the down position, or automatically after 30 seconds of motor run.</li>
+    <li>Only after this check, connect the motor and fit the propeller.</li>
+  </ol>
+
+  <h3>6.8. Motor idle <span class="tag">Page 8 · Motor</span></h3>
+  <p>The idle is the motor throttle at minimum stick in the Motor mode. Set it by ear with the motor running: at minimum the motor should turn slowly but steadily. This is the only step with the motor connected and the propeller on: hold the model and do not stand in front of the propeller.</p>
+  <ol class="steps">
+    <li>Open screen 3, the <span class="ui">Motor</span> tile in full screen, and confirm the warning with <kbd>Enter</kbd>. The page itself does not start the motor.</li>
+    <li>Throttle stick at minimum. Start the motor as usual: <span class="sw">SA↓</span>, then <span class="sw">SE↓</span> and right back. <span class="ui">FM2:Motor</span> appears in the title.</li>
+    <li>Throttle trim (T3) up or down: each click changes the idle by 1, holding repeats, and the motor changes speed at once.</li>
+    <li>Stop the motor as usual and close the page. The value stays in the model.</li>
+  </ol>
+  <ul class="plain">
+    <li>Range 0…60, default 37. At 0 the motor stops at minimum throttle.</li>
+    <li>The value is the first point of the CV13 <code>Pot</code> curve. The page keeps the middle point at half the value; full throttle does not change.</li>
+    <li>While the page is open, the throttle trim does not move the camber. In a model made from an older template (without <code>L49</code> and <code>SF39</code>) the trim works as usual and does not change the idle: select the value and turn the wheel, or touch it and drag your finger.</li>
+  </ul>
+</section>
+
+<section id="s7">
+  <h2><span class="n">7</span>Flying F5J with the widget</h2>
+  <p>Screen 1 (Page = 1) shows the flight state, the working time, the motor time and the start height.</p>
+  <div class="flow">
+    <span class="st">Ready</span><span class="arr">→</span>
+    <span class="st">Motor ON</span><span class="arr">→</span>
+    <span class="st">Glide</span><span class="arr">→</span>
+    <span class="st">Finished</span>
+    <span class="note">or</span>
+    <span class="st zero">Zero result</span>
+  </div>
+  <ol class="steps">
+    <li><span class="ui">Ready</span>: the screen shows the working time from timer 1, 10:00 by default. To change it, open the widget in full screen and press <kbd>Inc</kbd>/<kbd>Dec</kbd> (1 minute per step), or change <span class="ui">Start</span> of timer 1 in the model settings.</li>
+    <li><span class="sw">SA↓</span> arms: the flight, the timers and the height are reset.</li>
+    <li><span class="sw">SE↓</span> and back starts the motor: state <span class="ui">Motor ON</span>. The voice calls 10 and 15 seconds of motor run and counts 10…1 from the 20th second to 30 seconds.</li>
+    <li>The motor stops (<span class="sw">SE↓</span>, SA out of the down position, or automatically at 30 seconds): state <span class="ui">Glide</span>. The start height (the <code>Alt+</code> sensor) is captured while the motor runs and for 10 more seconds after it stops.</li>
+    <li>Move SA up (<span class="sw">SA↑</span>) right away: this disarms and turns on the <span class="ui">Aileron -&gt; Elevator</span> mix. While SA is down, the next SE flick starts the motor again.</li>
+    <li>In the glide the voice calls the remaining working time: every minute while more than 2 minutes remain; every 15 seconds from 2 to 1 minute; every 5 seconds from 1 minute to 10 seconds; then every second 10…1.</li>
+    <li>Landing: <span class="sw">SF↓</span> enters landing mode, and the throttle stick deploys the brakes; <span class="sw">SF↑</span> leaves it.</li>
+    <li>Finish: an <span class="sw">SE</span> flick (SA not down) gives the state <span class="ui">Finished</span> and stops the time. With the widget in full screen, <kbd>Enter</kbd> or a tap also works. The next press resets to <span class="ui">Ready</span> for a new flight.</li>
+  </ol>
+  <div class="callout warn"><span class="t">Zero result</span>Restarting the motor in the glide gives a <span class="ui">Zero result</span>, as in the F5J rules. Do not move SA down during the flight: that arms again and resets the flight.</div>
+  <p>The widget does not keep a flight log.</p>
+
+  <h2 id="s8"><span class="n">8</span>Troubleshooting</h2>
+  <table>
+    <thead><tr><th>What you see</th><th>What to do</th></tr></thead>
+    <tbody>
+      <tr><td>SoarF5J is not in the widget list</td><td>Check that the card has <code>/WIDGETS/SoarF5J/main.lua</code> and restart the radio.</td></tr>
+      <tr><td>The message “Curve #32 is missing”</td><td>The model was not made from the template. Create it from a template in the <span class="ui">3.SoarEdgeTx</span> folder.</td></tr>
+      <tr><td>A page says <code>input8</code>, a curve or a channel is missing</td><td>The model does not match the template; start from the template.</td></tr>
+      <tr><td>The tile does not open and shows only its title</td><td>That is how it works: the page works only in full screen. Hold your finger on the tile and choose <span class="ui">Full screen</span> (section 5).</td></tr>
+      <tr><td>No screen with the setup tiles</td><td>Create the model from the template. If your EdgeTX is older than 2.12, update it or take the new package: in older templates screen 2 had a 1×6 layout that EdgeTX before 2.12 does not load.</td></tr>
+      <tr><td>The throttle trim on the <span class="ui">Motor</span> page does not change the idle</td><td>The model was made from an older template, without <code>L49</code> and <code>SF39</code>. Change the value with the wheel or by touch, or create the model from the new template.</td></tr>
+      <tr><td>N/A in some fields</td><td>The tx16s template: these values are fixed in the template (section 3).</td></tr>
+      <tr><td>Values changed in the wrong mode</td><td>Select the flight mode first, then change the values.</td></tr>
+      <tr><td>The right flap (CH5) sits at an end</td><td>For ExpressLRS, set <span class="ui">Packet Rate</span> to “100Hz Full” and <span class="ui">Switch Mode</span> to “8ch” (section 3). Do not move channels.</td></tr>
+      <tr><td>After an update everything works the old way</td><td>Delete <code>/WIDGETS/SoarF5J</code>, copy the new folder and restart the radio. If that does not help, remove the widget from the screen and add it again.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="s9"><span class="n">9</span>Checklist before the first flight</h2>
+  <ul class="check">
+    <li>All control surfaces move the right way in Cruise, Speed and Float.</li>
+    <li>The elevator halves are level at neutral and have equal travel.</li>
+    <li>The <span class="ui">Aileron -&gt; Elevator</span> and <span class="ui">Rudder -&gt; Elevator</span> mixes help the roll in the right direction with small values; <span class="ui">Rudder -&gt; Elevator</span> is on deliberately or set to 0.</li>
+    <li>Without arming, CH3 is at minimum; the failsafe stops the motor.</li>
+    <li>The motor stops with an SE flick and automatically after 30 seconds.</li>
+    <li>Landing mode (<span class="sw">SF↓</span>): flaps down, ailerons up, and the throttle stick controls the brakes smoothly.</li>
+    <li>The altitude and receiver voltage telemetry show, and the voice prompts are heard.</li>
+    <li>A range check is done.</li>
+  </ul>
+
+  <p class="endnote">The full documentation is in the <code>docs</code> folder of the repository <a href="https://github.com/vitas/soar-edgetx">github.com/vitas/soar-edgetx</a>. This guide describes the templates and the widget as of October 2026.</p>
+</section>
+
+</body>
+</html>

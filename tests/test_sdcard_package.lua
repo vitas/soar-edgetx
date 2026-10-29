@@ -960,6 +960,40 @@ test("README stays short and presents the competition widget and setup UI", func
   end
 end)
 
+test("README links the M-tail guides in English, Russian, and Bulgarian", function()
+  local readme = read_file("README.md")
+
+  for _, lang in ipairs({ "en", "ru", "bg" }) do
+    local pdf = "docs/guides/SoarF5J-MTail-" .. lang .. ".pdf"
+    assert_contains(readme, "(" .. pdf .. ")", "README guide link")
+    assert(file_exists(pdf), "missing guide " .. pdf)
+    assert(file_exists("docs/guides/src/mtail-" .. lang .. ".html"), "missing guide source for " .. lang)
+  end
+end)
+
+test("documentation shows only screenshots that exist", function()
+  local shown = 0
+
+  for _, path in ipairs({ "README.md", "docs/widget-setup-and-usage.md" }) do
+    local content = read_file(path)
+    local dir = path:match("^(.*)/[^/]*$")
+    local function check(ref)
+      shown = shown + 1
+      local full = dir and (dir .. "/" .. ref) or ref
+      assert(file_exists(full), path .. " shows a missing image: " .. ref)
+    end
+
+    for ref in content:gmatch('<img src="([^"]+)"') do
+      check(ref)
+    end
+    for ref in content:gmatch("!%[[^%]]*%]%(([^%)]+)%)") do
+      check(ref)
+    end
+  end
+
+  assert(shown > 0, "documentation should show screenshots")
+end)
+
 test("planning documents are local-only and ignored", function()
   local ignore = read_file(".gitignore")
   assert(ignore:find("docs/plans/", 1, true), "missing docs/plans ignore rule")

@@ -200,6 +200,8 @@ different `Page`.
 
 ## Opening A Setup Page
 
+![Setup tiles on the second template screen](images/setup-tiles.png)
+
 Outside full screen, a setup page only draws its title tile, and EdgeTX passes
 no taps or keys to it. Open the page full screen:
 
@@ -252,7 +254,11 @@ There is no separate save button in the widget.
 
 ## Setup Pages
 
+The screenshots are from the TX15 simulator with the `tx15-MTail` template.
+
 ### `setup/switches`
+
+![Switches page](images/page-switches.png)
 
 Assigns physical switch positions to the logical switches used by the model.
 The page currently covers:
@@ -335,6 +341,8 @@ value every 10 seconds after the F5J height window has closed.
 
 ### `setup/outputs`
 
+![Outputs page](images/page-outputs.png)
+
 Configures named output channels.
 
 This page can:
@@ -349,6 +357,8 @@ Only named output channels are shown. Name the channel in the model output page
 if it does not appear.
 
 ### `setup/wing_alignment`
+
+![Wing alignment page](images/page-wing-alignment.png)
 
 Aligns the four flaperon outputs:
 
@@ -368,6 +378,8 @@ Use `Reset` only when you intentionally want to return the flaperon alignment
 curves and endpoints to the page defaults.
 
 ### `setup/brake_curves`
+
+![Airbrake curves page](images/page-airbrake-curves.png)
 
 Edits the airbrake curves: flaps CV5 `BrF`, ailerons CV6 `BrA`, and the
 elevator compensation CV14 `BrE`.
@@ -405,6 +417,8 @@ curve shapes.
 
 ### `setup/aileron_camber`
 
+![Aileron/camber page](images/page-aileron-camber.png)
+
 Lists four wing values and the trim that adjusts each one while the page is
 open:
 
@@ -439,6 +453,8 @@ setting.
 
 ### `setup/motor`
 
+![Motor page with the motor running](images/page-motor.png)
+
 Sets the motor idle: the motor command at minimum throttle in the `Motor`
 flight mode. Set it by ear with the motor running, so that the motor keeps
 turning slowly at minimum throttle.
@@ -470,6 +486,8 @@ turn the wheel, or tap it and slide, instead.
 
 ### `setup/mixes`
 
+![Mixes & Battery page](images/page-mixes.png)
+
 Edits mix-related global variables for the current flight mode:
 
 - Aileron to rudder.
@@ -496,6 +514,8 @@ template's trim buttons can adjust the mix GVARs through the model's
 adjustment mode.
 
 ## Competition Widget
+
+<img src="images/competition-motor.png" width="49%" alt="Competition screen with the motor running"> <img src="images/competition-glide.png" width="49%" alt="Competition screen in glide">
 
 Use:
 

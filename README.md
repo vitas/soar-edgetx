@@ -13,6 +13,11 @@ The widget runs from the radio SD card. The active model template supplies the
 flight modes, timers, logical switches, global variables, curves, mixes, and
 named outputs that the widget reads or edits.
 
+<img src="docs/images/competition-glide.png" width="32%" alt="Competition screen in glide"> <img src="docs/images/setup-tiles.png" width="32%" alt="Setup tiles"> <img src="docs/images/page-airbrake-curves.png" width="32%" alt="Airbrake curves page">
+
+**Guide (PDF):** an M-tail model step by step, from the SD card to the first flight, in
+[English](docs/guides/SoarF5J-MTail-en.pdf), [Russian](docs/guides/SoarF5J-MTail-ru.pdf), and [Bulgarian](docs/guides/SoarF5J-MTail-bg.pdf).
+
 ## Pages
 
 `Page` is the only widget option; it selects the competition page or one of the
@@ -49,8 +54,6 @@ usage](docs/widget-setup-and-usage.md#setup-pages) for the full workflow.
 
 ## Build And Verify
 
-From the repo root:
-
 ```sh
 make package
 make verify
@@ -67,8 +70,4 @@ make install-widget SDCARD=/Volumes/TX15
 ```
 
 The Companion simulator can use `dist/SDCARD` itself as its SD Structure path.
-
-## More Docs
-
-- [project structure](docs/project-structure.md)
-- [TX15 artifact notes](models/tx15/README.md)
+More docs: [project structure](docs/project-structure.md) and [TX15 artifact notes](models/tx15/README.md).
