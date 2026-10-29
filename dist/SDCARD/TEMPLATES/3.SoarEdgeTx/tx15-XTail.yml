@@ -632,11 +632,11 @@ mixData:
     name: MotEle
   - destCh: 21
     srcRaw: ch(20)
-    weight: "!gv(4)"
+    weight: gv(4)
     swtch: NONE
     curve:
       type: 3
-      value: 5
+      value: 14
     delayPrec: 0
     delayUp: 0
     delayDown: 0
@@ -649,25 +649,6 @@ mixData:
     flightModes: 000000000
     offset: gv(4)
     name: BrkEle
-  - destCh: 21
-    srcRaw: MAX
-    weight: gv(4)
-    swtch: NONE
-    curve:
-      type: 3
-      value: 5
-    delayPrec: 0
-    delayUp: 0
-    delayDown: 0
-    speedPrec: 0
-    speedUp: 0
-    speedDown: 0
-    carryTrim: 0
-    mltpx: ADD
-    mixWarn: 0
-    flightModes: 000000000
-    offset: "!gv(4)"
-    name: BEOffs
   - destCh: 21
     srcRaw: MAX
     weight: gv(4)
@@ -1627,6 +1608,11 @@ curves:
     smooth: 0
     points: -2
     name: Pot
+  13:
+    type: 0
+    smooth: 0
+    points: 0
+    name: BrE
   31:
     type: 0
     smooth: 0
@@ -1779,6 +1765,16 @@ points:
     val: 0
   72:
     val: 0
+  73:
+    val: 50
+  74:
+    val: 0
+  75:
+    val: -50
+  76:
+    val: -75
+  77:
+    val: -100
   163:
     val: -46
   164:
@@ -2102,6 +2098,14 @@ logicalSw:
     andsw: NONE
     lsPersist: 0
     lsState: 0
+  49:
+    func: FUNC_VNEG
+    def: gv(7),-50
+    delay: 0
+    duration: 0
+    andsw: NONE
+    lsPersist: 0
+    lsState: 0
 customFn:
   1:
     swtch: ONE
@@ -2235,6 +2239,18 @@ customFn:
     swtch: L49
     func: ADJUST_GVAR
     def: 7,Src,T3,1
+  39:
+    swtch: L50
+    func: ADJUST_GVAR
+    def: 7,Src,T3,1
+  40:
+    swtch: L50
+    func: ADJUST_GVAR
+    def: 7,Src,T4,1
+  41:
+    swtch: L50
+    func: ADJUST_GVAR
+    def: 7,Src,T2,1
 thrTraceSrc: Thr
 thrTrimSw: 0
 potsWarnMode: WARN_OFF

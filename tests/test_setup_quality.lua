@@ -41,7 +41,8 @@ local globalNames = {
   "loadScript",
   "CHAR_TRIM",
   "FUNC_ADJUST_GVAR",
-  "LS_FUNC_VPOS"
+  "LS_FUNC_VPOS",
+  "LS_FUNC_VNEG"
 }
 
 for _, name in ipairs(globalNames) do
@@ -247,6 +248,7 @@ local function setup_env(options)
   -- Function codes as the TX16S simulator reports them.
   FUNC_ADJUST_GVAR = 5
   LS_FUNC_VPOS = 3
+  LS_FUNC_VNEG = 4
   bit32 = {
     band = function(a, b) return 0 end,
     rshift = function(a, b) return 0 end,
@@ -481,6 +483,39 @@ local function five_point_curve()
   return { y = { -100, -50, 0, 50, 100 } }
 end
 
+-- CV14 "BrE" as the templates ship it: no elevator compensation at the last point, brakes off.
+local function brake_elevator_curve()
+  return { name = "BrE", y = { 50, 0, -50, -75, -100 } }
+end
+
+local function brake_page_curves()
+  return { [4] = five_point_curve(), [5] = five_point_curve(), [13] = brake_elevator_curve() }
+end
+
+-- Options for a template model whose L50 and SF40-SF42 move GV8 instead of the throttle,
+-- aileron and elevator trims. Source and switch ids follow the setup_env stubs.
+local function brake_trim_capture_options(gv8)
+  local function capture(trim)
+    return { switch = "L50", func = 5, value = trim, mode = 1, param = 7, repetition = 0, active = 1 }
+  end
+
+  return {
+    input8 = 800,
+    values = { [800] = -512 },
+    curves = brake_page_curves(),
+    gvs = { [7] = gv8 or 0 },
+    logicalSwitches = {
+      [49] = { func = 4, v1 = 265, v2 = -50, v3 = 0, ["and"] = 0, delay = 0, duration = 0,
+        persistent = false, state = false }
+    },
+    customFunctions = {
+      [39] = capture("trim-thr"),
+      [40] = capture("trim-ail"),
+      [41] = capture("trim-ele")
+    }
+  }
+end
+
 local function valid_wing_outputs()
   return {
     [0] = { curve = 0, min = -1000, offset = 0, max = 1000 },
@@ -653,15 +688,25 @@ setup_quality_test("setup pages render inside supported landscape screen sizes",
     local brake = setup_env({
       screen = screen,
       input8 = 800,
-      curves = {
-        [4] = five_point_curve(),
-        [5] = five_point_curve()
-      }
+      curves = brake_page_curves()
     })
     load_setup_page("src/SoarF5J/setup/brake_curves.lua", brake)
     render_after_warning(brake)
     assert_screen_size(screen)
     assert_draw_calls_in_screen(brake, screen, "brake curves")
+
+    local brakeWithoutElevator = setup_env({
+      screen = screen,
+      input8 = 800,
+      curves = {
+        [4] = five_point_curve(),
+        [5] = five_point_curve()
+      }
+    })
+    load_setup_page("src/SoarF5J/setup/brake_curves.lua", brakeWithoutElevator)
+    render_after_warning(brakeWithoutElevator)
+    assert_screen_size(screen)
+    assert_draw_calls_in_screen(brakeWithoutElevator, screen, "brake curves without the elevator curve")
 
     local wing = setup_env({
       screen = screen,
@@ -765,7 +810,7 @@ local font_pages = {
     path = "src/SoarF5J/setup/brake_curves.lua",
     warning = true,
     options = function()
-      return { input8 = 800, curves = { [4] = five_point_curve(), [5] = five_point_curve() } }
+      return { input8 = 800, curves = brake_page_curves() }
     end
   },
   {
@@ -1082,14 +1127,16 @@ setup_quality_test("brake curves supports radios without getStickySwitch", funct
   assert(brake.stickyWrites[1] and brake.stickyWrites[1].value == true, "brake curves did not enable step switch")
 end)
 
-setup_quality_test("brake curves trims adjust selected flap and aileron landing points", function()
+-- Returns the second point of the flap, aileron and elevator curves.
+local function brake_points(env)
+  return env.curves[4].y[2], env.curves[5].y[2], env.curves[13].y[2]
+end
+
+setup_quality_test("brake curves trims adjust selected flap, aileron and elevator points", function()
   local brake = setup_env({
     input8 = 800,
     values = { [800] = -512 },
-    curves = {
-      [4] = five_point_curve(),
-      [5] = five_point_curve()
-    }
+    curves = brake_page_curves()
   })
 
   load_setup_page("src/SoarF5J/setup/brake_curves.lua", brake)
@@ -1099,26 +1146,31 @@ setup_quality_test("brake curves trims adjust selected flap and aileron landing 
     "brake curves did not enable live step switch")
 
   brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
-  local flapBefore = brake.curves[4].y[2]
-  local aileronBefore = brake.curves[5].y[2]
+  local flap, aileron, elevator = brake_points(brake)
 
   brake.values["trim-thr"] = 1024
   brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
-
-  assert_equal(brake.curves[4].y[2], flapBefore + 5, "throttle trim flap point")
-  assert_equal(brake.curves[5].y[2], aileronBefore, "throttle trim aileron point")
-
+  assert_equal(select(1, brake_points(brake)), flap + 5, "throttle trim flap point")
+  assert_equal(select(2, brake_points(brake)), aileron, "throttle trim aileron point")
+  assert_equal(select(3, brake_points(brake)), elevator, "throttle trim elevator point")
   brake.values["trim-thr"] = 0
   brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
 
-  flapBefore = brake.curves[4].y[2]
-  aileronBefore = brake.curves[5].y[2]
-
-  brake.values["trim-ele"] = -1024
+  flap, aileron, elevator = brake_points(brake)
+  brake.values["trim-ail"] = 1024
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_equal(select(1, brake_points(brake)), flap, "aileron trim flap point")
+  assert_equal(select(2, brake_points(brake)), aileron + 5, "aileron trim aileron point")
+  assert_equal(select(3, brake_points(brake)), elevator, "aileron trim elevator point")
+  brake.values["trim-ail"] = 0
   brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
 
-  assert_equal(brake.curves[4].y[2], flapBefore, "elevator trim flap point")
-  assert_equal(brake.curves[5].y[2], aileronBefore - 5, "elevator trim aileron point")
+  flap, aileron, elevator = brake_points(brake)
+  brake.values["trim-ele"] = -1024
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_equal(select(1, brake_points(brake)), flap, "elevator trim flap point")
+  assert_equal(select(2, brake_points(brake)), aileron, "elevator trim aileron point")
+  assert_equal(select(3, brake_points(brake)), elevator - 5, "elevator trim elevator point")
 end)
 
 setup_quality_test("brake curves trims respond to physical trim button switches", function()
@@ -1127,12 +1179,10 @@ setup_quality_test("brake curves trims respond to physical trim button switches"
     values = { [800] = -512 },
     availableSwitches = {
       ["~Tu"] = true,
+      ["~Al"] = true,
       ["~Ed"] = true
     },
-    curves = {
-      [4] = five_point_curve(),
-      [5] = five_point_curve()
-    }
+    curves = brake_page_curves()
   })
 
   load_setup_page("src/SoarF5J/setup/brake_curves.lua", brake)
@@ -1140,36 +1190,35 @@ setup_quality_test("brake curves trims respond to physical trim button switches"
   brake.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
   brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
 
-  local flapBefore = brake.curves[4].y[2]
-  local aileronBefore = brake.curves[5].y[2]
-
+  local flap, aileron, elevator = brake_points(brake)
   brake.switchValues[CHAR_TRIM .. "Tu"] = true
   brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
-
-  assert_equal(brake.curves[4].y[2], flapBefore + 5, "throttle trim button flap point")
-  assert_equal(brake.curves[5].y[2], aileronBefore, "throttle trim button aileron point")
-
+  assert_equal(select(1, brake_points(brake)), flap + 5, "throttle trim button flap point")
+  assert_equal(select(2, brake_points(brake)), aileron, "throttle trim button aileron point")
   brake.switchValues[CHAR_TRIM .. "Tu"] = false
   brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
 
-  flapBefore = brake.curves[4].y[2]
-  aileronBefore = brake.curves[5].y[2]
-
-  brake.switchValues[CHAR_TRIM .. "Ed"] = true
+  flap, aileron, elevator = brake_points(brake)
+  brake.switchValues[CHAR_TRIM .. "Al"] = true
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_equal(select(2, brake_points(brake)), aileron - 5, "aileron trim button aileron point")
+  assert_equal(select(3, brake_points(brake)), elevator, "aileron trim button elevator point")
+  brake.switchValues[CHAR_TRIM .. "Al"] = false
   brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
 
-  assert_equal(brake.curves[4].y[2], flapBefore, "elevator trim button flap point")
-  assert_equal(brake.curves[5].y[2], aileronBefore - 5, "elevator trim button aileron point")
+  flap, aileron, elevator = brake_points(brake)
+  brake.switchValues[CHAR_TRIM .. "Ed"] = true
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_equal(select(1, brake_points(brake)), flap, "elevator trim button flap point")
+  assert_equal(select(2, brake_points(brake)), aileron, "elevator trim button aileron point")
+  assert_equal(select(3, brake_points(brake)), elevator - 5, "elevator trim button elevator point")
 end)
 
 setup_quality_test("brake curves trims respond to EdgeTX menu trim switch names", function()
   local brake = setup_env({
     input8 = 800,
     values = { [800] = -512 },
-    curves = {
-      [4] = five_point_curve(),
-      [5] = five_point_curve()
-    }
+    curves = brake_page_curves()
   })
 
   load_setup_page("src/SoarF5J/setup/brake_curves.lua", brake)
@@ -1177,18 +1226,112 @@ setup_quality_test("brake curves trims respond to EdgeTX menu trim switch names"
   brake.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
   brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
 
-  local flapBefore = brake.curves[4].y[2]
+  local flap, aileron, elevator = brake_points(brake)
   brake.switchValues["Thr+"] = true
   brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
-  assert_equal(brake.curves[4].y[2], flapBefore + 5, "throttle trim plus name")
-
+  assert_equal(select(1, brake_points(brake)), flap + 5, "throttle trim plus name")
   brake.switchValues["Thr+"] = false
   brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
 
-  local aileronBefore = brake.curves[5].y[2]
+  brake.switchValues["Ail+"] = true
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_equal(select(2, brake_points(brake)), aileron + 5, "aileron trim plus name")
+  brake.switchValues["Ail+"] = false
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
   brake.switchValues["Ele-"] = true
   brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
-  assert_equal(brake.curves[5].y[2], aileronBefore - 5, "elevator trim minus name")
+  assert_equal(select(3, brake_points(brake)), elevator - 5, "elevator trim minus name")
+end)
+
+setup_quality_test("brake curves keep the elevator at the brakes-off point", function()
+  local brake = setup_env({
+    input8 = 800,
+    values = { [800] = 1024 },
+    curves = brake_page_curves()
+  })
+
+  load_setup_page("src/SoarF5J/setup/brake_curves.lua", brake)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  brake.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  brake.switchValues["Ele+"] = true
+  brake.switchValues["Thr-"] = true
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  assert_equal(brake.curves[13].y[5], -100, "elevator trim at brakes off")
+  assert_equal(brake.curves[4].y[5], 95, "throttle trim still moves the flaps at brakes off")
+end)
+
+setup_quality_test("brake curves leave the elevator out on models without CV14 BrE", function()
+  local brake = setup_env({
+    input8 = 800,
+    values = { [800] = -512 },
+    curves = { [4] = five_point_curve(), [5] = five_point_curve(), [13] = { name = "", y = { 0, 0, 0, 0, 0 } } }
+  })
+
+  load_setup_page("src/SoarF5J/setup/brake_curves.lua", brake)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  brake.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  brake.switchValues["Ele+"] = true
+  reset_draw_output(brake)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+
+  for _, write in ipairs(brake.curveWrites) do
+    assert(write.index ~= 13, "brake curves wrote CV14 on a model without BrE")
+  end
+  assert(text_rendered(brake):find("N/A", 1, true), "brake curves did not mark the elevator as N/A")
+
+  brake.switchValues["Ele+"] = false
+  brake.switchValues["Ail+"] = true
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_equal(brake.curves[5].y[2], -45, "aileron trim without the elevator curve")
+end)
+
+setup_quality_test("brake curves hold the trims on GV8 while editing", function()
+  local brake = setup_env(brake_trim_capture_options(0))
+
+  load_setup_page("src/SoarF5J/setup/brake_curves.lua", brake)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_equal(#brake.gvWrites, 0, "brake curves wrote GV8 before the warning")
+  brake.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+  assert_equal(brake.gvs[7], -100, "brake curves trim adjustment mode")
+
+  -- A trim click moves GV8 instead of the trim; the page drops the count and uses the button.
+  brake.gvs[7] = -99
+  brake.switchValues["Ele+"] = true
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  assert_equal(brake.gvs[7], -100, "brake curves cleared the trim click")
+  assert_equal(brake.curves[13].y[2], 5, "elevator trim click with GV8 holding the trims")
+
+  brake.widget.background()
+  assert_equal(brake.gvs[7], 0, "brake curves restored GV8")
+
+  local leftover = setup_env(brake_trim_capture_options(-97))
+  load_setup_page("src/SoarF5J/setup/brake_curves.lua", leftover)
+  leftover.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  leftover.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+  leftover.widget.background()
+  assert_equal(leftover.gvs[7], 0, "brake curves dropped a GV8 count left from an interrupted session")
+end)
+
+setup_quality_test("brake curves leave GV8 alone without the trim functions", function()
+  local brake = setup_env({
+    input8 = 800,
+    values = { [800] = -512 },
+    curves = brake_page_curves()
+  })
+
+  load_setup_page("src/SoarF5J/setup/brake_curves.lua", brake)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  brake.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+  brake.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  brake.widget.background()
+
+  assert_equal(#brake.gvWrites, 0, "brake curves wrote GV8 on a model without L50 and SF40-SF42")
 end)
 
 setup_quality_test("brake curve trim button visibly redraws the active curve point", function()

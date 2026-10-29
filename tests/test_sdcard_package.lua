@@ -1075,6 +1075,73 @@ test("templates let the throttle trim set the Motor page idle", function()
   end
 end)
 
+-- Index of a curve's first point: EdgeTX keeps a 5-point curve for every curve not listed.
+local function curve_first_point(content, curve_index)
+  local first = 0
+  for index = 0, curve_index - 1 do
+    local ok, block = pcall(indexed_block, content, "curves", index)
+    local custom = ok and block:match("type: 1") ~= nil
+    local count = CURVE_POINTS + (ok and tonumber(block:match("points: (%-?%d+)")) or 0)
+    first = first + (custom and 2 * count - 2 or count)
+  end
+  return first
+end
+
+test("templates give the brake elevator compensation its own curve CV14 BrE", function()
+  local reset = brake_page_reset_curves()
+  local models = tx15_template_models()
+  for _, model in ipairs(tx16_family_template_models()) do
+    models[#models + 1] = model
+  end
+
+  assert(reset.CRV_ELE, "brake page reset should set the elevator curve")
+  for _, model in ipairs(models) do
+    model.content = normalize_model_content(model.content)
+
+    local curve = indexed_block(model.content, "curves", reset.CRV_ELE.index)
+    assert_contains(curve, "type: 0", model.label .. " CV14 standard curve")
+    assert_contains(curve, "points: 0", model.label .. " CV14 five points")
+    assert_contains(curve, "name: BrE", model.label .. " CV14 name")
+
+    local first = curve_first_point(model.content, reset.CRV_ELE.index)
+    assert_equal(first, 73, model.label .. " CV14 first point")
+    for point, expected in ipairs(reset.CRV_ELE.ys) do
+      local block = indexed_block(model.content, "points", first + point - 1)
+      assert_equal(tonumber(block:match("val: (%-?%d+)")), expected,
+        model.label .. " CV14 point " .. tostring(point))
+    end
+
+    local elevator = mix_blocks_for(model.content, 21)
+    local brake = find_mix_block_matching(elevator, { "name: BrkEle" })
+    assert(brake, model.label .. " missing CH22 BrkEle mix")
+    assert_mix_block(brake, { "srcRaw: ch(20)", "weight: gv(4)", "value: 14", "offset: gv(4)" },
+      model.label .. " CH22 BrkEle adds BkE x (1 + CV14) to the elevator")
+    assert(not find_mix_block_matching(elevator, { "name: BEOffs" }),
+      model.label .. " CH22 should no longer offset the elevator by the flap curve")
+  end
+end)
+
+test("templates let the Airbrake page hold the trims on GV8", function()
+  local models = tx15_template_models()
+  for _, model in ipairs(tx16_family_template_models()) do
+    models[#models + 1] = model
+  end
+
+  for _, model in ipairs(models) do
+    local counter = indexed_block(model.content, "logicalSw", 49)
+    assert_contains(counter, "func: FUNC_VNEG", model.label .. " L50 compares GV8")
+    assert_contains(counter, "def: gv(7),-50", model.label .. " L50 turns on below GV8 -50")
+
+    for index, trim in pairs({ [39] = "T3", [40] = "T4", [41] = "T2" }) do
+      local label = model.label .. " SF" .. tostring(index + 1)
+      local fn = indexed_block(model.content, "customFn", index)
+      assert_contains(fn, "swtch: L50", label .. " switch")
+      assert_contains(fn, "func: ADJUST_GVAR", label .. " function")
+      assert_contains(fn, "def: 7,Src," .. trim .. ",1", label .. " moves GV8 with trim " .. trim)
+    end
+  end
+end)
+
 test("TX15 template variants keep common wing channels", function()
   for _, model in ipairs(tx15_template_models()) do
     model.content = normalize_model_content(model.content)

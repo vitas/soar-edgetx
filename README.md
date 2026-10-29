@@ -25,7 +25,7 @@ seven setup pages.
 | `3` | Mixes: edit the mix global variables for the selected flight mode. |
 | `4` | Outputs: reorder named outputs, reverse direction, and set offset, range, center, and endpoints. |
 | `5` | Wing alignment: align the four flaperon outputs with the trims and on-screen sliders. |
-| `6` | Brake curves: edit the airbrake flap and aileron curves. |
+| `6` | Brake curves: edit the airbrake flap and aileron curves and the elevator compensation along the brake travel, with the trims. |
 | `7` | Aileron/camber: adjust aileron travel, aileron-to-flap, camber-to-aileron, and thermal camber with the trims. |
 | `8` | Motor: set the motor idle at minimum throttle with the throttle trim while the motor runs. |
 

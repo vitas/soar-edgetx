@@ -113,7 +113,9 @@ The wing alignment curves CV1 through CV4 start linear at
 `-100, -50, 0, 50, 100`. The brake curves CV5 `BrF` and CV6 `BrA` start at the
 brake page `Reset` values, `-100, -50, 0, 25, 50` and `50, 50, 50, 25, 0`.
 With brakes off the ailerons sit at center and the flaps at `-50`/`+50`; at
-full brake the flaps go down and the ailerons go up.
+full brake the flaps go down and the ailerons go up. The brake elevator curve
+CV14 `BrE` starts at `50, 0, -50, -75, -100`: no compensation with brakes off
+and `1.5 x BkE` at full brake, as when the compensation followed the flap curve.
 Tune those curves for the actual airframe during wing alignment and brake curve
 setup.
 
@@ -240,7 +242,8 @@ There is no separate save button in the widget.
 4. Run `Page = 2` and confirm the physical switch assignments.
 5. Run `Page = 4` with the motor disconnected.
 6. Run `Page = 5` to align flaperon outputs and curves.
-7. Run `Page = 6` to tune the flap and aileron airbrake curves.
+7. Run `Page = 6` to tune the flap and aileron airbrake curves and the elevator
+   compensation.
 8. Run `Page = 7` to adjust aileron travel and camber values with the trims.
 9. Run `Page = 8` with the model held and the propeller clear to set the motor
    idle.
@@ -366,13 +369,31 @@ curves and endpoints to the page defaults.
 
 ### `setup/brake_curves`
 
-Edits the airbrake flap and aileron curves.
+Edits the airbrake curves: flaps CV5 `BrF`, ailerons CV6 `BrA`, and the
+elevator compensation CV14 `BrE`.
 
-Use the throttle stick to select one of the five curve points. Throttle trim
-adjusts the flap landing curve, and elevator trim adjusts the aileron landing
-curve. The flap and aileron sliders on the screen still work. While editing is
-enabled, the page turns on the model step switch so the surfaces move live with
-the selected curve point.
+Use the throttle stick to select one of the five curve points. The throttle trim
+adjusts the flap point, the aileron trim the aileron point, and the elevator
+trim the elevator compensation at that point of the brake travel. The sliders
+on the screen still work. While editing is enabled, the page turns on the model
+step switch so the surfaces move live with the selected curve point.
+
+The elevator compensation is `BkE` (`GV5`, `Brake -> Elevator` on the Mixes
+page) times `1 + BrE / 100`. At the bottom of the `Elevator` curve there is no
+compensation, on the middle line it equals `BkE`, and at the top it is
+`2 x BkE`. `BkE` sets the amount for each flight mode, and the curve sets how it
+builds up along the brake travel. The last point, brakes off, stays at the
+bottom and has no slider, so normal flight keeps the elevator where the trim put
+it.
+
+While the page is open, it sets the model adjustment mode to `GV8` = -100. The
+template's `L50` and `SF40` to `SF42` then count throttle, aileron, and elevator
+trim clicks in `GV8` instead of moving the trims, so the flight trims and the
+thermal camber stay put. The page restores `GV8` when it closes.
+
+Models made from older templates have no CV14 `BrE`: the page shows `N/A` for
+the elevator, and the compensation still follows the flap curve. Without `L50`
+and `SF40` to `SF42` the trims also move as normal trims while you edit.
 
 `I5:Brk` and `I8:Adj` must use the same input direction. The templates invert
 both throttle-stick inputs so the point selected during setup is the point used
@@ -461,7 +482,8 @@ Edits mix-related global variables for the current flight mode:
 - Flap differential for the aileron-to-flap path.
 - Elevator differential for the aileron-to-elevator path on MTail. Positive
   values reduce the travel of the elevator half that moves down; `50` halves it.
-- Brake to elevator.
+- Brake to elevator, the amount of elevator compensation for the airbrakes. The
+  `Elevator` curve on the Airbrake curves page shapes it along the brake travel.
 - Snap flap.
 - Battery warning level.
 

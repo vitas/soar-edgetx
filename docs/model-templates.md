@@ -88,9 +88,10 @@ CH4/CH5  Flaps
 Template artifacts must stay airframe-neutral: no copied output endpoints,
 centers, reversals, or curve-point tuning from a flown aircraft. The wing
 alignment curves CV1 through CV4 start with the linear sequence
-`-100, -50, 0, 50, 100`. The brake curves CV5 `BrF` and CV6 `BrA` start at the
-brake page `Reset` values, so the ailerons sit at center with brakes off. Tune
-them for the actual model through the setup pages and EdgeTX output checks.
+`-100, -50, 0, 50, 100`. The brake curves CV5 `BrF`, CV6 `BrA`, and CV14 `BrE`
+start at the brake page `Reset` values, so the ailerons sit at center and the
+elevator gets no compensation with brakes off. Tune them for the actual model
+through the setup pages and EdgeTX output checks.
 
 ## Current Control Assignments
 
@@ -151,7 +152,7 @@ Switches page to keep a function on without a physical switch.
 | `L8` | Report current altitude every 10 sec. | `SB up` / `SB0`, gated by `L1` | Speaks current altitude every 10 seconds after the F5J height window has closed. |
 
 Internal logical switches such as `L23`, `L24`, `L26`, `L35`, `L36`, `L37`,
-`L44`, and `L49` are model-state, audio, and setup helpers. Do not assign them
+`L44`, `L49`, and `L50` are model-state, audio, and setup helpers. Do not assign them
 directly from the setup page unless you are intentionally editing the template
 logic.
 
@@ -187,6 +188,22 @@ motor runs. `L49` is on while `GV8` is above `50`, and `SF39` then adjusts
 `GV8` at `100` while it is open, turns each click into an idle step, and
 restores `GV8` when it closes. In normal flying `GV8` stays below `50`, so
 `L49` and `SF39` stay off.
+
+### Brake Elevator Compensation
+
+`CH22 EleM` adds the elevator compensation for the airbrakes. Its `BrkEle` mix
+takes the brake channel `CH21` through curve CV14 `BrE`, with weight and offset
+`GV5` / `BkE`, so the compensation is `BkE x (1 + BrE / 100)`. CV14 starts at
+`50, 0, -50, -75, -100`: no compensation with brakes off, `BkE` at three
+quarters brake, and `1.5 x BkE` at full brake, the same as when the
+compensation followed the flap curve CV5. `BkE` sets the amount for each flight
+mode; CV14 sets how it builds up along the brake travel.
+
+The Airbrake curves page (`Page = 6`) edits CV14 with the elevator trim. While
+it is open it holds `GV8` at `-100`: `L50` is on while `GV8` is below `-50`, and
+`SF40`, `SF41`, and `SF42` then adjust `GV8` with the throttle trim `T3`, the
+aileron trim `T4`, and the elevator trim `T2` instead of moving them. The page
+reads the trim buttons, clears `GV8`, and restores it when it closes.
 
 ### M-tail Elevator Mixes
 

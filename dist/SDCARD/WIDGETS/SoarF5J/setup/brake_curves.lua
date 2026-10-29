@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------
--- SoarETX Adjust airbrake curves for flaps and ailerons                 --
+-- SoarETX Adjust airbrake curves for flaps, ailerons and elevator       --
 --                                                                       --
 -- Author:  Jesper Frickmann + Frankie Arzu                              --
 -- Date:    2025-01-20                                                   --
@@ -37,17 +37,26 @@ local HEADER =    math.floor(40 * FONT_SCALE)
 local TOP =       HEADER + 10
 local MARGIN =    20
 local DIST_X =    40
-local HEIGHT =    150
-local WIDTH =     (LCD_W - 3 * DIST_X) / 2
+local GAP =       10
+local CURVES =    3
+local WIDTH =     math.floor((LCD_W - CURVES * DIST_X - GAP) / CURVES)
+-- The curves get the height left above three lines of help text, but stay at most a bit taller than wide.
+local TEXT_H =    3 * select(2, lcd.sizeText(title, 0))
+local HEIGHT =    math.min(LCD_H - TOP - TEXT_H - 2 * GAP, math.floor(1.25 * WIDTH))
 local BUTTON_W =  80
 local BUTTON_X =  LCD_W - BUTTON_W - MARGIN
 local BUTTON_H =  36
-local BUTTON_Y =  (LCD_H + TOP + HEIGHT - BUTTON_H) / 2
+local BUTTON_Y =  TOP + HEIGHT + GAP
 local TEXT_Y =    BUTTON_Y
 local CLOSE_W =   math.floor(28 * FONT_SCALE)
 local CLOSE_Y =   math.floor(6 * FONT_SCALE)
 local CLOSE_X =   LCD_W - CLOSE_Y - CLOSE_W
 local beginEditing
+
+-- Left edge of curve i, counted from 1
+local function plotX(i)
+  return DIST_X + (i - 1) * (WIDTH + DIST_X)
+end
 
 -- Setup warning prompt
 do
@@ -158,7 +167,8 @@ end
 -- Global variables
 local INP_STEP = safeFieldId("input8")      -- Step input for selecting curve point
 local INP_FLP_TRIM = trimInput({ "trim-thr", "T3" }, { "Thr+", "Tu" }, { "Thr-", "Td" })
-local INP_AIL_TRIM = trimInput({ "trim-ele", "T2" }, { "Ele+", "Eu" }, { "Ele-", "Ed" })
+local INP_AIL_TRIM = trimInput({ "trim-ail", "T4" }, { "Ail+", "Ar", "Au" }, { "Ail-", "Al", "Ad" })
+local INP_ELE_TRIM = trimInput({ "trim-ele", "T2" }, { "Ele+", "Eu" }, { "Ele-", "Ed" })
 local LS_STEP = 11                          -- Set this LS to apply step input
 local N = 5 																-- Number of points on the curves
 local MAX_Y = 100   												-- Max plot value
@@ -166,15 +176,32 @@ local TRIM_DEADBAND = 256
 local TRIM_STEP = 5
 local CRV_FLP = 4 													-- Index of the  flap curve
 local CRV_AIL = 5 													-- Index of the  aileron curve
+local CRV_ELE = 13                          -- Index of the elevator compensation curve
 local tblFlp 																-- Table with data for the flap curve
 local tblAil 																-- Table with data for the aileron curve
+local tblEle                                -- Elevator curve, nil on models made before it
 local activeP   														-- The point currently being edited
 local stepOwned = false											-- Step input has be turned on by this widget
 local editingEnabled = false
 local trimAxes = {
   { source = INP_FLP_TRIM, curve = CRV_FLP, last = 0 },
-  { source = INP_AIL_TRIM, curve = CRV_AIL, last = 0 }
+  { source = INP_AIL_TRIM, curve = CRV_AIL, last = 0 },
+  { source = INP_ELE_TRIM, curve = CRV_ELE, last = 0 }
 }
+
+-- CH22 adds BkE x (1 + CV14 / 100) to the elevator, so the bottom of the elevator curve is no
+-- compensation. Its last point, brakes off, stays there, so normal flight keeps the elevator trim.
+local ELE_NAME = "BrE"
+
+-- While this page holds GV8 at ADJUST_MODE, L50 is on and SF40-SF42 move GV8 instead of the
+-- throttle, aileron and elevator trims. The page reads the trim buttons and clears GV8 again.
+local GV_ADJUST_MODE = 7
+local ADJUST_MODE = -100
+local TRIM_THRESHOLD = -50
+local LS_TRIMS = 49
+local SF_TRIMS = { [39] = "trim-thr", [40] = "trim-ail", [41] = "trim-ele" }
+local GVAR_MODE_SOURCE = 1
+local adjustModePrevious
 
 local function clamp(value, minimum, maximum)
   return math.min(math.max(value, minimum), maximum)
@@ -183,6 +210,54 @@ end
 local function resetTrimTracking()
   for _, axis in ipairs(trimAxes) do
     axis.last = 0
+  end
+end
+
+local function hasTrimCapture()
+  local gvar8 = getFieldInfo("gvar8")
+  local counter = model.getLogicalSwitch(LS_TRIMS)
+  if type(getSwitchIndex) ~= "function" or gvar8 == nil or counter == nil or counter.func ~= LS_FUNC_VNEG or
+      counter.v1 ~= gvar8.id or counter.v2 ~= TRIM_THRESHOLD then
+    return false
+  end
+
+  local switch = getSwitchIndex("L50")
+  for index, trimName in pairs(SF_TRIMS) do
+    local trim = getFieldInfo(trimName)
+    local fn = model.getCustomFunction(index)
+    if trim == nil or fn == nil or fn.func ~= FUNC_ADJUST_GVAR or fn.param ~= GV_ADJUST_MODE or
+        fn.mode ~= GVAR_MODE_SOURCE or fn.value ~= trim.id or fn.active ~= 1 or fn.switch ~= switch then
+      return false
+    end
+  end
+  return true
+end
+
+local function adjustModeOn()
+  if adjustModePrevious ~= nil then
+    return
+  end
+
+  -- A count left over from an interrupted session here or on the Motor page would keep a trim on GV8.
+  local current = model.getGlobalVariable(GV_ADJUST_MODE, 0)
+  if type(current) ~= "number" or math.abs(current) > -TRIM_THRESHOLD then
+    current = 0
+  end
+  adjustModePrevious = current
+  model.setGlobalVariable(GV_ADJUST_MODE, 0, ADJUST_MODE)
+end
+
+local function adjustModeOff()
+  if adjustModePrevious ~= nil then
+    model.setGlobalVariable(GV_ADJUST_MODE, 0, adjustModePrevious)
+    adjustModePrevious = nil
+  end
+end
+
+-- The trim clicks GV8 counted are already handled through the trim buttons, so drop them.
+local function clearTrimClicks()
+  if adjustModePrevious ~= nil and model.getGlobalVariable(GV_ADJUST_MODE, 0) ~= ADJUST_MODE then
+    model.setGlobalVariable(GV_ADJUST_MODE, 0, ADJUST_MODE)
   end
 end
 
@@ -201,6 +276,7 @@ local function stepOff()
     stepOwned = false
     setStickySwitch(LS_STEP, false)
   end
+  adjustModeOff()
   editingEnabled = false
   resetTrimTracking()
 end
@@ -237,6 +313,24 @@ local function GetCurve(crvIndex)
 		return tbl
 end -- GetCurve()
 
+-- Models made before the elevator curve have no CV14 BrE; the page then leaves the elevator out.
+local function GetElevatorCurve()
+  local tbl = soarGlobals.getCurve(CRV_ELE)
+  if type(tbl) ~= "table" or tbl.name ~= ELE_NAME or type(tbl.y) ~= "table" or #tbl.y ~= N then
+    return nil
+  end
+  return tbl
+end
+
+local function curveTable(crvIdx)
+  if crvIdx == CRV_FLP then
+    return tblFlp
+  elseif crvIdx == CRV_AIL then
+    return tblAil
+  end
+  return tblEle
+end
+
 local function init()
 		tblFlp = GetCurve(CRV_FLP)
   if errMsg then
@@ -246,6 +340,7 @@ local function init()
   if errMsg then
     return
   end
+  tblEle = GetElevatorCurve()
 end -- init()
 
 beginEditing = function()
@@ -256,6 +351,9 @@ beginEditing = function()
     return
   end
   stepOn()
+  if hasTrimCapture() then
+    adjustModeOn()
+  end
   editingEnabled = true
   resetTrimTracking()
 end -- beginEditing()
@@ -332,8 +430,8 @@ local function trimDirection(source)
 end
 
 local function adjustCurveFromTrim(axis, direction)
-  local crvTbl = axis.curve == CRV_FLP and tblFlp or tblAil
-  if not crvTbl or not crvTbl.y or not activeP then
+  local crvTbl = curveTable(axis.curve)
+  if not crvTbl or not crvTbl.y or not activeP or (axis.curve == CRV_ELE and activeP == N) then
     return
   end
 
@@ -368,6 +466,15 @@ local function reset()
 		tblAil.y[i] = y
 	end
 	model.setCurve(CRV_AIL, tblAil)
+
+  -- The elevator follows the default flap travel: BkE at three quarters brake, 1.5 x BkE at full.
+  if tblEle then
+    ys = { 50, 0, -50, -75, -100 }
+    for i, y in ipairs(ys) do
+      tblEle.y[i] = y
+    end
+    model.setCurve(CRV_ELE, tblEle)
+  end
   resetTrimTracking()
 end
 -------------------------------- Setup GUI --------------------------------
@@ -385,17 +492,26 @@ local function setup_gui()
     lcd.drawText(10, 2, title, bit32.bor(DBLSIZE, colors.primary2))
 
 		-- Curves
-    drawCurve(DIST_X, TOP, WIDTH, HEIGHT, tblFlp.y)
-		lcd.drawText(DIST_X + 2, TOP, "Flaps", SMLSIZE + colors.primary1)
+    drawCurve(plotX(1), TOP, WIDTH, HEIGHT, tblFlp.y)
+		lcd.drawText(plotX(1) + 2, TOP, "Flaps", SMLSIZE + colors.primary1)
 
-    drawCurve(WIDTH + 2 * DIST_X, TOP, WIDTH, HEIGHT, tblAil.y)
-		lcd.drawText(WIDTH + 2 * DIST_X + 2, TOP, "Aileron", SMLSIZE + colors.primary1)
+    drawCurve(plotX(2), TOP, WIDTH, HEIGHT, tblAil.y)
+		lcd.drawText(plotX(2) + 2, TOP, "Aileron", SMLSIZE + colors.primary1)
+
+    if tblEle then
+      drawCurve(plotX(3), TOP, WIDTH, HEIGHT, tblEle.y)
+    else
+      gui.drawFilledRectangle(plotX(3), TOP, WIDTH + 1, HEIGHT, colors.primary2)
+      gui.drawRectangle(plotX(3), TOP, WIDTH + 1, HEIGHT, COLOR_THEME_SECONDARY2)
+      lcd.drawText(plotX(3) + WIDTH / 2, TOP + HEIGHT / 2, "N/A", CENTER + VCENTER + colors.primary1)
+    end
+    lcd.drawText(plotX(3) + 2, TOP, "Elevator", SMLSIZE + colors.primary1)
 
     -- Help text
-    local txt = "Use the throttle stick to select a point on the\n" ..
-                "curve. Thr trim adjusts flaps; Ele trim adjusts ailerons.\n" ..
-                "Sliders on screen also work."
-    lcd.drawTextLines(MARGIN, TEXT_Y, BUTTON_X - MARGIN, LCD_H - TEXT_Y, txt, colors.primary1)
+    local txt = "The throttle stick selects a point.\n" ..
+                "Trims: Thr flaps, Ail ailerons, Ele elevator.\n" ..
+                "The sliders also work."
+    lcd.drawTextLines(MARGIN, TEXT_Y, BUTTON_X - MARGIN - GAP, LCD_H - TEXT_Y, txt, colors.primary1)
   end
 
   -- Close button
@@ -416,17 +532,27 @@ local function setup_gui()
     end
   end
 
-	-- Sliders
-	local flpSlider = gui.verticalSlider(MARGIN, TOP, HEIGHT, 0, -100, 100, 1, function(slider) adjustPoint(CRV_FLP, tblFlp, slider) end)
+	-- Sliders, each in the gap left of its curve
+	local flpSlider = gui.verticalSlider(plotX(1) - DIST_X / 2, TOP, HEIGHT, 0, -100, 100, 1, function(slider) adjustPoint(CRV_FLP, tblFlp, slider) end)
 
   function flpSlider.update()
     flpSlider.value = tblFlp.y[activeP]
   end
 
-  local ailSlider = gui.verticalSlider(LCD_W - MARGIN, TOP, HEIGHT, 0, -100, 100, 1, function(slider) adjustPoint(CRV_AIL, tblAil, slider) end)
+  local ailSlider = gui.verticalSlider(plotX(2) - DIST_X / 2, TOP, HEIGHT, 0, -100, 100, 1, function(slider) adjustPoint(CRV_AIL, tblAil, slider) end)
 
   function ailSlider.update()
     ailSlider.value = tblAil.y[activeP]
+  end
+
+  local eleSlider = gui.verticalSlider(plotX(3) - DIST_X / 2, TOP, HEIGHT, -100, -100, 100, 1, function(slider) adjustPoint(CRV_ELE, tblEle, slider) end)
+
+  -- The brakes-off point keeps the elevator where it is, so it has no slider.
+  function eleSlider.update()
+    eleSlider.hidden = not tblEle or activeP == N
+    if not eleSlider.hidden then
+      eleSlider.value = tblEle.y[activeP]
+    end
   end
 
   gui.button(BUTTON_X, BUTTON_Y, BUTTON_W, BUTTON_H, "Reset", reset)
@@ -467,5 +593,6 @@ function widget.refresh(event, touchState)
 
   activeP = math.floor((N - 1) / 2048 * (getValue(INP_STEP) + 1024) + 1.5)
   handleTrimAdjustments()
+  clearTrimClicks()
   gui.run(event, touchState)
 end -- refresh(...)
