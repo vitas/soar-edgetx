@@ -105,8 +105,26 @@ local function init()
   local swIndices = { getSwitchIndex("!ON") or 0, getSwitchIndex("ON") or 0 }
   local swNames = { "NONE", "ON" }
 
+  -- Offer the physical and customizable switches, renamed ones too, but not trims, logical
+  -- switches, flight modes or telemetry. A switch position ends in CHAR_UP or CHAR_DOWN, and
+  -- the middle position of a three-position switch ends in "-".
+  local positions = {}
+  local listed = {}
+
   for swIdx, swName in switches() do
-    if string.find(swName, "^!?S[A-H][+-]?") then
+    positions[#positions + 1] = { swIdx, swName }
+    listed[swName] = true
+  end
+
+  local function endsWith(text, suffix)
+    return string.sub(text, -#suffix) == suffix
+  end
+
+  for _, position in ipairs(positions) do
+    local swIdx, swName = position[1], position[2]
+    local middle = endsWith(swName, "-") and listed[string.sub(swName, 1, -2) .. CHAR_UP]
+
+    if endsWith(swName, CHAR_UP) or endsWith(swName, CHAR_DOWN) or middle then
       local i = #swIndices + 1
       swIndices[i] = swIdx
       swNames[i] = swName

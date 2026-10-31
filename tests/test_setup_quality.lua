@@ -40,6 +40,8 @@ local globalNames = {
   "playTone",
   "loadScript",
   "CHAR_TRIM",
+  "CHAR_UP",
+  "CHAR_DOWN",
   "FUNC_ADJUST_GVAR",
   "LS_FUNC_VPOS",
   "LS_FUNC_VNEG"
@@ -245,6 +247,9 @@ local function setup_env(options)
   FORCE = 4
   EVT_VIRTUAL_ENTER = 1
   CHAR_TRIM = "~"
+  -- Switch position arrows as the EdgeTX 2.12 simulators report them.
+  CHAR_UP = "\194\130"
+  CHAR_DOWN = "\194\131"
   -- Function codes as the TX16S simulator reports them.
   FUNC_ADJUST_GVAR = 5
   LS_FUNC_VPOS = 3
@@ -334,27 +339,30 @@ local function setup_env(options)
     end
   }
 
+  -- Switch positions as switches() lists them on the TX16S MK3 simulator, a few of each kind.
+  -- SW1 and SW2 are customizable switches turned on in the model, and SW3 is turned on and
+  -- named "Arm". The radio lists the inverted positions first.
   function switches()
-    local names = {
-      "SA-",
-      "SA+",
-      "SB-",
-      "SB0",
-      "SB+",
-      "SC-",
-      "SC0",
-      "SC+",
-      "SD-",
-      "SD+",
-      "SE-",
-      "SE0",
-      "SE+"
+    local up, down = CHAR_UP, CHAR_DOWN
+    local list = {
+      { -173, "!L01" }, { -157, "!Rud-" }, { -33, "!SW1" .. down },
+      { -3, "!SA" .. down }, { -2, "!SA-" }, { -1, "!SA" .. up }, { 0, "---" },
+      { 1, "SA" .. up }, { 2, "SA-" }, { 3, "SA" .. down },
+      { 4, "SB" .. up }, { 5, "SB-" }, { 6, "SB" .. down },
+      { 7, "SC" .. up }, { 8, "SC-" }, { 9, "SC" .. down },
+      { 10, "SD" .. up }, { 11, "SD-" }, { 12, "SD" .. down },
+      { 13, "SE" .. up }, { 15, "SE" .. down }, { 16, "SF" .. up }, { 18, "SF" .. down },
+      { 31, "SW1" .. up }, { 33, "SW1" .. down }, { 34, "SW2" .. up }, { 36, "SW2" .. down },
+      { 37, "Arm" .. up }, { 39, "Arm" .. down },
+      { 157, "Rud-" }, { 158, "Rud+" }, { 173, "L01" }, { 177, "L05" },
+      { 237, "ON" }, { 238, "One" }, { 239, "FM0" }, { 248, "Tele" }, { 252, "Alt" },
+      { 324, "Act" }, { 325, "Trn" }
     }
     local i = 0
     return function()
       i = i + 1
-      if names[i] then
-        return i, names[i]
+      if list[i] then
+        return list[i][1], list[i][2]
       end
     end
   end
@@ -452,8 +460,33 @@ local function drop_down_item_index(dropDown, item)
   return nil
 end
 
+local function switch_drop_down(env, ls)
+  for _, dropDown in ipairs(env.dropDowns) do
+    if dropDown.ls == ls then
+      return dropDown
+    end
+  end
+  return nil
+end
+
+-- Switch names with the EdgeTX arrows written as ^ and v, so that failures are readable.
+local function readable_switches(names)
+  local out = {}
+  for i, name in ipairs(names) do
+    out[i] = name:gsub(CHAR_UP, "^"):gsub(CHAR_DOWN, "v")
+  end
+  return table.concat(out, " ")
+end
+
 local function load_setup_page(path, env)
   return assert(loadfile(path))(env.widget, env.soarGlobals)
+end
+
+local function open_switches_page(logicalSwitches)
+  local switchesPage = setup_env({ logicalSwitches = logicalSwitches })
+  load_setup_page("src/SoarF5J/setup/switches.lua", switchesPage)
+  switchesPage.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  return switchesPage
 end
 
 local function text_rendered(env)
@@ -1058,14 +1091,41 @@ setup_quality_test("switches page keeps crow-off audio edge switch aligned", fun
   landingOff.selected = assert(drop_down_item_index(landingOff, "SB-"), "missing SB- switch option")
   landingOff.onChange(landingOff)
 
-  assert_equal(switchesPage.logicalSwitches[44].v1, 3, "L45 landing-off switch")
-  assert_equal(switchesPage.logicalSwitches[46].v1, 3, "L47 crow-off audio switch")
+  assert_equal(switchesPage.logicalSwitches[44].v1, 5, "L45 landing-off switch")
+  assert_equal(switchesPage.logicalSwitches[46].v1, 5, "L47 crow-off audio switch")
 
   landingOff.selected = assert(drop_down_item_index(landingOff, "NONE"), "missing NONE switch option")
   landingOff.onChange(landingOff)
 
   assert_equal(switchesPage.logicalSwitches[44].v1, ON_SWITCHES["!ON"], "L45 disabled switch")
   assert_equal(switchesPage.logicalSwitches[46].v1, ON_SWITCHES["!ON"], "L47 disabled crow-off audio switch")
+end)
+
+setup_quality_test("switches page offers customizable switches but not other switch sources", function()
+  local switchesPage = open_switches_page({ [4] = { func = 1, v1 = 1 } })
+
+  local motorArm = assert(switch_drop_down(switchesPage, 4), "missing L05 motor arm dropdown")
+  assert_equal(readable_switches(motorArm.items),
+    "NONE ON !SW1v !SAv !SA- !SA^ SA^ SA- SAv SB^ SB- SBv SC^ SC- SCv SD^ SD- SDv SE^ SEv SF^ SFv " ..
+    "SW1^ SW1v SW2^ SW2v Arm^ Armv",
+    "L05 switch options")
+end)
+
+setup_quality_test("switches page sets motor arm to a customizable switch", function()
+  local switchesPage = open_switches_page({ [4] = { func = 1, v1 = 1 } })
+
+  local motorArm = assert(switch_drop_down(switchesPage, 4), "missing L05 motor arm dropdown")
+  motorArm.selected = assert(drop_down_item_index(motorArm, "SW1" .. CHAR_DOWN), "missing SW1 down option")
+  motorArm.onChange(motorArm)
+
+  assert_equal(switchesPage.logicalSwitches[4].v1, 33, "L05 motor arm switch")
+end)
+
+setup_quality_test("switches page shows a renamed customizable switch", function()
+  local switchesPage = open_switches_page({ [4] = { func = 1, v1 = 39 } })
+
+  local motorArm = assert(switch_drop_down(switchesPage, 4), "missing L05 motor arm dropdown")
+  assert_equal(readable_switches({ motorArm.items[motorArm.selected] }), "Armv", "L05 motor arm switch")
 end)
 
 setup_quality_test("curve setup pages show motor warning prompt before edits", function()
