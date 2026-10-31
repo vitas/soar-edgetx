@@ -451,13 +451,14 @@ input has a -100 differential, so only `T3` below center reaches the mixes:
 | --- | --- |
 | Speed | No camber, and `T3` is off: the surfaces sit at the Wing alignment neutral. |
 | Cruise | `T3` only: below center adds camber, center and above add none. The templates start slightly below center. |
-| Float | The thermal camber `CbX` (33 in the templates) plus `T3`. |
+| Float | The throttle stick plus `T3`. The `CambrX` mix in `CH25` adds no camber with the stick down and `CbX` (33 in the templates) with the stick up, in proportion in between, whether crow is on or off. |
 
 In camber the ailerons follow the flaps by `CbA`, 153 % in the templates. To
-set the camber, select Float before opening the page: the surfaces then show
-the Float camber while the throttle trim changes `CbX` and the elevator trim
-`CbA`. On the page throttle trim up gives more camber, while in flight `T3`
-down does. Then leave the page and set the Cruise camber with `T3`.
+set the camber, leave landing mode, select Float and put the throttle stick up
+before opening the page: the surfaces then show the full Float camber while the
+throttle trim changes `CbX` and the elevator trim `CbA`. On the page throttle
+trim up gives more camber, while in flight `T3` down does. Then leave the page
+and set the Cruise camber with `T3`.
 
 Reflex comes from the alignment neutral, because Speed has no camber. On the
 Wing alignment page, raise the aileron center point and the flap point second

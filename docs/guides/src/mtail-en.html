@@ -325,23 +325,23 @@
     <li>The page shows four parameters: for each, its code, the trim that changes it and the current value.</li>
     <li>While the page is open, the trims change the parameters: the aileron trim the aileron travel (<code>Ail</code>), the rudder trim aileron → flap (<code>AiF</code>), the elevator trim camber → aileron (<code>CbA</code>), and the throttle trim the amount of thermal camber (<code>CbX</code>; N/A in tx16s). After you leave the page, the trims work as usual again.</li>
   </ul>
-  <p><b>In flight, camber</b> comes from trim T3 (input <code>CbP</code>; in Mode 2 usually the throttle trim). T3 is kept separately for Cruise and Float, while <code>CbX</code> and <code>CbA</code> are shared by all modes.</p>
+  <p><b>In flight, camber</b> comes from trim T3 (input <code>CbP</code>; in Mode 2 usually the throttle trim), and in Float also from the throttle stick. T3 is kept separately for Cruise and Float, while <code>CbX</code> and <code>CbA</code> are shared by all modes.</p>
   <table>
     <thead><tr><th>Mode</th><th>Position of the flaps and ailerons</th></tr></thead>
     <tbody>
       <tr><td>Speed (<span class="sw">SD↑</span>)</td><td>No camber, and T3 does nothing: the surfaces sit exactly at the neutral set on the <span class="ui">Wing alignment</span> page.</td></tr>
       <tr><td>Cruise (SD&nbsp;middle)</td><td>Only T3 gives camber: below center it adds camber, a little more with each click down; at center the camber is zero; above center T3 changes nothing. The template sets T3 a little below center, for light camber.</td></tr>
-      <tr><td>Float (<span class="sw">SD↓</span>)</td><td>The thermal camber <code>CbX</code> (33 in the template) plus T3: each click down adds a little more camber.</td></tr>
+      <tr><td>Float (<span class="sw">SD↓</span>)</td><td>Thermal camber from the throttle stick plus T3. Stick at the bottom: no thermal camber; at the top: <code>CbX</code> (33 in the template); in between: in proportion. T3: each click down adds a little more camber.</td></tr>
     </tbody>
   </table>
   <p>In camber the ailerons follow the flaps by <code>CbA</code>. The template has 153 %, so in thermal mode the ailerons drop more than the flaps. If that is too much, lower <code>CbA</code>.</p>
 
   <p><b>Setting the camber</b> (motor disconnected):</p>
   <ol class="steps">
-    <li>Select Float (<span class="sw">SD↓</span>) and open <span class="ui">Aileron/camber</span>. While the page is open, the surfaces show the Float camber.</li>
+    <li>Leave landing mode (<span class="sw">SF↑</span>), select Float (<span class="sw">SD↓</span>) and put the throttle stick up. Open <span class="ui">Aileron/camber</span>: while the page is open, the surfaces show the full Float camber.</li>
     <li>Throttle trim up raises <code>CbX</code>: the flaps and ailerons go lower (in tx16s <code>CbX</code> is fixed in the template). Note: on the page, trim up gives more camber; in flight, T3 down does.</li>
     <li>The elevator trim changes only <code>CbA</code>: up makes the ailerons drop more, down less.</li>
-    <li>Leave the page, select Cruise and set the camber with T3 (down for more). In Float, T3 adds camber to <code>CbX</code> the same way.</li>
+    <li>Leave the page, select Cruise and set the camber with T3 (down for more). In Float, T3 adds camber to the camber from the throttle stick the same way.</li>
   </ol>
 
   <p><b>Reflex for Speed.</b> In Speed the surfaces sit at the alignment neutral, so reflex is set on the <span class="ui">Wing alignment</span> page (6.3), with the motor disconnected:</p>
@@ -467,6 +467,7 @@
       <tr><td>N/A in some fields</td><td>The tx16s template: these values are fixed in the template (section 3).</td></tr>
       <tr><td>Values changed in the wrong mode</td><td>Select the flight mode first, then change the values.</td></tr>
       <tr><td>T3 above center does nothing, no reflex</td><td>That is by design: T3 only adds camber. Reflex is the neutral on the <span class="ui">Wing alignment</span> page (6.5).</td></tr>
+      <tr><td>No camber in Float</td><td>In Float the thermal camber comes from the throttle stick: at the bottom there is none. Raise the stick or lower T3 (6.5).</td></tr>
       <tr><td>The right flap (CH5) sits at an end</td><td>For ExpressLRS, set <span class="ui">Packet Rate</span> to “100Hz Full” and <span class="ui">Switch Mode</span> to “8ch” (section 3). Do not move channels.</td></tr>
       <tr><td>After an update everything works the old way</td><td>Delete <code>/WIDGETS/SoarF5J</code>, copy the new folder and restart the radio. If that does not help, remove the widget from the screen and add it again.</td></tr>
     </tbody>

@@ -108,7 +108,7 @@ physical stick or trim location depends on the radio stick mode.
 | `Rud` | `Rudder` / `I1:Rud` | Stick source `Rud` | Rudder/yaw input. On `VTail` it feeds the virtual rudder channel `CH18` that drives both V-tail servos instead of a separate rudder channel. On `MTail` it also feeds the optional rudder-to-elevator mix. |
 | `Ele` | `Elev` / `I2:Ele` | Stick source `Ele` | Elevator/pitch input. |
 | `Ail` | `Ailero` / `I3:Ail` | Stick source `Ail` | Aileron input, plus source for aileron-to-rudder and optional aileron-to-elevator mixes. |
-| `Thr` | `Brake` / `I5:Brk` | Stick source `Thr`, inverted | Landing brake/crow control. |
+| `Thr` | `Brake` / `I5:Brk` | Stick source `Thr`, inverted | Landing brake/crow control. In Float it also sets the thermal camber through the `CambrX` mix: none with the stick down, `CbX` with the stick up. |
 | `Thr` | `Adjust` / `I8:Adj` | Stick source `Thr`, inverted | Setup-page adjustment source, used for live curve-point selection on wing and brake setup pages. |
 
 ### Template-Family Source Defaults
