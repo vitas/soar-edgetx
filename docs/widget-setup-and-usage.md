@@ -374,6 +374,11 @@ left/right aileron pair. The screen sliders can still adjust individual
 surfaces. The page writes to the flaperon curves and the related output
 center/endpoints.
 
+The neutral is where the surfaces sit in Speed: the center point for the
+ailerons (throttle stick in the middle) and the second point from the right for
+the flaps (throttle stick a quarter up from the bottom). Reflex for Speed is set
+there; see [`setup/aileron_camber`](#setupaileron_camber).
+
 Use `Reset` only when you intentionally want to return the flaperon alignment
 curves and endpoints to the page defaults.
 
@@ -434,12 +439,31 @@ the model adjustment mode (`GV8` = 3), so these trims change the values instead
 of trimming the model. When the page exits, it restores the previous adjustment
 state and the trims work normally again.
 
-In normal flying, the templates drive thermal camber through `I6:CbP`. TX15
+In normal flying, the templates drive camber through `I6:CbP`. TX15
 templates default that input to `T3`; TX16-family templates also default it to
 `T3` for Companion import compatibility. On Mode 2 radios `T3` is commonly the
-throttle trim, but the physical trim depends on the radio's stick mode. Moving
-the configured camber source changes how much thermal camber is applied between
-maximum reflex and the configured camber amount.
+throttle trim, but the physical trim depends on the radio's stick mode. The
+input has a -100 differential, so only `T3` below center reaches the mixes:
+`T3` adds camber and never reflex. Each flight mode keeps its own `T3`, while
+`CbX` and `CbA` are shared by all modes:
+
+| Flight mode | Flaps and ailerons |
+| --- | --- |
+| Speed | No camber, and `T3` is off: the surfaces sit at the Wing alignment neutral. |
+| Cruise | `T3` only: below center adds camber, center and above add none. The templates start slightly below center. |
+| Float | The thermal camber `CbX` (33 in the templates) plus `T3`. |
+
+In camber the ailerons follow the flaps by `CbA`, 153 % in the templates. To
+set the camber, select Float before opening the page: the surfaces then show
+the Float camber while the throttle trim changes `CbX` and the elevator trim
+`CbA`. On the page throttle trim up gives more camber, while in flight `T3`
+down does. Then leave the page and set the Cruise camber with `T3`.
+
+Reflex comes from the alignment neutral, because Speed has no camber. On the
+Wing alignment page, raise the aileron center point and the flap point second
+from the right by the reflex you want. Cruise and Float count their camber from
+the same neutral, so then bring Cruise back down with `T3`, and in Float add a
+little `CbX` or lower `T3` if needed.
 
 9-GVAR compatible templates keep only GV1 through GV9. Controls backed by
 GV10-GV15 are fixed in the template and show `N/A` in setup pages on radios

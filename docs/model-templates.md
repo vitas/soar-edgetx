@@ -116,7 +116,7 @@ physical stick or trim location depends on the radio stick mode.
 | Template family | Model input | Default assignment | What it does |
 | --- | --- | --- | --- |
 | `tx15-*` | `I4:Mot` | `Thr` stick, inverted | Motor throttle source in the `Motor` flight mode. Outside `Motor`, the `Off` input line holds the motor off. |
-| `tx15-*` | `I6:CbP` | `T3` trim source | Thermal camber position between maximum reflex and the configured camber amount. |
+| `tx15-*` | `I6:CbP` | `T3` trim source | Camber position: `T3` below center adds camber in Cruise and Float, center and above add none, and Speed ignores it. |
 | `tx16s-*` | `I4:Mot` | `Thr` stick, inverted | TX16S/T16-class motor throttle source in the `Motor` flight mode. |
 | `tx16s-*` | `I6:CbP` | `T3` trim source | TX16S/T16-class thermal camber position source. The physical trim depends on the radio stick mode. |
 | `tx16s-mk3-*` | `I4:Mot` | `Thr` stick, inverted | TX16S MK3 motor throttle source in the `Motor` flight mode. |

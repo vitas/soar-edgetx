@@ -305,6 +305,7 @@
     <li>The rudder trim aligns the left flap with the right one, the aileron trim the left aileron with the right one.</li>
     <li>The on-screen sliders move single surfaces.</li>
     <li>Order: the end points first, then the center, then ±50 %.</li>
+    <li>The neutral is where the surfaces sit in Speed: for the ailerons the center point (throttle stick in the middle), for the flaps the second point from the right (throttle stick a quarter up from the bottom). Reflex is set through it (6.5).</li>
     <li><span class="ui">Reset</span> returns the alignment to the start; press it only if you want to start over.</li>
   </ul>
 
@@ -322,9 +323,34 @@
   <h3>6.5. Ailerons and camber <span class="tag">Page 7 · Aileron/camber</span></h3>
   <ul class="plain">
     <li>The page shows four parameters: for each, its code, the trim that changes it and the current value.</li>
-    <li>While the page is open, the trims change the parameters: the aileron trim the aileron travel (<code>Ail</code>), the rudder trim aileron → flap (<code>AiF</code>), the elevator trim camber → aileron (<code>CbA</code>), and the throttle trim the amount of thermal camber (<code>CbX</code>; N/A in tx16s).</li>
-    <li>In flight the camber position comes from the <code>CbP</code> input, by default trim T3 (in Mode 2 usually the throttle trim). After you leave the page, the trims work as usual again.</li>
+    <li>While the page is open, the trims change the parameters: the aileron trim the aileron travel (<code>Ail</code>), the rudder trim aileron → flap (<code>AiF</code>), the elevator trim camber → aileron (<code>CbA</code>), and the throttle trim the amount of thermal camber (<code>CbX</code>; N/A in tx16s). After you leave the page, the trims work as usual again.</li>
   </ul>
+  <p><b>In flight, camber</b> comes from trim T3 (input <code>CbP</code>; in Mode 2 usually the throttle trim). T3 is kept separately for Cruise and Float, while <code>CbX</code> and <code>CbA</code> are shared by all modes.</p>
+  <table>
+    <thead><tr><th>Mode</th><th>Position of the flaps and ailerons</th></tr></thead>
+    <tbody>
+      <tr><td>Speed (<span class="sw">SD↑</span>)</td><td>No camber, and T3 does nothing: the surfaces sit exactly at the neutral set on the <span class="ui">Wing alignment</span> page.</td></tr>
+      <tr><td>Cruise (SD&nbsp;middle)</td><td>Only T3 gives camber: below center it adds camber, a little more with each click down; at center the camber is zero; above center T3 changes nothing. The template sets T3 a little below center, for light camber.</td></tr>
+      <tr><td>Float (<span class="sw">SD↓</span>)</td><td>The thermal camber <code>CbX</code> (33 in the template) plus T3: each click down adds a little more camber.</td></tr>
+    </tbody>
+  </table>
+  <p>In camber the ailerons follow the flaps by <code>CbA</code>. The template has 153 %, so in thermal mode the ailerons drop more than the flaps. If that is too much, lower <code>CbA</code>.</p>
+
+  <p><b>Setting the camber</b> (motor disconnected):</p>
+  <ol class="steps">
+    <li>Select Float (<span class="sw">SD↓</span>) and open <span class="ui">Aileron/camber</span>. While the page is open, the surfaces show the Float camber.</li>
+    <li>Throttle trim up raises <code>CbX</code>: the flaps and ailerons go lower (in tx16s <code>CbX</code> is fixed in the template). Note: on the page, trim up gives more camber; in flight, T3 down does.</li>
+    <li>The elevator trim changes only <code>CbA</code>: up makes the ailerons drop more, down less.</li>
+    <li>Leave the page, select Cruise and set the camber with T3 (down for more). In Float, T3 adds camber to <code>CbX</code> the same way.</li>
+  </ol>
+
+  <p><b>Reflex for Speed.</b> In Speed the surfaces sit at the alignment neutral, so reflex is set on the <span class="ui">Wing alignment</span> page (6.3), with the motor disconnected:</p>
+  <ol class="steps">
+    <li>Put the throttle stick in the middle: the center point, the aileron neutral, is selected. Raise both ailerons by the reflex you want with the elevator trim.</li>
+    <li>Put the throttle stick a quarter up from the bottom: the second point from the right, the flap neutral, is selected. Raise both flaps by the same amount with the throttle trim.</li>
+    <li>Close the page and check in Speed (<span class="sw">SD↑</span>): the surfaces sit with reflex.</li>
+    <li>Cruise and Float count their camber from the same neutral. In Cruise, bring the surfaces down with T3 to where you want them, for example to zero; in Float, raise <code>CbX</code> a little or lower T3 if needed.</li>
+  </ol>
 
   <h3>6.6. M-tail mixes and battery <span class="tag">Page 3 · Mixes &amp; Battery</span></h3>
   <p>The values are stored separately for each flight mode. First select the mode with its switch, Cruise (the default), Speed (<span class="sw">SD↑</span>) or Float (<span class="sw">SD↓</span>), then change the values. The current mode shows at the top right, for example <span class="ui">FM0:Cruise</span>. While the page is open, the trims also change the mix values.</p>
@@ -440,6 +466,7 @@
       <tr><td>The throttle trim on the <span class="ui">Motor</span> page does not change the idle</td><td>The model was made from an older template, without <code>L49</code> and <code>SF39</code>. Change the value with the wheel or by touch, or create the model from the new template.</td></tr>
       <tr><td>N/A in some fields</td><td>The tx16s template: these values are fixed in the template (section 3).</td></tr>
       <tr><td>Values changed in the wrong mode</td><td>Select the flight mode first, then change the values.</td></tr>
+      <tr><td>T3 above center does nothing, no reflex</td><td>That is by design: T3 only adds camber. Reflex is the neutral on the <span class="ui">Wing alignment</span> page (6.5).</td></tr>
       <tr><td>The right flap (CH5) sits at an end</td><td>For ExpressLRS, set <span class="ui">Packet Rate</span> to “100Hz Full” and <span class="ui">Switch Mode</span> to “8ch” (section 3). Do not move channels.</td></tr>
       <tr><td>After an update everything works the old way</td><td>Delete <code>/WIDGETS/SoarF5J</code>, copy the new folder and restart the radio. If that does not help, remove the widget from the screen and add it again.</td></tr>
     </tbody>
