@@ -40,6 +40,11 @@ local function restore_globals()
   end
 end
 
+-- Font heights lcd.sizeText reports on the radio simulators: the 480 px wide TX15 and TX16S
+-- screens, and the 800 px wide TX16S MK3 screen.
+local FONT_HEIGHTS_480 = { SMLSIZE = 17, MIDSIZE = 29, DBLSIZE = 40, XXLSIZE = 69 }
+local FONT_HEIGHTS_800 = { SMLSIZE = 23, MIDSIZE = 42, DBLSIZE = 55, XXLSIZE = 93 }
+
 local function new_widget_env()
   restore_globals()
 
@@ -54,6 +59,7 @@ local function new_widget_env()
     playDurations = {},
     drawTexts = {},
     drawTimers = {},
+    fontHeights = FONT_HEIGHTS_480,
     timers = {
       [0] = { start = 600, value = 600 },
       [1] = { start = 0, value = 0 }
@@ -101,6 +107,14 @@ local function new_widget_env()
     end,
     RGB = function(r, g, b)
       return 1000000 + r * 10000 + g * 100 + b
+    end,
+    sizeText = function(text, flags)
+      for font, height in pairs(env.fontHeights) do
+        if _G[font] == flags then
+          return 10 * #tostring(text), height
+        end
+      end
+      error("sizeText called with unexpected flags " .. tostring(flags))
     end
   }
 
@@ -330,6 +344,84 @@ widget_test("competition labels and timers use contest colors", function()
   assert_equal(latest_drawn_entry(env, "Max alt").flags, COLOR_THEME_PRIMARY3 + SMLSIZE, "altitude label color")
   assert_equal(env.drawTimers[1].flags, lcd.RGB(0, 70, 20) + XXLSIZE + RIGHT, "flight timer color")
   assert_equal(env.drawTimers[2].flags, lcd.RGB(110, 0, 0) + XXLSIZE + RIGHT, "motor timer color")
+end)
+
+local function draw_competition_screen(w, h, fontHeights)
+  local env = new_widget_env()
+  env.widget.zone = { w = w, h = h }
+  env.fontHeights = fontHeights or env.fontHeights
+
+  env.widget.refresh(nil, nil)
+  return env
+end
+
+-- Returns the top and bottom of the competition screen rows as drawn: the title and status
+-- header, the flight and motor timers, and the altitude.
+local function drawn_rows(env, timerFont)
+  local heights = env.fontHeights
+  local headerY = math.max(latest_drawn_entry(env, "F5J").y, latest_drawn_entry(env, "Ready").y)
+  local altitudeY = latest_drawn_entry(env, "0 m").y
+
+  return {
+    { top = headerY, bottom = headerY + heights.MIDSIZE },
+    { top = env.drawTimers[1].y, bottom = env.drawTimers[1].y + heights[timerFont] },
+    { top = env.drawTimers[2].y, bottom = env.drawTimers[2].y + heights[timerFont] },
+    { top = altitudeY, bottom = altitudeY + heights.MIDSIZE }
+  }
+end
+
+local function assert_rows_apart(env, timerFont)
+  local rows = drawn_rows(env, timerFont)
+
+  for i = 2, #rows do
+    local label = string.format("row %d top %d below row %d bottom %d", i, rows[i].top, i - 1, rows[i - 1].bottom)
+    assert_equal(rows[i].top >= rows[i - 1].bottom, true, label)
+  end
+
+  local last = rows[#rows].bottom
+  assert_equal(last <= env.widget.zone.h, true, "last row bottom " .. last .. " inside the zone")
+end
+
+widget_test("competition rows stay apart on the TX15 screen", function()
+  local env = draw_competition_screen(430, 225)
+
+  assert_rows_apart(env, "XXLSIZE")
+end)
+
+widget_test("competition rows stay apart on the TX16S screen", function()
+  local env = draw_competition_screen(396, 177)
+
+  assert_rows_apart(env, "DBLSIZE")
+end)
+
+widget_test("competition rows stay apart on the TX16S MK3 screen", function()
+  local env = draw_competition_screen(686, 350, FONT_HEIGHTS_800)
+
+  assert_rows_apart(env, "XXLSIZE")
+end)
+
+widget_test("competition rows share the spare height on the TX16S MK3 screen", function()
+  local env = draw_competition_screen(686, 350, FONT_HEIGHTS_800)
+  local rows = drawn_rows(env, "XXLSIZE")
+  local gap = rows[2].top - rows[1].bottom
+  local bottomGap = env.widget.zone.h - rows[4].bottom
+
+  assert_equal(gap > 0, true, "gap below the header " .. gap)
+  assert_equal(rows[3].top - rows[2].bottom, gap, "gap between the timers")
+  assert_equal(rows[4].top - rows[3].bottom, gap, "gap above the altitude")
+  assert_equal(bottomGap >= gap and bottomGap < gap + 4, true, "gap below the altitude " .. bottomGap)
+end)
+
+widget_test("competition labels are centered on their timer rows", function()
+  local env = draw_competition_screen(686, 350, FONT_HEIGHTS_800)
+  local heights = env.fontHeights
+
+  for i, text in ipairs({ "Target", "Motor" }) do
+    local labelCenter = latest_drawn_entry(env, text).y + heights.DBLSIZE / 2
+    local timerCenter = env.drawTimers[i].y + heights.XXLSIZE / 2
+    local label = string.format("%s label center %.1f on timer center %.1f", text, labelCenter, timerCenter)
+    assert_equal(math.abs(labelCenter - timerCenter) <= 1, true, label)
+  end
 end)
 
 widget_test("explicit arm and target adjustment still write timer 0", function()

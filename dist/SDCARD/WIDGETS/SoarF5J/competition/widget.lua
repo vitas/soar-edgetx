@@ -502,35 +502,49 @@ local function draw_metric(label, value, suffix, x, y, w)
   lcd.drawText(x + w, y, tostring(value) .. suffix, colors.primary1 + MIDSIZE + RIGHT)
 end
 
+local function font_height(text, flags)
+  local _, height = lcd.sizeText(text, flags)
+  return height
+end
+
 local function draw()
   local w = widget.zone.w
   local h = widget.zone.h
   local pad = 8
   local headerH = 26
   local textYOffset = 20
+  local statusY = 7 + textYOffset
   local right = w - pad
-  local rowY = headerH + pad + textYOffset
   local compact = h < 190
   local timerSize = compact and DBLSIZE or XXLSIZE
   local labelSize = compact and MIDSIZE or DBLSIZE
-  local timerGap = compact and 46 or 68
-  local metricGap = compact and 42 or 54
   local flightTimerFlags = FLIGHT_TIMER_COLOR + timerSize + RIGHT
   local motorTimerFlags = MOTOR_TIMER_COLOR + timerSize + RIGHT
+  local status = status_text()
+  local flightLabel = state.mode == "initial" and "Target" or "Flight"
+
+  -- Fonts are larger on high resolution screens, so the rows are stacked by their font heights,
+  -- and the height left over is shared evenly above, between and below them.
+  local headerBottom = statusY + font_height(status, MIDSIZE)
+  local timerH = font_height("00:00", timerSize)
+  local labelOffset = math.floor((timerH - font_height(flightLabel, labelSize)) / 2)
+  local metricH = font_height("0 m", MIDSIZE)
+  local gap = math.max(0, math.floor((h - headerBottom - 2 * timerH - metricH) / 4))
+  local rowY = headerBottom + gap
 
   lcd.drawFilledRectangle(0, 0, w, h, colors.secondary3)
   lcd.drawFilledRectangle(0, 0, w, headerH, colors.secondary1)
   lcd.drawText(pad, 5 + textYOffset, "F5J", colors.primary3 + MIDSIZE)
-  lcd.drawText(right, 7 + textYOffset, status_text(), colors.primary3 + MIDSIZE + RIGHT)
+  lcd.drawText(right, statusY, status, colors.primary3 + MIDSIZE + RIGHT)
 
-  lcd.drawText(pad, rowY + 8, state.mode == "initial" and "Target" or "Flight", colors.primary3 + labelSize)
+  lcd.drawText(pad, rowY + labelOffset, flightLabel, colors.primary3 + labelSize)
   lcd.drawTimer(right, rowY, flight_timer_value(), flightTimerFlags)
 
-  rowY = rowY + timerGap
-  lcd.drawText(pad, rowY + 8, "Motor", colors.primary3 + labelSize)
+  rowY = rowY + timerH + gap
+  lcd.drawText(pad, rowY + labelOffset, "Motor", colors.primary3 + labelSize)
   lcd.drawTimer(right, rowY, motor_timer_value(), motorTimerFlags)
 
-  rowY = rowY + metricGap
+  rowY = rowY + timerH + gap
   draw_metric("Max alt", state.max_altitude or 0, " m", pad, rowY, w - 2 * pad)
 end
 
