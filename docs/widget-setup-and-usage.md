@@ -100,13 +100,20 @@ wired without receiver remapping. Both V-tail servos mix the virtual rudder
 `docs/model-templates.md`. `XTail` has no aileron-to-elevator or
 rudder-to-elevator mix on the single elevator output.
 
-With ExpressLRS, set `Packet Rate` to `100Hz Full` and `Switch Mode` to `8ch`
-in the ExpressLRS tool script, and keep receiver outputs 1-8 on channels 1-8.
-In the Hybrid and Wide switch modes `CH5` is the two-position arm channel and
-`CH6` to `CH8` have reduced resolution, so the right flap on `CH5` sits at an
-end and the tail servos move in steps. `CH5` stays the arm channel in `8ch`
-mode: ExpressLRS treats the model as armed while the right flap is above
-center.
+With ExpressLRS, use version 4 on the TX module and the receiver, set
+`Packet Rate` to `100Hz Full` and `Switch Mode` to `8ch` in the ExpressLRS
+tool script, and keep receiver outputs 1-8 on channels 1-8. ExpressLRS 4 then
+sends channels 1-8 at full resolution, `CH5` included. In the Hybrid and Wide
+switch modes `CH5` has two positions and `CH6` to `CH8` have reduced
+resolution, so the right flap on `CH5` sits at an end and the tail servos move
+in steps. The TX15 and TX16S MK3 templates set the module's `Arm using` to
+`Switch` with no switch, so ExpressLRS does not treat the model as armed while
+it is set up. After the ExpressLRS setup, set the switch to `ON`: the model is
+then always armed, and dynamic power, if enabled, goes to maximum when
+telemetry or the link is lost. Set the switch back to `---` to change
+ExpressLRS settings. With `Arm using` on `CH5`, as on a TX16S model switched
+to an ExpressLRS module, the model counts as armed while the right flap is
+above center.
 
 The templates start with neutral output endpoints, centers, and reversals.
 The wing alignment curves CV1 through CV4 start linear at
