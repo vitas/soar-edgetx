@@ -317,7 +317,9 @@ The distributed TX16-family YAML uses `Thr` for motor and `T3` for camber.
 Pilots who prefer the TX16 side sliders can remap `I4:Mot` to `LS` and
 `I6:CbP` to `RS` after import. First check that `LS` and `RS` are enabled in
 the radio hardware settings; otherwise Companion may clear those input sources
-on reload.
+on reload. A slider on `I6:CbP` also needs the first `CH23` mix line limited to
+`Cruise`, `Motor`, and `Float`, so that `Speed` keeps no camber; see
+[Camber Slider](model-templates.md#camber-slider).
 
 Default launch/motor operation: with `SE` up, `SA down` arms the motor, and the
 siren repeats every 5 seconds until the motor starts or `SA` goes up. A brief

@@ -416,7 +416,7 @@
     <li>Stopping: <span class="sw">SE↓</span> again, moving SA out of the down position, or automatically after 30 seconds of motor run. When SE returns, the motor does not start again: the next start needs <span class="sw">SA↑</span>, then <span class="sw">SA↓</span> and a new SE flick.</li>
     <li>Only after this check, connect the motor and fit the propeller.</li>
   </ol>
-  <div class="callout warn"><span class="t">Full throttle with the stick up</span>If you want full throttle with the stick up, open the <code>On</code> line of <code>I4:Mot</code> in the model's inputs and set its weight to +100. Do not change the <code>Off</code> line. Check with the propeller off: in the Motor mode, the stick down now gives idle and the stick up gives full throttle. The stick up also gives full thermal camber in Float and full brakes in landing mode (<span class="sw">SF↓</span>), so move the stick back down after the motor stops.</div>
+  <div class="callout warn"><span class="t">Full throttle with the stick up</span>If you want full throttle with the stick up, open the <code>On</code> line of <code>I4:Mot</code> in the model's inputs and change its curve from <code>Mot</code> to <code>!Mot</code>, the same curve inverted. Keep the weight −100 and do not change the <code>Off</code> line. Check with the propeller off: in the Motor mode, the stick down now gives idle (the bottom 5 % of the travel) and the stick up gives full throttle. Do not set the weight to +100 instead: full throttle then comes as a jump in the top 5 %, and idle is only at the very bottom. The stick up also gives full thermal camber in Float and full brakes in landing mode (<span class="sw">SF↓</span>), so move the stick back down after the motor stops, or turn the brakes and the camber around as well (6.9).</div>
 
   <h3>6.8. Motor idle <span class="tag">Page 8 · Motor</span></h3>
   <p>The idle is the minimum motor throttle in the Motor mode. Set it by ear with the motor running: at minimum the motor should turn slowly but steadily. This is the only step with the motor connected and the propeller on: hold the model and do not stand in front of the propeller.</p>
@@ -430,6 +430,28 @@
     <li>Range 0…60, default 37. At 0 the motor stops at minimum throttle.</li>
     <li>The value is the first point of the CV13 <code>Pot</code> curve. The page keeps the middle point at half the value; full throttle does not change.</li>
     <li>While the page is open, the throttle trim does not move the camber. In a model made from an older template (without <code>L49</code> and <code>SF39</code>) the trim works as usual and does not change the idle: select the value and turn the wheel, or touch it and drag your finger.</li>
+  </ul>
+
+  <h3>6.9. Stick direction and a camber slider <span class="tag">optional</span></h3>
+  <p>The throttle stick has three jobs: the motor in the Motor mode, the thermal camber in Float and the brakes in landing mode. In the template the stick down gives full throttle, and the stick up gives full thermal camber and full brakes. Each job can be turned around in the model's inputs and mixes, and the camber can move from T3 to a slider. Check each change in the channel monitor with the propeller off.</p>
+  <table>
+    <thead><tr><th>What you want</th><th>Where</th><th>Change</th></tr></thead>
+    <tbody>
+      <tr><td>Full throttle with the stick up</td><td>input <code>I4:Mot</code>, line <code>On</code></td><td>curve <code>Mot</code> → <code>!Mot</code> (6.7)</td></tr>
+      <tr><td>Full brakes and full thermal camber with the stick down</td><td>input <code>I5:Brk</code></td><td>weight −100 → +100</td></tr>
+      <tr><td>Only the thermal camber with the stick down</td><td>CH25 mixes, line <code>CambrX</code></td><td>curve <code>LSl</code> → <code>!LSl</code></td></tr>
+    </tbody>
+  </table>
+  <ul class="plain">
+    <li>The brakes and the thermal camber both come from <code>I5:Brk</code>, so its weight turns both around at once. The stick up then gives neither, and the top 5 % of the travel keep the brakes fully in, as the bottom 5 % did before. Nothing else needs changing: the brake curves follow the brake channel, and in the Motor mode the brakes stay in.</li>
+    <li>With the motor and <code>I5:Brk</code> both turned around, the stick up gives full throttle with the brakes in and no thermal camber, and the stick down gives idle, full brakes and full thermal camber. The warning in the 6.7 note then no longer applies, and the idle position in 6.8 is the stick down.</li>
+    <li>Leave <code>I8:Adj</code> as it is: it selects the points on the setup pages (6.3, 6.4), and they keep the stick directions given in this guide. If you want them to follow the new direction too, set the weight of <code>I8:Adj</code> to +100 as well; then read the stick positions in 6.3 and 6.5 the other way round, for example a quarter down from the top instead of a quarter up from the bottom.</li>
+    <li>Leave the throttle reverse option in the model setup off: it turns the whole stick around at once, the setup pages included, and the directions in this guide no longer match.</li>
+  </ul>
+  <p><b>Camber on a slider.</b> If it is a TX16S side slider (<code>LS</code> or <code>RS</code>), first enable it in the radio's hardware settings (<span class="ui">SYS</span> → <span class="ui">Hardware</span>); otherwise Companion may clear the source. There are two ways:</p>
+  <ul class="plain">
+    <li><b>In addition to T3: input <code>I7:Cmb</code>.</b> The template keeps it for a slider; its source <code>MAX</code> gives no camber. Set the source to the slider: fully up (the top 5 %) gives no camber, fully down gives 20, on the same scale as <code>CbX</code> (33 in the template). T3 works as before and adds to it. This camber works in every flight mode and stays while the motor runs, so in the CH25 mixes open the <code>Slider</code> line and untick FM1–FM4 (Adjust, Motor, KAPOW, Speed) in its flight modes: the slider then works only in Cruise and Float. Untick them in the mix line, not in the input: a switched-off input does not bring this camber to zero.</li>
+    <li><b>Instead of T3: input <code>I6:CbP</code>.</b> Change its source from <code>T3</code> to the slider. The slider then works like T3: below center it adds camber, at center and above it adds none. One slider position serves all modes, so Cruise and Float no longer keep their own camber. To keep Speed without camber, open the first line in the CH23 mixes (source <code>I6:CbP</code>) and untick FM1, FM3 and FM4 (Adjust, KAPOW, Speed) in its flight modes. As with T3, full motor power takes this camber away. T3 no longer moves the camber in flight, and the setup pages still use its buttons.</li>
   </ul>
 </section>
 
@@ -467,7 +489,7 @@
       <tr><td>The throttle trim on the <span class="ui">Motor</span> page does not change the idle</td><td>The model was made from an older template, without <code>L49</code> and <code>SF39</code>. Change the value with the wheel or by touch, or create the model from the new template.</td></tr>
       <tr><td>No siren after <span class="sw">SA↓</span>, and the motor does not start</td><td>SE was down when SA went down, so the motor is not armed. Move SE up, then SA up and down again.</td></tr>
       <tr><td>The motor starts again when SE returns after a stop</td><td>The model was made from an older template. In the model's logical switches, change the AND switch of <code>L24</code> to <code>L23</code>, or create the model from the new template.</td></tr>
-      <tr><td>Stick fully down gives only about +75 on CH3, or after the change in 6.7 the stick down gives no idle</td><td>The model was made from an older template, where the first point of the CV9 <code>Mot</code> curve is −70. Set it to −100 in the model's curves, or create the model from the new template.</td></tr>
+      <tr><td>At full throttle CH3 reaches only about +75</td><td>The model was made from an older template, where the first point of the CV9 <code>Mot</code> curve is −70. Set it to −100 in the model's curves, or create the model from the new template.</td></tr>
       <tr><td>N/A in some fields</td><td>The tx16s template: these values are fixed in the template (section 3).</td></tr>
       <tr><td>Values changed in the wrong mode</td><td>Select the flight mode first, then change the values.</td></tr>
       <tr><td>T3 above center does nothing, no reflex</td><td>That is by design: T3 only adds camber. Reflex is the neutral on the <span class="ui">Wing alignment</span> page (6.5).</td></tr>

@@ -862,12 +862,79 @@ test("model template documentation explains the motor throttle direction", funct
   local expected = {
     "### Motor Throttle",
     "With the stick fully down, `CH3` is `+100`, full throttle",
-    "set the weight of its `On` line to `+100`. Leave the `Off` line as it is.",
+    "and change the curve of its `On` line from `Mot` to `!Mot`, curve CV9 inverted.",
+    "Keep the weight `-100` and leave the `Off` line as it is.",
     "camber in Float and full airbrakes in landing mode (`SF down`)"
   }
 
   for _, needle in ipairs(expected) do
     assert_contains(docs, needle, "motor throttle documentation")
+  end
+  -- Weight +100 turns the idle step into a full throttle step in the top 5 %.
+  assert(not docs:find("set the weight of its `On` line to `+100`", 1, true),
+    "motor throttle documentation still reverses the motor with weight +100")
+end)
+
+test("model template documentation explains the brake direction and the camber slider", function()
+  local docs = read_file(MODEL_TEMPLATE_DOC)
+  local expected = {
+    "### Brake and Camber Direction",
+    "weight of its `Brake` line to `+100`.",
+    "curve of the `CambrX` line from `LSl` to `!LSl`, curve CV12 inverted.",
+    "Leave `I8:Adj` as it is.",
+    "Leave the throttle reverse option in the model setup off.",
+    "### Camber Slider",
+    "In addition to `T3`, use `I7:Cmb`.",
+    "Instead of `T3`, change the source of the `CambPs` line of `I6:CbP`",
+    "the one with the source `I6:CbP`",
+    "not in the `I7:Cmb` input"
+  }
+
+  for _, needle in ipairs(expected) do
+    assert_contains(docs, needle, "brake direction and camber slider documentation")
+  end
+end)
+
+test("M-tail guides explain the stick direction and the camber slider", function()
+  -- The motor note used to reverse I4:Mot with weight +100.
+  local old_motor_step = {
+    en = "and set its weight to +100",
+    ru = "и поставьте вес +100",
+    bg = "и задайте тегло +100"
+  }
+
+  for _, lang in ipairs({ "en", "ru", "bg" }) do
+    local guide = read_file("docs/guides/src/mtail-" .. lang .. ".html")
+    local label = "mtail-" .. lang .. " guide"
+
+    local motor = guide:match("<h3>6%.7%..-<h3>6%.8%.")
+    assert(motor, label .. " missing sections 6.7 and 6.8")
+    local note = motor:match('<div class="callout warn">(.-)</div>')
+    assert(note, label .. " missing the motor direction note in 6.7")
+    assert_contains(note, "<code>!Mot</code>", label .. " motor direction note")
+    assert_contains(note, "(6.9)", label .. " motor direction note")
+    assert(not note:find(old_motor_step[lang], 1, true), label .. " motor note still sets the weight to +100")
+
+    local options = guide:match("<h3>6%.9%..-</section>")
+    assert(options, label .. " missing section 6.9")
+    for _, needle in ipairs({
+      "<code>I5:Brk</code>",
+      "−100 → +100",
+      "<code>CambrX</code>",
+      "<code>!LSl</code>",
+      "<code>I8:Adj</code>",
+      "<code>I7:Cmb</code>",
+      "<code>Slider</code>",
+      "FM1–FM4",
+      "<code>I6:CbP</code>",
+      "FM1, FM3"
+    }) do
+      assert_contains(options, needle, label .. " section 6.9")
+    end
+
+    local row = guide:match("<tr><td>[^<]*%+75.-</tr>")
+    assert(row, label .. " missing the +75 troubleshooting row")
+    assert(not row:find("6.7", 1, true), label .. " +75 row still describes the weight +100 reversal")
   end
 end)
 
@@ -1204,6 +1271,61 @@ test("templates give full motor throttle at the stick bottom and idle in the top
       local block = indexed_block(model.content, "points", first + offset - 1)
       assert_equal(tonumber(block:match("val: (%-?%d+)")), item[2],
         model.label .. " CV9 " .. item[1])
+    end
+  end
+end)
+
+-- The guides (6.9) and docs/model-templates.md name these lines for turning the throttle
+-- stick around and for a camber slider, so the templates must keep them where they point.
+test("templates keep the lines named by the stick direction and camber slider steps", function()
+  local models = tx15_template_models()
+  for _, model in ipairs(tx16_family_template_models()) do
+    models[#models + 1] = model
+  end
+
+  local function point(content, index)
+    local ok, block = pcall(indexed_block, content, "points", index)
+    return ok and tonumber(block:match("val: (%-?%d+)")) or 0
+  end
+
+  for _, model in ipairs(models) do
+    model.content = normalize_model_content(model.content)
+    local label = model.label
+
+    local modes = top_level_section(model.content, "flightModeData")
+    for index, name in pairs({ [1] = "Adjust", [2] = "Motor", [3] = "KAPOW", [4] = "Speed", [5] = "Float" }) do
+      assert_equal(modes:match("\n  " .. tostring(index) .. ":\n.-\n    name: ([^\n]*)"), name,
+        label .. " FM" .. tostring(index) .. " name")
+    end
+
+    assert_contains(input_block_for(model.content, 6, "Camber"), "srcRaw: MAX",
+      label .. " I7:Cmb adds no camber until it gets a slider")
+
+    local camber = mix_blocks_for(model.content, 24)
+    local slider = find_mix_block(camber, "Slider")
+    assert(slider, label .. " missing CH25 Slider line")
+    assert_mix_block(slider, { "srcRaw: I6", "weight: 10", "offset: -10", "value: 11", "flightModes: 000000000" },
+      label .. " CH25 Slider line takes I7:Cmb through CV11 in every flight mode")
+    local thermal = find_mix_block(camber, "CambrX")
+    assert(thermal, label .. " missing CH25 CambrX line")
+    assert_mix_block(thermal, { "srcRaw: I4", "value: 12" }, label .. " CH25 CambrX line takes I5:Brk through CV12")
+    assert_contains(indexed_block(model.content, "curves", 11), "name: LSl", label .. " CV12 name")
+
+    local position = mix_blocks_for(model.content, 22)
+    assert_mix_block(position[1], { "srcRaw: I5", "mltpx: ADD" }, label .. " first CH23 line takes I6:CbP")
+
+    -- CV8 Adj is symmetric, so weight +100 on I8:Adj mirrors the setup-page point selection.
+    assert_mix_block(indexed_block(model.content, "curves", 7), { "type: 1", "points: 5", "name: Adj" },
+      label .. " CV8 is the 10-point Adj curve")
+    local first = curve_first_point(model.content, 7)
+    local count = 10
+    for k = 0, count - 1 do
+      assert_equal(point(model.content, first + k), -point(model.content, first + count - 1 - k),
+        label .. " CV8 y symmetric at point " .. tostring(k + 1))
+    end
+    for k = 0, count - 3 do
+      assert_equal(point(model.content, first + count + k), -point(model.content, first + 2 * count - 3 - k),
+        label .. " CV8 x symmetric at inner point " .. tostring(k + 1))
     end
   end
 end)

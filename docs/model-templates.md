@@ -124,7 +124,8 @@ physical stick or trim location depends on the radio stick mode.
 
 Pilots who prefer a pot or side slider can remap `I4:Mot` after importing the
 template. Enable the control in radio hardware settings first, then check the
-servo monitor with the motor disconnected.
+servo monitor with the motor disconnected. For a camber slider, see
+[Camber Slider](#camber-slider).
 
 ### Switch Setup Defaults
 
@@ -186,12 +187,18 @@ workflow.
 of the stick travel the motor is at idle. The stick down is also where the
 airbrakes are retracted and Float adds no thermal camber.
 
-For full throttle with the stick up, open the model inputs, select `I4:Mot`, and
-set the weight of its `On` line to `+100`. Leave the `Off` line as it is. Check
-with the propeller off: in the `Motor` flight mode, the stick down gives idle
-and the stick up gives full throttle. The stick up also gives full thermal
+For full throttle with the stick up, open the model inputs, select `I4:Mot`,
+and change the curve of its `On` line from `Mot` to `!Mot`, curve CV9 inverted.
+Keep the weight `-100` and leave the `Off` line as it is. The idle zone moves
+to the bottom 5% of the stick travel, and full throttle to the top end. Do not
+set the `On` weight to `+100` instead: full throttle then comes as a step in the
+top 5%, and the motor idles only with the stick fully down.
+
+Check with the propeller off: in the `Motor` flight mode, the stick down gives
+idle and the stick up gives full throttle. The stick up also gives full thermal
 camber in Float and full airbrakes in landing mode (`SF down`), so move the
-stick back down after the motor stops.
+stick back down after the motor stops, or turn the airbrakes and the thermal
+camber around as well (see [Brake and Camber Direction](#brake-and-camber-direction)).
 
 ### Motor Idle
 
@@ -207,6 +214,67 @@ motor runs. `L49` is on while `GV8` is above `50`, and `SF39` then adjusts
 `GV8` at `100` while it is open, turns each click into an idle step, and
 restores `GV8` when it closes. In normal flying `GV8` stays below `50`, so
 `L49` and `SF39` stay off.
+
+### Brake and Camber Direction
+
+`I5:Brk` takes the throttle stick inverted (weight `-100`) and drives both the
+airbrakes in landing mode and the Float thermal camber. With the stick down the
+airbrakes are retracted and Float adds no thermal camber; with the stick up
+both are full. Curve CV11 `DB` keeps the airbrakes fully retracted in the
+bottom 5% of the stick travel.
+
+To turn both around, open the model inputs, select `I5:Brk`, and set the
+weight of its `Brake` line to `+100`. The stick down then gives full airbrakes
+and full thermal camber (`CbX`), the stick up gives neither, and the 5% zone
+with the airbrakes fully retracted moves to the top of the stick travel.
+Nothing else depends on this direction: the airbrake curves, the brake elevator
+compensation, and the `BrkOff` line that keeps the airbrakes retracted in
+`Motor` and outside landing mode all work from the brake channel `CH21`, and no
+logical switch or script reads `Thr` or `I5:Brk`. With the motor turned around
+as well, the stick up gives full throttle with the airbrakes retracted and no
+thermal camber, and the stick down gives idle, full airbrakes, and full thermal
+camber.
+
+To turn only the thermal camber around, open the `CH25` mixes and change the
+curve of the `CambrX` line from `LSl` to `!LSl`, curve CV12 inverted.
+
+Leave `I8:Adj` as it is. The wing alignment and airbrake setup pages select
+curve points with it, so they keep the stick directions described in the
+guides. To make them follow the new direction too, set the weight of its
+`Adjust` line to `+100` as well: curve CV8 `Adj` is symmetric, so the point
+selection mirrors exactly.
+
+Leave the throttle reverse option in the model setup off. It turns the whole
+throttle stick around at once, the setup pages included, and the stick
+directions in the guides no longer match.
+
+### Camber Slider
+
+A slider or pot can set the camber in two ways. If it is a TX16 side slider
+(`LS` or `RS`), enable it in the radio hardware settings first; otherwise
+Companion may clear the input source on reload. Check the result in the servo
+monitor with the motor disconnected.
+
+In addition to `T3`, use `I7:Cmb`. Its `Camber` line has the source `MAX`,
+which adds no camber through the `Slider` line of `CH25` (curve CV11 `DB`,
+weight `10`, offset `-10`). With a slider as the source, `CH25` gets `0` in the
+top 5% of the slider travel and `-20` at the bottom; for comparison, full Float
+thermal camber is `-CbX` (`-33` in the template). `T3` keeps working on top of
+the slider. The `Slider` line is active in every flight mode and is not reduced
+while the motor runs, so untick `FM1` to `FM4` (`Adjust`, `Motor`, `KAPOW`,
+`Speed`) in that line and keep `Cruise` and `Float`. Untick them in the `CH25`
+line, not in the `I7:Cmb` input: a switched-off input line does not bring this
+camber to zero.
+
+Instead of `T3`, change the source of the `CambPs` line of `I6:CbP` from `T3`
+to the slider. It then works like `T3`: below center it adds camber, center and
+above add none. One slider position serves all flight modes, so `Cruise` and
+`Float` no longer keep their own camber, and `Adjust`, `KAPOW`, and `Speed` lose
+the zero camber of their disabled `T3`. Open the first `CH23` mix line,
+the one with the source `I6:CbP`, and untick `FM1`, `FM3`, and `FM4`
+(`Adjust`, `KAPOW`, `Speed`) in it. The `MotCbr` line still takes this camber
+away as the motor power rises. `T3` no longer moves the camber in flight, and
+the setup pages still use its buttons.
 
 ### Brake Elevator Compensation
 
