@@ -1695,7 +1695,7 @@ points:
   53:
     val: 90
   54:
-    val: -70
+    val: -100
   55:
     val: 75
   56:
@@ -1918,7 +1918,7 @@ logicalSw:
     def: L9,0,-
     delay: 0
     duration: 1
-    andsw: L5
+    andsw: L23
     lsPersist: 0
     lsState: 0
   24:

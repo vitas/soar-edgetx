@@ -260,8 +260,8 @@
   <table>
     <thead><tr><th>Row on the screen</th><th class="nowrap">Default</th><th>What it does</th></tr></thead>
     <tbody>
-      <tr><td><span class="ui">Launch mode (Motor Arm) and flight timer control</span></td><td><span class="sw">SA↓</span></td><td>arms the motor, resets the flight and controls the timer</td></tr>
-      <tr><td><span class="ui">Start/Stop timer and Motor</span></td><td><span class="sw">SE↓</span></td><td>flick down and up: starts and stops the motor and the timer</td></tr>
+      <tr><td><span class="ui">Launch mode (Motor Arm) and flight timer control</span></td><td><span class="sw">SA↓</span></td><td>with SE up: arms the motor (the siren sounds), resets the flight and controls the timer</td></tr>
+      <tr><td><span class="ui">Start/Stop timer and Motor</span></td><td><span class="sw">SE↓</span></td><td>flick down and up while the siren sounds: starts the motor and the timer; down while the motor runs: stops the motor</td></tr>
       <tr><td><span class="ui">Allow vario and voice reporting of altitude</span></td><td><span class="sw">SB↓</span></td><td>allows altitude callouts (together with the last row)</td></tr>
       <tr><td><span class="ui">Variometer sound</span></td><td><span class="sw">NONE</span></td><td>vario sound (choose its source in the model's telemetry settings); off with NONE, with ON always on except at SA↓</td></tr>
       <tr><td><span class="ui">Speed flight mode</span></td><td><span class="sw">SD↑</span></td><td>Speed flight mode</td></tr>
@@ -278,7 +278,7 @@
   <ul class="plain">
     <li><span class="sw">SA</span> has two roles: down arms the motor, up turns on the <span class="ui">Aileron -&gt; Elevator</span> mix, and the middle does neither.</li>
     <li>To switch <span class="ui">Rudder -&gt; Elevator</span> by hand, assign it a free switch.</li>
-    <li>A spring-loaded switch works best for <span class="ui">Start/Stop timer and Motor</span>. With a normal switch, return <span class="sw">SE</span> up right after the flick: <span class="sw">SE↓</span> while the motor runs stops the motor.</li>
+    <li>A spring-loaded switch works best for <span class="ui">Start/Stop timer and Motor</span>. With a normal switch, return <span class="sw">SE</span> up right after each flick and keep it up before arming: with SE down, <span class="sw">SA↓</span> does not arm the motor, and there is no siren. <span class="sw">SE↓</span> while the motor runs stops it, and returning SE does not start it again.</li>
     <li>Altitude callouts work only when both rows are on, the third and the last. By default they are <span class="sw">SB↓</span> and <span class="sw">SB↑</span>, which are never on together. To hear the altitude at <span class="sw">SB↓</span>, set the <span class="ui">Report current altitude every 10 sec.</span> row to ON.</li>
   </ul>
 
@@ -411,17 +411,18 @@
   <ol class="steps">
     <li>Open the radio's channel monitor.</li>
     <li>Without arming (SA not down), CH3 stays at −100 at any throttle stick position.</li>
-    <li>Arm with <span class="sw">SA↓</span>. Start with <span class="sw">SE↓</span> and right back: the motor starts when the switch returns. The Motor flight mode comes on, and CH3 follows the throttle stick.</li>
-    <li>Find the stick position where CH3 = +100 (full throttle). The motor input in the template is reversed (<code>I4:Mot</code>: source <code>Thr</code>, weight −100). At the start the motor gets the throttle that matches the stick position right away.</li>
-    <li>Stopping: <span class="sw">SE↓</span> again, moving SA out of the down position, or automatically after 30 seconds of motor run.</li>
+    <li>With SE up, arm with <span class="sw">SA↓</span>: the siren sounds every 5 seconds. Start with <span class="sw">SE↓</span> and right back: the motor starts when the switch returns, and the siren stops. The Motor flight mode comes on, and CH3 follows the throttle stick.</li>
+    <li>Stick fully down: CH3 = +100 (full throttle). In the top 5 % of the stick travel the motor is at idle: with the default idle of 37, CH3 = −63. The motor input in the template is reversed (<code>I4:Mot</code>: source <code>Thr</code>, weight −100). At the start the motor gets the throttle that matches the stick position right away.</li>
+    <li>Stopping: <span class="sw">SE↓</span> again, moving SA out of the down position, or automatically after 30 seconds of motor run. When SE returns, the motor does not start again: the next start needs <span class="sw">SA↑</span>, then <span class="sw">SA↓</span> and a new SE flick.</li>
     <li>Only after this check, connect the motor and fit the propeller.</li>
   </ol>
+  <div class="callout warn"><span class="t">Full throttle with the stick up</span>If you want full throttle with the stick up, open the <code>On</code> line of <code>I4:Mot</code> in the model's inputs and set its weight to +100. Do not change the <code>Off</code> line. Check with the propeller off: in the Motor mode, the stick down now gives idle and the stick up gives full throttle. The stick up also gives full thermal camber in Float and full brakes in landing mode (<span class="sw">SF↓</span>), so move the stick back down after the motor stops.</div>
 
   <h3>6.8. Motor idle <span class="tag">Page 8 · Motor</span></h3>
-  <p>The idle is the motor throttle at minimum stick in the Motor mode. Set it by ear with the motor running: at minimum the motor should turn slowly but steadily. This is the only step with the motor connected and the propeller on: hold the model and do not stand in front of the propeller.</p>
+  <p>The idle is the minimum motor throttle in the Motor mode. Set it by ear with the motor running: at minimum the motor should turn slowly but steadily. This is the only step with the motor connected and the propeller on: hold the model and do not stand in front of the propeller.</p>
   <ol class="steps">
     <li>Open screen 3, the <span class="ui">Motor</span> tile in full screen, and confirm the warning with <kbd>Enter</kbd>. The page itself does not start the motor.</li>
-    <li>Throttle stick at minimum. Start the motor as usual: <span class="sw">SA↓</span>, then <span class="sw">SE↓</span> and right back. <span class="ui">FM2:Motor</span> appears in the title.</li>
+    <li>Throttle stick in the idle position: fully up, or fully down if you set full throttle with the stick up (6.7). Start the motor as usual: with SE up, <span class="sw">SA↓</span>, then <span class="sw">SE↓</span> and right back. <span class="ui">FM2:Motor</span> appears in the title.</li>
     <li>Throttle trim (T3) up or down: each click changes the idle by 1, holding repeats, and the motor changes speed at once.</li>
     <li>Stop the motor as usual and close the page. The value stays in the model.</li>
   </ol>
@@ -440,20 +441,18 @@
     <span class="st">Motor ON</span><span class="arr">→</span>
     <span class="st">Glide</span><span class="arr">→</span>
     <span class="st">Finished</span>
-    <span class="note">or</span>
-    <span class="st zero">Zero result</span>
   </div>
   <ol class="steps">
     <li><span class="ui">Ready</span>: the screen shows the working time from timer 1, 10:00 by default. To change it, open the widget in full screen and press <kbd>Inc</kbd>/<kbd>Dec</kbd> (1 minute per step), or change <span class="ui">Start</span> of timer 1 in the model settings.</li>
-    <li><span class="sw">SA↓</span> arms: the flight, the timers and the height are reset.</li>
+    <li>With SE up, <span class="sw">SA↓</span> arms: the siren sounds every 5 seconds, and the flight, the timers and the height are reset.</li>
     <li><span class="sw">SE↓</span> and back starts the motor: state <span class="ui">Motor ON</span>. The voice calls 10 and 15 seconds of motor run and counts 10…1 from the 20th second to 30 seconds.</li>
     <li>The motor stops (<span class="sw">SE↓</span>, SA out of the down position, or automatically at 30 seconds): state <span class="ui">Glide</span>. The start height (the <code>Alt+</code> sensor) is captured while the motor runs and for 10 more seconds after it stops.</li>
-    <li>Move SA up (<span class="sw">SA↑</span>) right away: this disarms and turns on the <span class="ui">Aileron -&gt; Elevator</span> mix. While SA is down, the next SE flick starts the motor again.</li>
+    <li>Move SA up (<span class="sw">SA↑</span>) right away: this disarms and turns on the <span class="ui">Aileron -&gt; Elevator</span> mix. The motor does not start again when SE returns.</li>
     <li>In the glide the voice calls the remaining working time: every minute while more than 2 minutes remain; every 15 seconds from 2 to 1 minute; every 5 seconds from 1 minute to 10 seconds; then every second 10…1.</li>
     <li>Landing: <span class="sw">SF↓</span> enters landing mode, and the throttle stick deploys the brakes; <span class="sw">SF↑</span> leaves it.</li>
     <li>Finish: an <span class="sw">SE</span> flick (SA not down) gives the state <span class="ui">Finished</span> and stops the time. With the widget in full screen, <kbd>Enter</kbd> or a tap also works. The next press resets to <span class="ui">Ready</span> for a new flight.</li>
   </ol>
-  <div class="callout warn"><span class="t">Zero result</span>Restarting the motor in the glide gives a <span class="ui">Zero result</span>, as in the F5J rules. Do not move SA down during the flight: that arms again and resets the flight.</div>
+  <div class="callout warn"><span class="t">Restart in the air</span>The motor starts again only after a new arming: <span class="sw">SA↑</span>, then <span class="sw">SA↓</span> (the siren sounds) and an SE flick. The arming resets the flight, and the screen starts a new flight; by the F5J rules, that flight scores zero. So do not move SA down during the flight unless you have to restart the motor.</div>
   <p>The widget does not keep a flight log.</p>
 
   <h2 id="s8"><span class="n">8</span>Troubleshooting</h2>
@@ -466,6 +465,9 @@
       <tr><td>The tile does not open and shows only its title</td><td>That is how it works: the page works only in full screen. Hold your finger on the tile and choose <span class="ui">Full screen</span> (section 5).</td></tr>
       <tr><td>No screen with the setup tiles</td><td>Create the model from the template. If your EdgeTX is older than 2.12, update it or take the new package: in older templates screen 2 had a 1×6 layout that EdgeTX before 2.12 does not load.</td></tr>
       <tr><td>The throttle trim on the <span class="ui">Motor</span> page does not change the idle</td><td>The model was made from an older template, without <code>L49</code> and <code>SF39</code>. Change the value with the wheel or by touch, or create the model from the new template.</td></tr>
+      <tr><td>No siren after <span class="sw">SA↓</span>, and the motor does not start</td><td>SE was down when SA went down, so the motor is not armed. Move SE up, then SA up and down again.</td></tr>
+      <tr><td>The motor starts again when SE returns after a stop</td><td>The model was made from an older template. In the model's logical switches, change the AND switch of <code>L24</code> to <code>L23</code>, or create the model from the new template.</td></tr>
+      <tr><td>Stick fully down gives only about +75 on CH3, or after the change in 6.7 the stick down gives no idle</td><td>The model was made from an older template, where the first point of the CV9 <code>Mot</code> curve is −70. Set it to −100 in the model's curves, or create the model from the new template.</td></tr>
       <tr><td>N/A in some fields</td><td>The tx16s template: these values are fixed in the template (section 3).</td></tr>
       <tr><td>Values changed in the wrong mode</td><td>Select the flight mode first, then change the values.</td></tr>
       <tr><td>T3 above center does nothing, no reflex</td><td>That is by design: T3 only adds camber. Reflex is the neutral on the <span class="ui">Wing alignment</span> page (6.5).</td></tr>
@@ -477,18 +479,18 @@
   </table>
 
   <h2 id="s9"><span class="n">9</span>Checklist before the first flight</h2>
-  <ul class="check">
+  <ul class="check keep">
     <li>All control surfaces move the right way in Cruise, Speed and Float.</li>
     <li>The elevator halves are level at neutral and have equal travel.</li>
     <li>The <span class="ui">Aileron -&gt; Elevator</span> and <span class="ui">Rudder -&gt; Elevator</span> mixes help the roll in the right direction with small values; <span class="ui">Rudder -&gt; Elevator</span> is on deliberately or set to 0.</li>
     <li>Without arming, CH3 is at minimum; the failsafe stops the motor.</li>
-    <li>The motor stops with an SE flick and automatically after 30 seconds.</li>
+    <li>With SE up, <span class="sw">SA↓</span> gives the siren. The motor stops with <span class="sw">SE↓</span> and automatically after 30 seconds, and it does not start again when SE returns.</li>
     <li>Landing mode (<span class="sw">SF↓</span>): flaps down, ailerons up, and the throttle stick controls the brakes smoothly.</li>
     <li>The altitude and receiver voltage telemetry show, and the voice prompts are heard.</li>
     <li>A range check is done.</li>
   </ul>
 
-  <p class="endnote">The full documentation is in the <code>docs</code> folder of the repository <a href="https://github.com/vitas/soar-edgetx">github.com/vitas/soar-edgetx</a>. This guide describes the templates and the widget as of October 2026.</p>
+  <p class="endnote">The full documentation is in the <code>docs</code> folder of the repository <a href="https://github.com/vitas/soar-edgetx">github.com/vitas/soar-edgetx</a>. This guide describes the templates and the widget as of November 2026.</p>
 </section>
 
 </body>

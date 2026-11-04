@@ -613,7 +613,7 @@ test("F5J brake curve selector follows the reversed brake input", function()
   end
 end)
 
-test("F5J templates gate motor start edge with visible motor arm switch", function()
+test("F5J templates start the motor only from the armed siren state", function()
   local models = tx15_template_models()
   for _, model in ipairs(tx16_family_template_models()) do
     models[#models + 1] = model
@@ -623,16 +623,21 @@ test("F5J templates gate motor start edge with visible motor arm switch", functi
     model.content = normalize_model_content(model.content)
     local arm = indexed_block(model.content, "logicalSw", 4)
     local trigger = indexed_block(model.content, "logicalSw", 8)
+    local siren_latch = indexed_block(model.content, "logicalSw", 22)
     local start_edge = indexed_block(model.content, "logicalSw", 23)
     local motor_latch = indexed_block(model.content, "logicalSw", 25)
 
     assert_contains(arm, "def: SA2,NONE", model.label .. " L5 motor arm switch")
     assert_contains(trigger, "def: SE2,L11", model.label .. " L9 motor trigger switch")
+    assert_contains(siren_latch, "func: FUNC_STICKY", model.label .. " L23 siren latch")
+    assert_contains(siren_latch, "def: L22,L27", model.label .. " L23 siren latch sources")
     assert_contains(start_edge, "func: FUNC_EDGE", model.label .. " L24 motor start edge")
     assert_contains(start_edge, "def: L9,0,-", model.label .. " L24 motor start edge source")
-    assert_contains(start_edge, "andsw: L5", model.label .. " L24 should be gated by visible motor arm")
-    assert(not start_edge:find("andsw: L23", 1, true),
-      model.label .. " L24 should not depend on hidden prep latch L23")
+    -- With SA alone as the gate, arming with SE down armed the motor without the siren, and
+    -- releasing the start switch after a stop started the motor again.
+    assert_contains(start_edge, "andsw: L23", model.label .. " L24 should be gated by the siren latch L23")
+    assert(not start_edge:find("andsw: L5", 1, true),
+      model.label .. " L24 should not start the motor from SA alone")
     assert_contains(motor_latch, "def: L25,L30", model.label .. " L26 motor latch")
   end
 end)
@@ -835,10 +840,13 @@ test("TX15 template documentation lists current default control assignments", fu
     "| `tx16s-mk3-*` | `I4:Mot` | `Thr` stick, inverted |",
     "| `tx16s-mk3-*` | `I6:CbP` | `T3` trim source |",
     "| `L5` | Launch mode (Motor Arm) and flight timer control | `SA down` / `SA2` |",
-    "Default launch sequence: arm with `SA down`, flick `SE down` and back",
-    "so do not leave it down after starting. The default `SE`",
-    "assignment is a manual stand-in for the original momentary trigger behavior",
-    "the radio has a spring-loaded momentary switch, assign `L9` to that switch for a",
+    "| `L9` | Start/Stop timer and Motor | `SE down` / `SE2` | Motor trigger. While the siren sounds,",
+    "logic. `L23` is the arming latch behind the siren, and the motor start edge",
+    "Default launch sequence: with `SE` up, arm with `SA down`.",
+    "not start it again: a restart needs a new arming, `SA` up and then down.",
+    "is down when `SA` goes down, the motor is not armed and there is no siren",
+    "stand-in for the original momentary trigger behavior; if the radio has a",
+    "spring-loaded momentary switch, assign `L9` to that switch for a better launch",
     "| `L8` | Report current altitude every 10 sec. | `SB up` / `SB0`, gated by `L1` |",
     "| `L46` | Aileron -> Elevator | `MTail`: `SA up` / `SA0`; `VTail` and `XTail`: `NONE` |",
     "| `L48` | Rudder -> Elevator | Not assigned (`NONE`) |"
@@ -846,6 +854,20 @@ test("TX15 template documentation lists current default control assignments", fu
 
   for _, needle in ipairs(expected) do
     assert_contains(docs, needle, "TX15 template control documentation")
+  end
+end)
+
+test("model template documentation explains the motor throttle direction", function()
+  local docs = read_file(MODEL_TEMPLATE_DOC)
+  local expected = {
+    "### Motor Throttle",
+    "With the stick fully down, `CH3` is `+100`, full throttle",
+    "set the weight of its `On` line to `+100`. Leave the `Off` line as it is.",
+    "camber in Float and full airbrakes in landing mode (`SF down`)"
+  }
+
+  for _, needle in ipairs(expected) do
+    assert_contains(docs, needle, "motor throttle documentation")
   end
 end)
 
@@ -1152,6 +1174,37 @@ test("templates give the brake elevator compensation its own curve CV14 BrE", fu
       model.label .. " CH22 BrkEle adds BkE x (1 + CV14) to the elevator")
     assert(not find_mix_block_matching(elevator, { "name: BEOffs" }),
       model.label .. " CH22 should no longer offset the elevator by the flap curve")
+  end
+end)
+
+test("templates give full motor throttle at the stick bottom and idle in the top 5 percent", function()
+  local models = tx15_template_models()
+  for _, model in ipairs(tx16_family_template_models()) do
+    models[#models + 1] = model
+  end
+
+  for _, model in ipairs(models) do
+    model.content = normalize_model_content(model.content)
+
+    local curve = indexed_block(model.content, "curves", 8)
+    assert_contains(curve, "type: 1", model.label .. " CV9 custom curve")
+    assert_contains(curve, "points: -1", model.label .. " CV9 four points")
+    assert_contains(curve, "name: Mot", model.label .. " CV9 name")
+
+    local first = curve_first_point(model.content, 8)
+    assert_equal(first, 54, model.label .. " CV9 first point")
+
+    -- I4:Mot reverses the stick, so the first point is the stick fully down. With -70 there,
+    -- CH3 stopped at about +75; -100 gives +100. The step at x = 90 keeps the top 5 % at idle.
+    local expected = {
+      { "point 1 y", -100 }, { "point 2 y", 75 }, { "point 3 y", 100 }, { "point 4 y", 100 },
+      { "point 2 x", 90 }, { "point 3 x", 90 }
+    }
+    for offset, item in ipairs(expected) do
+      local block = indexed_block(model.content, "points", first + offset - 1)
+      assert_equal(tonumber(block:match("val: (%-?%d+)")), item[2],
+        model.label .. " CV9 " .. item[1])
+    end
   end
 end)
 

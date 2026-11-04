@@ -139,7 +139,7 @@ Switches page to keep a function on without a physical switch.
 | Logical switch | Switches page name | Default assignment | What it does |
 | --- | --- | --- | --- |
 | `L5` | Launch mode (Motor Arm) and flight timer control | `SA down` / `SA2` | Arms the launch/motor logic and is part of the flight-timer reset/control path. |
-| `L9` | Start/Stop timer and Motor | `SE down` / `SE2` | Start/stop trigger for the motor/timer path. Use a brief down-up switch action; a spring-loaded momentary switch is optional. |
+| `L9` | Start/Stop timer and Motor | `SE down` / `SE2` | Motor trigger. While the siren sounds, a brief down-up action starts the motor when the switch returns; `SE down` while the motor runs stops it. A spring-loaded momentary switch is optional. |
 | `L1` | Allow vario and voice reporting of altitude | `SB down` / `SB2`, gated by flight timer `L19` | Enables the altitude voice/vario gate while the flight timer is active. |
 | `L2` | Variometer sound | Not assigned (`NONE`), blocked while `SA down` | Drives the EdgeTX `VARIO` special function. It is off until you assign a switch or select `ON`. |
 | `L3` | Speed flight mode | `SD up` / `SD0` | Selects the `Speed` flight mode. |
@@ -154,14 +154,19 @@ Switches page to keep a function on without a physical switch.
 Internal logical switches such as `L23`, `L24`, `L26`, `L35`, `L36`, `L37`,
 `L44`, `L49`, and `L50` are model-state, audio, and setup helpers. Do not assign them
 directly from the setup page unless you are intentionally editing the template
-logic.
+logic. `L23` is the arming latch behind the siren, and the motor start edge
+`L24` works only while it is on.
 
-Default launch sequence: arm with `SA down`, flick `SE down` and back, then
-control motor power with the throttle stick. Holding `SE down` is also part of
-the stop path, so do not leave it down after starting. The default `SE`
-assignment is a manual stand-in for the original momentary trigger behavior; if
-the radio has a spring-loaded momentary switch, assign `L9` to that switch for a
-better launch workflow.
+Default launch sequence: with `SE` up, arm with `SA down`. The siren and the
+vibration repeat every 5 seconds until the motor starts or `SA` goes up. Flick
+`SE down` and back to start the motor, then control motor power with the
+throttle stick. `SE down` while the motor runs stops it, and returning `SE` does
+not start it again: a restart needs a new arming, `SA` up and then down. If `SE`
+is down when `SA` goes down, the motor is not armed and there is no siren; move
+`SE` up, then `SA` up and down again. The default `SE` assignment is a manual
+stand-in for the original momentary trigger behavior; if the radio has a
+spring-loaded momentary switch, assign `L9` to that switch for a better launch
+workflow.
 
 ### Flight Modes
 
@@ -173,6 +178,20 @@ better launch workflow.
 | `KAPOW` | `L32` | Launch/snap helper mode used by the template's internal launch logic. |
 | `Speed` | `L3` | Speed flight mode, defaulted to `SD up`. |
 | `Float` | `L4` | Float flight mode, defaulted to `SD down`. |
+
+### Motor Throttle
+
+`I4:Mot` takes the throttle stick inverted (weight `-100`) through curve CV9
+`Mot`. With the stick fully down, `CH3` is `+100`, full throttle; in the top 5%
+of the stick travel the motor is at idle. The stick down is also where the
+airbrakes are retracted and Float adds no thermal camber.
+
+For full throttle with the stick up, open the model inputs, select `I4:Mot`, and
+set the weight of its `On` line to `+100`. Leave the `Off` line as it is. Check
+with the propeller off: in the `Motor` flight mode, the stick down gives idle
+and the stick up gives full throttle. The stick up also gives full thermal
+camber in Float and full airbrakes in landing mode (`SF down`), so move the
+stick back down after the motor stops.
 
 ### Motor Idle
 

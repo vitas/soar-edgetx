@@ -319,12 +319,17 @@ Pilots who prefer the TX16 side sliders can remap `I4:Mot` to `LS` and
 the radio hardware settings; otherwise Companion may clear those input sources
 on reload.
 
-Default launch/motor operation is `SA down` to arm, then a brief down-up action
-on `SE` to start or stop the motor/timer latch. A spring-loaded momentary
-switch is optional; when using a normal switch, return it after the trigger.
-`SE` is the default manual stand-in for the original momentary trigger behavior;
-if the radio has a spring-loaded momentary switch, assign `L9` to that switch
-for a better launch workflow. Motor power then comes from the throttle stick.
+Default launch/motor operation: with `SE` up, `SA down` arms the motor, and the
+siren repeats every 5 seconds until the motor starts or `SA` goes up. A brief
+down-up action on `SE` then starts the motor/timer latch when the switch
+returns. `SE down` while the motor runs stops it, and returning `SE` does not
+start it again; a restart needs a new arming with `SA` up and then down. If
+`SE` is down when `SA` goes down, the motor is not armed and there is no siren.
+A spring-loaded momentary switch is optional; when using a normal switch,
+return it after the trigger. `SE` is the default manual stand-in for the
+original momentary trigger behavior; if the radio has a spring-loaded momentary
+switch, assign `L9` to that switch for a better launch workflow. Motor power
+then comes from the throttle stick.
 
 To verify throttle-stick motor control after importing a template:
 
@@ -605,8 +610,11 @@ Basic flow:
 7. Press the trigger again (or `Enter` in full screen) from the finished state
    to reset for the next flight.
 
-Restarting the motor after glide has started produces a zero result. The widget
-does not save flight logs.
+Restarting the motor after glide has started produces a zero result. With the
+templates, a restart needs a new arming (`SA` up, then down). The arming resets
+the flight, so the widget starts a new flight instead of showing a zero result;
+by the F5J rules, that flight still scores zero. The widget does not save
+flight logs.
 
 ## Troubleshooting
 
