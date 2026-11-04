@@ -217,7 +217,8 @@ local function setup_env(options)
     switchValues = options.switchValues or {},
     availableSwitches = options.availableSwitches,
     input8 = options.input8,
-    parameterValue = options.parameterValue
+    parameterValue = options.parameterValue,
+    flightMode = options.flightMode or { 0, "Normal" }
   }
 
   local screen = options.screen or { w = 480, h = 272 }
@@ -402,7 +403,7 @@ local function setup_env(options)
   end
 
   function getFlightMode()
-    return 0, "Normal"
+    return env.flightMode[1], env.flightMode[2]
   end
 
   function setStickySwitch(index, value)
@@ -1697,6 +1698,38 @@ setup_quality_test("aileron camber page lists trim-adjusted values without a sli
   assert(help.text:find("Trim buttons adjust", 1, true), "help copy should explain trim adjustment")
   assert(not help.text:find("slider", 1, true), "help copy still mentions the slider")
   assert(texts["Thermal camber"] < help.y, "help copy overlaps trim rows")
+end)
+
+setup_quality_test("aileron camber page shows the current flight mode in the title bar", function()
+  local aileron = setup_env({
+    flightMode = { 4, "Speed" },
+    gvs = { [0] = 57, [1] = 24, [6] = 153, [9] = 33 }
+  })
+  load_setup_page("src/SoarF5J/setup/aileron_camber.lua", aileron)
+  aileron.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  aileron.prompts[1].customs[1].onEvent(EVT_VIRTUAL_ENTER)
+
+  local function refreshed_text_y()
+    reset_draw_output(aileron)
+    aileron.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+    local texts = {}
+    for _, call in ipairs(aileron.drawCalls) do
+      if call.method == "drawText" then
+        texts[tostring(call.args[3])] = call.args[2]
+      end
+    end
+    return texts
+  end
+
+  local texts = refreshed_text_y()
+  assert(texts["FM4:Speed"], "aileron camber page should show the current flight mode")
+  assert(texts["FM4:Speed"] < texts["Aileron travel"], "flight mode should be in the title bar above the rows")
+
+  -- The pilot flips the flight mode switch while the page is open.
+  aileron.flightMode = { 5, "Float" }
+  texts = refreshed_text_y()
+  assert(texts["FM5:Float"], "aileron camber page should follow a flight mode change")
+  assert(not texts["FM4:Speed"], "aileron camber page still shows the old flight mode")
 end)
 
 setup_quality_test("wing alignment cleanup tracks owned GV8 state", function()

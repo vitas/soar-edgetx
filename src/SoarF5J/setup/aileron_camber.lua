@@ -162,6 +162,10 @@ local function setup_gui()
     lcd.drawFilledRectangle(0, 0, LCD_W, HEADER, COLOR_THEME_SECONDARY1)
     lcd.drawText(10, 2, title, bit32.bor(DBLSIZE, colors.primary2))
 
+    -- Flight mode, so the pilot sees which mode the surfaces show
+    local fmIdx, fmStr = getFlightMode()
+    lcd.drawText(LCD_W - HEADER, HEADER / 2, "FM" .. fmIdx .. ":" .. fmStr, RIGHT + VCENTER + MIDSIZE + colors.primary2)
+
     drawAdjustmentRows()
 
     -- Help text
