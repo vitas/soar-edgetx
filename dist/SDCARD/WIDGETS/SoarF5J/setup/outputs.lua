@@ -208,7 +208,8 @@ local function MoveOutput(direction, channel)
 		end
 	end
 
-	-- Write back swapped data
+	-- Write back swapped data. EdgeTX skips insertMix while the mixer table is full, so the lines of
+	-- both channels are deleted before any are written back.
 	for i = 1, 2 do
 		model.setOutput(m[i] - 1, outputs[3 - i])
 
@@ -216,8 +217,10 @@ local function MoveOutput(direction, channel)
 		for j = 1, model.getMixesCount(m[i] - 1) do
 			model.deleteMix(m[i] - 1, 0)
 		end
+	end
 
-		-- Write back mixer lines
+	-- Write back mixer lines
+	for i = 1, 2 do
 		for j, mix in ipairs(mixes[3 - i]) do
 			model.insertMix(m[i] - 1, j - 1, mix)
 		end

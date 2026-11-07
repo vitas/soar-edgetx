@@ -1244,6 +1244,47 @@ test("templates give the brake elevator compensation its own curve CV14 BrE", fu
   end
 end)
 
+-- EdgeTX adds a line's trim to its source before the differential, so the aileron lines leave the
+-- trim out, and AilTrm adds T4 after the differential through CV15 Trm (the ±25 % that full trim
+-- adds to a source) and GV1. CV32 keeps the widget parameters, so CV15 must not move its points.
+test("F5J templates add the aileron trim after the aileron differential", function()
+  local models = tx15_template_models()
+  for _, model in ipairs(tx16_family_template_models()) do models[#models + 1] = model end
+
+  for _, model in ipairs(models) do
+    local content = normalize_model_content(model.content)
+    for dest_ch, diff in pairs({ [0] = "!gv(3)", [1] = "gv(3)" }) do
+      local label = model.label .. " CH" .. tostring(dest_ch + 1)
+      local blocks = mix_blocks_for(content, dest_ch)
+      assert_equal(#blocks, 3, label .. " mix count")
+      assert_mix_block(blocks[2], { "srcRaw: I2", "weight: gv(0)", "value: " .. diff, "carryTrim: 1",
+        "flightModes: 010000000" }, label .. " aileron line")
+      assert_mix_block(blocks[3], { "srcRaw: T4", "weight: gv(0)", "swtch: NONE", "type: 3", "value: 15",
+        "carryTrim: 1", "mltpx: ADD", "flightModes: 010000000", "offset: 0", "name: AilTrm" },
+        label .. " trim line")
+    end
+    assert_mix_block(indexed_block(content, "curves", 14),
+      { "type: 0", "smooth: 0", "points: 0", "name: Trm" }, model.label .. " CV15")
+    for offset, value in ipairs({ -25, -12, 0, 12, 25 }) do
+      local point = indexed_block(content, "points", 77 + offset)
+      assert_equal(tonumber(point:match("val: (%-?%d+)")), value, model.label .. " CV15 point " .. offset)
+    end
+    assert_equal(curve_first_point(content, 14), 78, model.label .. " CV15 first point")
+    assert_equal(curve_first_point(content, 31), 163, model.label .. " CV32 first point")
+    local mixes = 0
+    for _ in top_level_section(content, "mixData"):gmatch("\n%s*%- ") do mixes = mixes + 1 end
+    assert(mixes <= 64, model.label .. " has " .. tostring(mixes) .. " mix lines")
+  end
+end)
+
+test("model template documentation explains the aileron trim line", function()
+  local section = read_file(MODEL_TEMPLATE_DOC):match("\n## Channel Layout\n(.-)\n## ")
+  assert(section, "model template documentation has no Channel Layout section")
+  for _, needle in ipairs({ "`AilTrm`", "`T4`", "`Trm`", "CV15", "CV32" }) do
+    assert_contains(section, needle, "Channel Layout aileron trim documentation")
+  end
+end)
+
 test("templates give full motor throttle at the stick bottom and idle in the top 5 percent", function()
   local models = tx15_template_models()
   for _, model in ipairs(tx16_family_template_models()) do

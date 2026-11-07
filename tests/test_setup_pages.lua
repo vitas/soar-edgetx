@@ -200,3 +200,65 @@ test("motor warning helper draws warning copy through GUI", function()
   assert(rendered:find(safety.motor_warning_title, 1, true), "missing warning title")
   assert(rendered:find(safety.motor_warning_text, 1, true), "missing warning text")
 end)
+
+-- EdgeTX skips model.insertMix while the mixer table holds 64 lines, and the colour M-tail
+-- template fills all 64. Moving an output swaps its mixer lines with its neighbour's, so the page
+-- has to free the lines of both channels before it writes any back.
+test("outputs page swaps neighbouring channels in a full mixer table without losing lines", function()
+  local source = read_file("src/SoarF5J/setup/outputs.lua")
+  local move_output = assert(source:match("(local function MoveOutput%b().-\nend %-%- MoveOutput%(%))"),
+    "missing MoveOutput")
+
+  -- CH4 moves up onto CH3 (3 lines), and CH6 moves down onto CH7 (4 lines); CH30 fills the table
+  for _, case in ipairs({ { channel = 4, direction = -1 }, { channel = 6, direction = 1 } }) do
+    local counts = { [3] = 3, [4] = 2, [6] = 2, [7] = 4, [30] = 53 }
+    local lines = {}
+    local total = 0
+    for channel, count in pairs(counts) do
+      lines[channel - 1] = {}
+      for line = 1, count do
+        lines[channel - 1][line] = { source = 0, name = "CH" .. channel .. "." .. line }
+      end
+      total = total + count
+    end
+
+    local model = {
+      getOutput = function(index) return { name = "CH" .. (index + 1) } end,
+      setOutput = function() end,
+      getMixesCount = function(index) return #(lines[index] or {}) end,
+      getMix = function(index, line)
+        local mix = {}
+        for key, value in pairs(lines[index][line + 1]) do mix[key] = value end
+        return mix
+      end,
+      deleteMix = function(index, line)
+        table.remove(lines[index], line + 1)
+        total = total - 1
+      end,
+      insertMix = function(index, line, mix)
+        if total >= 64 then return end
+        lines[index] = lines[index] or {}
+        table.insert(lines[index], line + 1, mix)
+        total = total + 1
+      end
+    }
+    local env = { model = model, N = 32, CHAN_BASE = 1000, channels = {}, ipairs = ipairs, pairs = pairs,
+      playTone = function() end, PLAY_NOW = 0 }
+    local MoveOutput = assert(load(move_output .. "\nreturn MoveOutput", "MoveOutput", "t", env))()
+
+    local function names(channel)
+      local found = {}
+      for _, mix in ipairs(lines[channel - 1] or {}) do found[#found + 1] = mix.name end
+      return table.concat(found, ",")
+    end
+    local neighbour = case.channel + case.direction
+    local moved, other = names(case.channel), names(neighbour)
+
+    MoveOutput(case.direction, { iChannel = case.channel, iNamed = 1 })
+
+    local label = "moving CH" .. case.channel .. (case.direction < 0 and " up" or " down")
+    assert_equal(total, 64, label .. " mixer lines")
+    assert_equal(names(neighbour), moved, label .. " CH" .. neighbour)
+    assert_equal(names(case.channel), other, label .. " CH" .. case.channel)
+  end
+end)

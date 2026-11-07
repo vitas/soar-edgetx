@@ -85,6 +85,14 @@ CH3      Motor
 CH4/CH5  Flaps
 ```
 
+The aileron line of `CH1` and `CH2` leaves the trim out, because EdgeTX adds a
+line's trim before the differential. The line after it, `AilTrm`, adds the
+aileron trim `T4` after the differential, through the curve CV15 `Trm` (`-25`
+to `25`, the 25% that full trim adds to a line) and the aileron weight `GV1`,
+so both ailerons trim by the same amount. CV15 has 5 points, the space a
+default curve takes, so CV32, which holds the widget parameters, keeps its
+place.
+
 Template artifacts must stay airframe-neutral: no copied output endpoints,
 centers, reversals, or curve-point tuning from a flown aircraft. The wing
 alignment curves CV1 through CV4 start with the linear sequence

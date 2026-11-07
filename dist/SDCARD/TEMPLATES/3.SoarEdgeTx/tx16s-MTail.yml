@@ -192,12 +192,31 @@ mixData:
     speedPrec: 0
     speedUp: 0
     speedDown: 0
-    carryTrim: 0
+    carryTrim: 1
     mltpx: ADD
     mixWarn: 0
     flightModes: 010000000
     offset: 0
     name: ""
+  - destCh: 0
+    srcRaw: T4
+    weight: gv(0)
+    swtch: NONE
+    curve:
+      type: 3
+      value: 15
+    delayPrec: 0
+    delayUp: 0
+    delayDown: 0
+    speedPrec: 0
+    speedUp: 0
+    speedDown: 0
+    carryTrim: 1
+    mltpx: ADD
+    mixWarn: 0
+    flightModes: 010000000
+    offset: 0
+    name: AilTrm
   - destCh: 1
     srcRaw: ch(29)
     weight: 100
@@ -230,12 +249,31 @@ mixData:
     speedPrec: 0
     speedUp: 0
     speedDown: 0
-    carryTrim: 0
+    carryTrim: 1
     mltpx: ADD
     mixWarn: 0
     flightModes: 010000000
     offset: 0
     name: ""
+  - destCh: 1
+    srcRaw: T4
+    weight: gv(0)
+    swtch: NONE
+    curve:
+      type: 3
+      value: 15
+    delayPrec: 0
+    delayUp: 0
+    delayDown: 0
+    speedPrec: 0
+    speedUp: 0
+    speedDown: 0
+    carryTrim: 1
+    mltpx: ADD
+    mixWarn: 0
+    flightModes: 010000000
+    offset: 0
+    name: AilTrm
   - destCh: 2
     srcRaw: MAX
     weight: -100
@@ -1770,6 +1808,11 @@ curves:
     smooth: 0
     points: 0
     name: BrE
+  14:
+    type: 0
+    smooth: 0
+    points: 0
+    name: Trm
   31:
     type: 0
     smooth: 0
@@ -1932,6 +1975,16 @@ points:
     val: -75
   77:
     val: -100
+  78:
+    val: -25
+  79:
+    val: -12
+  80:
+    val: 0
+  81:
+    val: 12
+  82:
+    val: 25
   163:
     val: -46
   164:
