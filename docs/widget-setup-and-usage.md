@@ -583,10 +583,11 @@ controls, first open the competition widget full-screen; EdgeTX does not send
 those key events to the normal main-view widget after radio startup.
 
 To reset the working-window timer back to the target time, use the model's arm
-or reset control while the widget is on the competition page. After a flight,
-press the trigger (or `Enter` with the widget full screen) once to finish
-timing, then press it again from the `Finished` or `Zero result` state to reset
-for the next flight.
+or reset control while the widget is on the competition page in the `Ready` or
+`Finished` state; an arm during the motor run or the glide leaves the flight
+running. After a flight, press the trigger (or `Enter` with the widget full
+screen) once to finish timing, then press it again from the `Finished` state
+to reset for the next flight.
 
 During glide, the widget announces the remaining working-window time using this
 schedule: minute boundaries above 2 minutes, 15-second boundaries from 2 minutes
@@ -612,11 +613,15 @@ Basic flow:
 7. Press the trigger again (or `Enter` in full screen) from the finished state
    to reset for the next flight.
 
-Restarting the motor after glide has started produces a zero result. With the
-templates, a restart needs a new arming (`SA` up, then down). The arming resets
-the flight, so the widget starts a new flight instead of showing a zero result;
-by the F5J rules, that flight still scores zero. The widget does not save
-flight logs.
+Restarting the motor in the glide starts a new flight: the working time starts
+again from the target time and the motor time from 0. With the templates, a
+restart needs a new arming (`SA` up, then down) and an `SE` flick. The arming in
+the air leaves the flight running and keeps the altimeter zero, and while the
+motor is armed the `SE` flick starts the motor instead of finishing the flight.
+The start height of the new flight is the highest altitude (`Alt`) during the
+new motor run and the 10 seconds after it, because `Alt+` still holds the first
+climb. In a contest, a restart scores zero under the F5J rules and the working
+time runs on. The widget does not save flight logs.
 
 ## Troubleshooting
 

@@ -4,7 +4,7 @@
 covers the whole workflow:
 
 - **Competition** - the F5J contest flow, from launch and motor run through
-  glide timing, finish, and zero result.
+  glide timing and finish; a motor restart starts a new flight.
 - **Model setup** - a full in-radio setup UI for switches, outputs, wing
   alignment, brake curves, camber, mixes, and motor idle, so a model can be
   configured from the radio screen without a PC or Companion.
@@ -25,7 +25,7 @@ seven setup pages.
 
 | Page | Purpose |
 | --- | --- |
-| `1` | Competition: launch, motor, glide, finish, zero result, working-window voice, motor timer, and F5J start-height capture from `Alt+`. |
+| `1` | Competition: launch, motor, glide, finish, motor restart, working-window voice, motor timer, and F5J start-height capture from `Alt+`. |
 | `2` | Switches: assign physical switch positions to the model's logical switches. |
 | `3` | Mixes: edit the mix global variables for the selected flight mode. |
 | `4` | Outputs: reorder named outputs, reverse direction, and set offset, range, center, and endpoints. |

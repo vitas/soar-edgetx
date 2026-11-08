@@ -12,8 +12,6 @@ local function reset_flight(state)
   state.mode = "initial"
   state.max_altitude = 0
   state.flight_time = nil
-  state.result = nil
-  state.zero_result = false
   state.motor_restarted = false
   state.timing_active = false
   state.height_window_started_at = nil
@@ -100,22 +98,21 @@ function State.trigger(state)
     state.mode = "finished"
   elseif state.mode == "finished" then
     State.arm(state)
-  elseif state.mode == "zero" then
-    State.arm(state)
   end
 
   return state
 end
 
+-- A motor restart in the glide starts a new flight: the motor run, the working time and the start
+-- height begin again. The start height is taken from the new climb only, and motor_restarted
+-- tells the widget that the altimeter kept its zero in the air.
 function State.restart_motor(state)
   if state.mode == "glide" then
-    state.mode = "zero"
-    state.flight_time = 0
-    state.result = 0
+    state.mode = "motor"
+    state.flight_time = nil
     state.max_altitude = 0
-    state.zero_result = true
     state.motor_restarted = true
-    state.timing_active = false
+    state.timing_active = true
     state.height_capture_pending = false
     state.height_window_started_at = nil
     state.height_window_elapsed = false

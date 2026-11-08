@@ -53,8 +53,7 @@ local modeLabels = {
   initial = "Ready",
   motor = "Motor ON",
   glide = "Glide",
-  finished = "Finished",
-  zero = "Zero result"
+  finished = "Finished"
 }
 
 local function clamp(value, minimum, maximum)
@@ -200,6 +199,16 @@ local function read_current_altitude()
   return getValue("Alt")
 end
 
+-- The altitude for the start height. Alt+ is the highest altitude since the arm on the ground
+-- zeroed the altimeter. After a motor restart in the air it still holds the first climb, so a
+-- restarted flight follows the current altitude instead.
+local function read_climb_altitude()
+  if state.motor_restarted then
+    return read_current_altitude()
+  end
+  return read_max_altitude()
+end
+
 local function flight_mode_is_motor()
   return getFlightMode() == FM_LAUNCH
 end
@@ -267,10 +276,13 @@ local function record_flight_time()
   set_flight_timer_running(false, true)
 end
 
-local function zero_result()
+-- A motor restart in the glide starts a new flight: the working time starts again from the target
+-- time and the motor time from 0. The widget keeps no log, so the interrupted flight is dropped.
+local function restart_flight(now)
   State.restart_motor(state)
-  set_timer(0, { value = 0 })
-  set_flight_timer_running(false, true)
+  State.capture_max_altitude(state, read_climb_altitude(), now)
+  reset_radio_timers()
+  set_flight_timer_running(true, true)
   reset_voice_calls()
 end
 
@@ -299,7 +311,7 @@ end
 local function advance_scoring_state()
   if state.mode == "glide" then
     record_flight_time()
-  elseif state.mode == "finished" or state.mode == "zero" then
+  elseif state.mode == "finished" then
     State.trigger(state)
     reset_radio_timers()
     set_flight_timer_running(false, true)
@@ -311,7 +323,7 @@ local function advance_scoring_state()
 end
 
 local function update_height_window(now)
-  State.capture_max_altitude(state, read_max_altitude(), now)
+  State.capture_max_altitude(state, read_climb_altitude(), now)
   State.tick(state, { now = now })
 
   if state.height_capture_pending and state.height_window_started_at then
@@ -417,9 +429,12 @@ local function run_runtime(event)
 
   prevArm, armEdge = logical_switch_edge(LS_ARM, prevArm)
   prevTrigger, triggerEdge = logical_switch_edge(LS_TRIGGER, prevTrigger)
-  triggerEdge = triggerEdge or trigger_event(event)
+  -- While the motor is armed, the trigger switch starts the motor, so it does not finish the flight
+  triggerEdge = (triggerEdge and not prevArm) or trigger_event(event)
 
-  if armEdge then
+  -- An arm on the ground prepares a new flight and zeroes the altimeter. An arm in the air leaves
+  -- the flight and the altimeter alone; the motor start then begins a new flight.
+  if armEdge and state.mode ~= "motor" and state.mode ~= "glide" then
     initialize_flight(true)
     nextAltitudeCall = 0
   end
@@ -434,13 +449,13 @@ local function run_runtime(event)
 
     if motorOn then
       State.motor_started(state)
-      State.capture_max_altitude(state, read_max_altitude(), now)
+      State.capture_max_altitude(state, read_climb_altitude(), now)
       reset_radio_timers()
       set_flight_timer_running(true, true)
       reset_voice_calls()
     end
   elseif state.mode == "motor" then
-    State.capture_max_altitude(state, read_max_altitude(), now)
+    State.capture_max_altitude(state, read_climb_altitude(), now)
     if not motorOn then
       State.motor_stopped(state, now)
       set_flight_timer_running(true, true)
@@ -452,7 +467,7 @@ local function run_runtime(event)
     end
   elseif state.mode == "glide" then
     if motorOn and not lastMotorOn then
-      zero_result()
+      restart_flight(now)
     else
       enforce_flight_timer_floor()
       report_flight_time()
@@ -464,10 +479,6 @@ local function run_runtime(event)
       end
     end
   elseif state.mode == "finished" then
-    if triggerEdge then
-      advance_scoring_state()
-    end
-  elseif state.mode == "zero" then
     if triggerEdge then
       advance_scoring_state()
     end

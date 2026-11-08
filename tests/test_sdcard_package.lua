@@ -1060,6 +1060,27 @@ test("README links the M-tail guides in English, Russian, and Bulgarian", functi
   end
 end)
 
+-- A motor restart in the glide starts a new flight. The arming in the air no longer resets the
+-- flight, and the widget has no zero result.
+test("documentation describes a motor restart as a new flight", function()
+  for _, path in ipairs({ "README.md", "docs/widget-setup-and-usage.md" }) do
+    assert(not read_file(path):lower():find("zero result", 1, true), path .. " still describes the zero result")
+  end
+
+  local guides = {
+    en = { title = "Restart in the air", new = "starts a new flight", old = "The arming resets the flight" },
+    ru = { title = "Повторный запуск в воздухе", new = "начинает новый полёт", old = "Взвод сбрасывает полёт" },
+    bg = { title = "Повторно пускане във въздуха", new = "започва нов полет", old = "Активирането нулира полета" }
+  }
+  for lang, guide in pairs(guides) do
+    local path = "docs/guides/src/mtail-" .. lang .. ".html"
+    local callout = read_file(path):match(guide.title .. "</span>(.-)</div>")
+    assert(callout, path .. " has no restart callout")
+    assert_contains(callout, guide.new, path .. " restart callout")
+    assert(not callout:find(guide.old, 1, true), path .. " says that the arming resets the flight")
+  end
+end)
+
 test("documentation shows only screenshots that exist", function()
   local shown = 0
 

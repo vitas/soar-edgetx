@@ -155,7 +155,7 @@ local function new_widget_env()
 
   function getValue(name)
     if name == "Alt+" then
-      return env.altitude
+      return env.altitudeMax or env.altitude
     elseif name == "Alt" then
       return env.altitude
     end
@@ -804,31 +804,125 @@ widget_test("periodic altitude voice is silent when L8 is off", function()
   assert_equal(#play_numbers_with_unit(env, UNIT_METERS), 0, "altitude call count")
 end)
 
-widget_test("zero result can recover to initial on enter", function()
-  local env = new_widget_env()
-
+-- A flight armed on the ground (L23), with the motor run and stop; the motor stop disarms as in
+-- the templates, and the glide is past the 10-second height window.
+local function glide_after_motor_run(env)
+  env.switches[22] = true
+  env.widget.background()
   env.flightMode = 2
   env.widget.background()
   env.now = 500
   env.flightMode = 0
+  env.switches[22] = false
   env.widget.background()
+  env.now = 2000
+  env.widget.background()
+end
+
+widget_test("a motor restart in the glide starts a new flight from the target time", function()
+  local env = new_widget_env()
+  glide_after_motor_run(env)
+  env.timers[0].value = 420
+  env.timers[1].value = 25
+
+  -- A setup that keeps the arming after the motor stop starts the motor without a new arm
   env.flightMode = 2
   env.widget.background()
   env.drawTexts = {}
   env.widget.refresh(nil, nil)
 
-  assert_equal(latest_drawn_text(env, "Zero result"), "Zero result", "zero label")
+  assert_equal(latest_drawn_text(env, "Motor ON"), "Motor ON", "motor state")
+  assert_equal(env.timers[0].start, 600, "working time start")
+  assert_equal(env.timers[0].value, 600, "working time from the target")
+  assert_equal(env.timers[1].value, 0, "motor time")
+  assert_equal(gv_values(env, 8):sub(-1), "1", "flight timer on")
+  assert_equal(drawn_text_exists(env, "Zero result"), false, "zero result label")
+end)
 
-  env.flightMode = 0
-  env.timerWrites = {}
-  env.gvWrites = {}
+widget_test("arming again in the glide keeps the flight running and the altimeter zero", function()
+  local env = new_widget_env()
+  glide_after_motor_run(env)
+  env.timers[0].value = 420
+
+  env.switches[22] = true
+  env.widget.background()
   env.drawTexts = {}
-  env.widget.refresh(EVT_VIRTUAL_ENTER, nil)
+  env.widget.refresh(nil, nil)
 
-  assert_equal(latest_drawn_text(env, "Ready"), "Ready", "ready label")
-  assert_equal(drawn_text_exists(env, "Mode: initial"), false, "initial mode footer")
-  assert_equal(count_timer_writes(env, 0) > 0, true, "timer reset")
-  assert_equal(gv_values(env, 8), "0", "GV8 reset")
+  assert_equal(latest_drawn_text(env, "Glide"), "Glide", "still the glide")
+  assert_equal(env.timers[0].value, 420, "working time runs on")
+  assert_equal(gv_values(env, 8):sub(-1), "1", "flight timer on")
+  assert_equal(env.resetAltitudeCount, 1, "altimeter zeroed only by the arm on the ground")
+
+  env.flightMode = 2
+  env.widget.background()
+
+  assert_equal(env.timers[0].value, 600, "the restart starts a new flight")
+  assert_equal(env.resetAltitudeCount, 1, "altimeter zeroed at the restart")
+end)
+
+-- In the templates L9 (SE down) is the trigger, and its return while L23 is on starts the motor,
+-- so the start flick of a restart must not finish the flight.
+widget_test("the start flick of a restart does not finish the flight", function()
+  local env = new_widget_env()
+  glide_after_motor_run(env)
+  env.timers[0].value = 420
+
+  env.switches[22] = true
+  env.widget.background()
+  env.switches[8] = true
+  env.widget.background()
+  env.switches[8] = false
+  env.flightMode = 2
+  env.widget.background()
+  env.drawTexts = {}
+  env.widget.refresh(nil, nil)
+
+  assert_equal(latest_drawn_text(env, "Motor ON"), "Motor ON", "motor state")
+  assert_equal(env.timers[0].value, 600, "working time from the target")
+  assert_equal(gv_values(env, 8):sub(-1), "1", "flight timer on")
+end)
+
+widget_test("the trigger switch finishes the glide when the motor is not armed", function()
+  local env = new_widget_env()
+  glide_after_motor_run(env)
+  env.timers[0].value = 420
+
+  env.switches[8] = true
+  env.widget.background()
+  env.drawTexts = {}
+  env.widget.refresh(nil, nil)
+
+  assert_equal(latest_drawn_text(env, "Finished"), "Finished", "finished state")
+  assert_equal(env.timers[0].value, 180, "flight time")
+end)
+
+-- Alt+ still holds the first climb, because the altimeter keeps its zero in the air
+widget_test("a restarted flight takes the start height from the climb after the restart", function()
+  local env = new_widget_env()
+  env.altitude = 150
+  glide_after_motor_run(env)
+  env.altitudeMax = 150
+  env.altitude = 60
+
+  env.switches[22] = true
+  env.widget.background()
+  env.flightMode = 2
+  env.widget.background()
+  env.altitude = 120
+  env.widget.background()
+  env.now = 3000
+  env.altitude = 118
+  env.flightMode = 0
+  env.switches[22] = false
+  env.widget.background()
+  env.now = 4500
+  env.altitude = 100
+  env.widget.background()
+  env.drawTexts = {}
+  env.widget.refresh(nil, nil)
+
+  assert_equal(latest_drawn_text(env, "120 m"), "120 m", "start height")
 end)
 
 restore_globals()
