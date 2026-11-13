@@ -51,6 +51,7 @@ usage](docs/widget-setup-and-usage.md#setup-pages) for the full workflow.
 | Switches | Assign launch, motor, landing, voice, vario, and flight-mode switches on `Page = 2`. | [control assignments](docs/model-templates.md#current-control-assignments) |
 | Model setup | Tune outputs, wing alignment, brake curves, camber, mixes, and battery warning on `Page = 3..7`. | [setup pages](docs/widget-setup-and-usage.md#setup-pages) |
 | Simulator | Test layout and setup pages before using the radio. | [emulator workflow](docs/emulator.md) |
+| GX10 F3K | An F3K model for the RadioMaster GX10 with flight and window timers, without the widget. | [GX10 F3K template](docs/model-templates.md#gx10-f3k-template) |
 
 ## Build And Verify
 

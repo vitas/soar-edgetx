@@ -8,6 +8,9 @@ Pick a template by GVAR capability, radio family, and tail type. The widget
 code is shared across supported radios; the template family handles radio-
 specific EdgeTX limits and artifact formats.
 
+The GX10 F3K template is the one model that runs without the widget; see
+[GX10 F3K Template](#gx10-f3k-template).
+
 ## Supported Template Families
 
 | Family | Use on | Artifacts |
@@ -15,6 +18,7 @@ specific EdgeTX limits and artifact formats.
 | 9-GVAR compatible family: `tx16s-*` | TX16S, TX16S Mark II, T16/T18-class landscape color radios | SD-card YAML files under `dist/SDCARD/TEMPLATES/3.SoarEdgeTx/`. |
 | 15-GVAR full family: `tx15-*` | RadioMaster TX15 | `.etx` archives under `models/tx15/` and matching SD-card YAML files. |
 | 15-GVAR full family: `tx16s-mk3-*` | TX16S MK3 | SD-card YAML files under `dist/SDCARD/TEMPLATES/3.SoarEdgeTx/`. |
+| F3K model: `gx10-F3K.yml` | RadioMaster GX10 | One SD-card YAML file under `dist/SDCARD/TEMPLATES/3.SoarEdgeTx/`, without the widget. |
 
 TX15 artifacts:
 
@@ -51,7 +55,7 @@ dist/SDCARD/TEMPLATES/3.SoarEdgeTx/tx16s-mk3-XTail.yml
 
 ## Tail Variants
 
-All template families use the same tail variant names.
+All F5J template families use the same tail variant names.
 
 | Variant | Tail outputs |
 | --- | --- |
@@ -376,3 +380,56 @@ profile.
 For radio and simulator operation, including the required widget `Page` values,
 setup-page workflow, and competition-widget usage, see
 `docs/widget-setup-and-usage.md`.
+
+## GX10 F3K Template
+
+`gx10-F3K.yml` is an F3K model for the RadioMaster GX10 and its 320x240 screen.
+It is the GX12 F3K model of
+[Soar EdgeTX BW](https://github.com/vitas/soar-edgetx-bw), and the GX10 has the
+same switch names. Color EdgeTX runs no telemetry scripts, so this model times
+the flights and the working window itself, with logical switches, and two EdgeTX
+Timer widgets show them. It does not use the `SoarF5J` widget, and it has no F3K
+tasks or scores.
+
+Copy `TEMPLATES/3.SoarEdgeTx/gx10-F3K.yml` and the `.wav` files of `SOUNDS/en`
+to the card, as [SD-card structure](sdcard-structure.md) describes, and create
+a new model from the `GX10 F3K` template in the `3.SoarEdgeTx` folder.
+
+| Control | GX10 | Use |
+| --- | --- | --- |
+| Launch | `SG`, the left rear button | Hold it before the throw and let go as you throw. Press it again to catch. |
+| Speed / Cruise / Float | `SF` up / middle / down | The flight mode after the launch. |
+| Brakes and Landing | Throttle stick | At the bottom the brakes are in; push it up for brakes. Half a second after the stick leaves the bottom, the flight mode Landing comes on. |
+
+The outputs are `CH1` left flaperon, `CH2` right flaperon, `CH3` elevator, and
+`CH4` rudder, on the internal ExpressLRS module. The flight modes, mixes,
+brakes, and trims work as in the GX12 model, and the
+[BW F3K guide](https://github.com/vitas/soar-edgetx-bw/blob/main/docs/guides/SoarEdgeTX-BW-F3K-en.pdf)
+describes them. Its Configuration menu and score keeper do not run on the GX10:
+change values in the EdgeTX model pages instead.
+
+![GX10 F3K main view in flight](images/gx10-f3k-main-view.png)
+
+*In flight: 7:41 left in the window, 0:38 into the flight, in Cruise. Rendered
+in the PA01 simulator, which has the GX10's 320x240 screen.*
+
+The main view shows two timers:
+
+- `Fli` (Timer 1) is the flight. It starts as you let go of `SG` at the throw
+  and stops at the catch, when you press `SG` in flight. The time stays on the
+  screen until you hold `SG` for the next launch, which sets it back to `00:00`.
+  A press of `SG` in flight is always a catch, also after a landing in the
+  field: press and let go once to stop the flight, then hold `SG` again for the
+  next launch.
+- `Win` (Timer 2) is the working window, `10:00`. The first launch starts it.
+  It counts down in the air and on the ground, calls every minute, 30 and 20
+  seconds, and each of the last 10 seconds, and stops at `00:00`. A flight still
+  in the air then stops its `Fli` time too, and the next launch starts a new
+  `10:00` window. Resetting Timer 2 in the EdgeTX reset menu sets the window
+  back to `10:00`; a running window counts on from there. For another window
+  length, change the start of Timer 2 in the model's timer settings.
+
+The template is not yet tried on a GX10 radio, and EdgeTX Companion 2.12.5 has
+no GX10 simulator. The logic was run in the GX12 simulator, which has the same
+switches, and the screen in the PA01 simulator, which has the same 320x240
+screen.

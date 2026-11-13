@@ -23,6 +23,7 @@ the whole folder to a radio card. Install on a radio this way:
    | TX16S, TX16S Mark II, T16, T18 | 480x272 | `c480x272.zip` |
    | TX15 | 480x320 | `c480x320.zip` |
    | TX16S MK3 | 800x480 | `c800x480.zip` |
+   | GX10 | 320x240 | `c320x240.zip` |
 
 4. Download a voice pack of the same version from
    https://github.com/EdgeTX/edgetx-sdcard-sounds/releases, for example
@@ -34,6 +35,8 @@ the whole folder to a radio card. Install on a radio this way:
    `WIDGETS/SoarF5J`, `TEMPLATES/3.SoarEdgeTx`, and the `.wav` files in
    `SOUNDS/en`. If the radio voice language is not English, copy the same
    `.wav` files into that language folder too, for example `SOUNDS/ru`.
+   The GX10 F3K template does not use the widget: for it, copy only
+   `TEMPLATES/3.SoarEdgeTx` and the `.wav` files.
 
 When updating an existing card, delete `WIDGETS/SoarF5J` first and then copy
 the new folder, so old Lua or compiled `.luac` files cannot remain on the card.
@@ -42,7 +45,8 @@ The widget is intended for landscape color-radio screens at `480x272`,
 `480x320`, and `800x480`. Radios with those screen sizes should be compatible
 when the active model provides the required F5J template structure. Manual
 radio/simulator testing is currently limited to TX15 and T16/TX16S-class
-radios.
+radios. The `320x240` GX10 screen runs the GX10 F3K template, which has no
+widget; see [model templates](model-templates.md#gx10-f3k-template).
 
 For widget-only updates, use the Makefile target:
 
